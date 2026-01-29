@@ -7,69 +7,69 @@
 
 @layer base {
   :root {
-    /* We force dark mode, so light vars are same as dark */
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    /* Light theme */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 222 47% 10%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 160 84% 39%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 160 84% 35%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 30% 14%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 14% 92%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 222 30% 12%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 220 14% 95%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 250 89% 67%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 250 89% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 346 77% 55%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 346 77% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 160 84% 39%;
-    --success-foreground: 222 47% 6%;
+    --success: 160 84% 35%;
+    --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 222 47% 6%;
 
-    --border: 222 30% 16%;
-    --input: 222 30% 14%;
-    --ring: 250 89% 67%;
+    --border: 220 13% 88%;
+    --input: 220 14% 92%;
+    --ring: 250 89% 60%;
 
     --radius: 1rem;
 
     /* Custom Finance Colors */
-    --income: 160 84% 39%;
-    --expense: 346 77% 55%;
-    --balance-start: 250 89% 67%;
-    --balance-end: 280 85% 60%;
+    --income: 160 84% 35%;
+    --expense: 346 77% 50%;
+    --balance-start: 250 89% 60%;
+    --balance-end: 280 85% 55%;
 
-    /* Glass effect */
-    --glass: 222 47% 10% / 0.6;
-    --glass-border: 222 30% 20%;
+    /* Glass effect (light) */
+    --glass: 0 0% 100% / 0.7;
+    --glass-border: 220 13% 88%;
 
-    /* Shadows */
-    --shadow-sm: 0 2px 8px hsl(222 47% 4% / 0.3);
-    --shadow-md: 0 4px 16px hsl(222 47% 4% / 0.4);
-    --shadow-lg: 0 8px 32px hsl(222 47% 4% / 0.5);
-    --shadow-glow-income: 0 4px 20px hsl(var(--income) / 0.3);
-    --shadow-glow-expense: 0 4px 20px hsl(var(--expense) / 0.3);
-    --shadow-glow-accent: 0 4px 20px hsl(var(--accent) / 0.4);
+    /* Shadows (light) */
+    --shadow-sm: 0 2px 8px hsl(220 10% 50% / 0.08);
+    --shadow-md: 0 4px 16px hsl(220 10% 50% / 0.12);
+    --shadow-lg: 0 8px 32px hsl(220 10% 50% / 0.16);
+    --shadow-glow-income: 0 4px 20px hsl(var(--income) / 0.25);
+    --shadow-glow-expense: 0 4px 20px hsl(var(--expense) / 0.25);
+    --shadow-glow-accent: 0 4px 20px hsl(var(--accent) / 0.3);
 
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 222 47% 6%;
-    --sidebar-accent: 222 30% 14%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 30% 16%;
-    --sidebar-ring: 250 89% 67%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 160 84% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 92%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 88%;
+    --sidebar-ring: 250 89% 60%;
   }
 
   .dark {
@@ -101,6 +101,24 @@
     --input: 222 30% 14%;
     --ring: 250 89% 67%;
 
+    /* Custom Finance Colors (dark) */
+    --income: 160 84% 39%;
+    --expense: 346 77% 55%;
+    --balance-start: 250 89% 67%;
+    --balance-end: 280 85% 60%;
+
+    /* Glass effect (dark) */
+    --glass: 222 47% 10% / 0.6;
+    --glass-border: 222 30% 20%;
+
+    /* Shadows (dark) */
+    --shadow-sm: 0 2px 8px hsl(222 47% 4% / 0.3);
+    --shadow-md: 0 4px 16px hsl(222 47% 4% / 0.4);
+    --shadow-lg: 0 8px 32px hsl(222 47% 4% / 0.5);
+    --shadow-glow-income: 0 4px 20px hsl(var(--income) / 0.3);
+    --shadow-glow-expense: 0 4px 20px hsl(var(--expense) / 0.3);
+    --shadow-glow-accent: 0 4px 20px hsl(var(--accent) / 0.4);
+
     --sidebar-background: 222 47% 6%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 160 84% 39%;
@@ -118,12 +136,11 @@
   }
 
   html {
-    @apply dark;
     -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-300;
     font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   }
 }
