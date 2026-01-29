@@ -10,8 +10,12 @@ const REPO_NAME = "finance-app";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // For GitHub Pages: uses repo name as base path in production
-  base: mode === "production" ? `/${REPO_NAME}/` : "/",
+  /**
+   * Base path strategy:
+   * - Lovable hosting (default): served at domain root → base "/"
+   * - GitHub Pages: served under "/<repo>/" → build with `--mode gh-pages`
+   */
+  base: mode === "gh-pages" ? `/${REPO_NAME}/` : "/",
   server: {
     host: "::",
     port: 8080,
