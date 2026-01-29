@@ -194,14 +194,23 @@ export function useSupabaseFinance(userId: string | null) {
   }, [userId]);
 
   const deleteTransaction = useCallback(async (id: string) => {
-    const { error } = await supabase.from('transactions').delete().eq('id', id);
-    
-    if (error) {
-      toast.error('Erro ao excluir transação');
-      return;
-    }
+    try {
+      const { error } = await supabase.from('transactions').delete().eq('id', id);
+      
+      if (error) {
+        console.error('Delete transaction error:', error);
+        toast.error('Erro ao excluir transação');
+        return false;
+      }
 
-    setTransactions(prev => prev.filter(t => t.id !== id));
+      setTransactions(prev => prev.filter(t => t.id !== id));
+      toast.success('Transação excluída!');
+      return true;
+    } catch (err) {
+      console.error('Delete transaction exception:', err);
+      toast.error('Erro ao excluir transação');
+      return false;
+    }
   }, []);
 
   // === CATEGORIES ===
