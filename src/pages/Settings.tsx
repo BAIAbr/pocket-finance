@@ -3,14 +3,14 @@ import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User } from 'lucide-react';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
-  const { settings, setSettings, clearAllData } = useFinanceContext();
+  const { settings, setSettings, clearAllData, profile, updateProfile } = useFinanceContext();
   const { theme, toggleTheme } = useTheme();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, signOut, profile: authProfile } = useAuth();
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
 
@@ -20,17 +20,26 @@ export default function SettingsPage() {
     { code: 'EUR', symbol: '€', name: 'Euro' },
   ];
 
-  const handleClearData = () => {
-    clearAllData();
+  const handleClearData = async () => {
+    await clearAllData();
     setShowConfirmClear(false);
-    toast.success('Dados limpos com sucesso');
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     toast.success('Até logo!');
     navigate('/auth');
   };
+
+  const handleCurrencyChange = async (currencyCode: string, currencySymbol: string) => {
+    if (isAuthenticated && profile) {
+      await updateProfile({ currency: currencyCode });
+    }
+    setSettings({ ...settings, currency: currencyCode, currencySymbol });
+  };
+
+  const displayName = profile?.name || authProfile?.email?.split('@')[0] || 'Usuário';
+  const displayEmail = profile?.email || authProfile?.email || '';
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
@@ -46,16 +55,20 @@ export default function SettingsPage() {
             <User size={18} />
             Conta
           </h2>
-          {isAuthenticated && user ? (
+          {isAuthenticated ? (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl gradient-balance flex items-center justify-center text-white font-bold text-xl">
-                  {user.name.charAt(0).toUpperCase()}
+                  {displayName.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold">{user.name}</p>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                  <p className="font-semibold">{displayName}</p>
+                  <p className="text-sm text-muted-foreground">{displayEmail}</p>
                 </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 p-3 rounded-xl">
+                <Cloud size={14} className="text-primary" />
+                <span>Dados sincronizados na nuvem</span>
               </div>
               <button
                 onClick={handleLogout}
@@ -66,12 +79,17 @@ export default function SettingsPage() {
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => navigate('/auth')}
-              className="w-full py-3 rounded-xl gradient-balance text-white font-medium touch-scale"
-            >
-              Entrar ou criar conta
-            </button>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Crie uma conta para sincronizar seus dados na nuvem.
+              </p>
+              <button
+                onClick={() => navigate('/auth')}
+                className="w-full py-3 rounded-xl gradient-balance text-white font-medium touch-scale"
+              >
+                Entrar ou criar conta
+              </button>
+            </div>
           )}
         </section>
 
@@ -118,7 +136,7 @@ export default function SettingsPage() {
             {currencies.map(currency => (
               <button
                 key={currency.code}
-                onClick={() => setSettings({ ...settings, currency: currency.code, currencySymbol: currency.symbol })}
+                onClick={() => handleCurrencyChange(currency.code, currency.symbol)}
                 className={cn(
                   'w-full flex items-center justify-between p-3 rounded-xl transition-all touch-scale',
                   settings.currency === currency.code 
@@ -146,41 +164,43 @@ export default function SettingsPage() {
         </section>
 
         {/* Data */}
-        <section className="card-finance">
-          <h2 className="font-semibold mb-4 flex items-center gap-2">
-            <Trash2 size={18} />
-            Dados
-          </h2>
-          {showConfirmClear ? (
-            <div className="space-y-3">
-              <p className="text-sm text-destructive">
-                ⚠️ Isso apagará todas as suas transações e categorias personalizadas. Esta ação não pode ser desfeita.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowConfirmClear(false)}
-                  className="flex-1 py-3 rounded-xl bg-secondary font-medium touch-scale"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleClearData}
-                  className="flex-1 py-3 rounded-xl bg-destructive text-destructive-foreground font-medium touch-scale"
-                >
-                  Confirmar
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowConfirmClear(true)}
-              className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale text-destructive"
-            >
-              <span>Limpar todos os dados</span>
+        {isAuthenticated && (
+          <section className="card-finance">
+            <h2 className="font-semibold mb-4 flex items-center gap-2">
               <Trash2 size={18} />
-            </button>
-          )}
-        </section>
+              Dados
+            </h2>
+            {showConfirmClear ? (
+              <div className="space-y-3">
+                <p className="text-sm text-destructive">
+                  ⚠️ Isso apagará todas as suas transações e metas de poupança. Esta ação não pode ser desfeita.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowConfirmClear(false)}
+                    className="flex-1 py-3 rounded-xl bg-secondary font-medium touch-scale"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleClearData}
+                    className="flex-1 py-3 rounded-xl bg-destructive text-destructive-foreground font-medium touch-scale"
+                  >
+                    Confirmar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowConfirmClear(true)}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale text-destructive"
+              >
+                <span>Limpar todos os dados</span>
+                <Trash2 size={18} />
+              </button>
+            )}
+          </section>
+        )}
 
         {/* About */}
         <section className="card-finance">
@@ -191,11 +211,14 @@ export default function SettingsPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between py-2">
               <span className="text-muted-foreground">Versão</span>
-              <span className="font-mono">1.0.0</span>
+              <span className="font-mono">2.0.0</span>
             </div>
             <div className="flex items-center justify-between py-2">
               <span className="text-muted-foreground">Armazenamento</span>
-              <span className="font-mono">LocalStorage</span>
+              <span className="font-mono flex items-center gap-1">
+                <Cloud size={14} className="text-primary" />
+                Nuvem
+              </span>
             </div>
           </div>
         </section>
@@ -203,7 +226,7 @@ export default function SettingsPage() {
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground p-4">
           <p>FINANGO © 2025</p>
-          <p className="mt-1">Seus dados ficam salvos localmente no navegador</p>
+          <p className="mt-1">Seus dados são sincronizados de forma segura</p>
         </div>
       </main>
     </div>

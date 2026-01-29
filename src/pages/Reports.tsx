@@ -17,8 +17,8 @@ export default function Reports() {
   const monthlyStats = getMonthlyStats(6);
 
   const totals = useMemo(() => {
-    const income = monthTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const expense = monthTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const income = monthTransactions.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
+    const expense = monthTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
     return { income, expense, balance: income - expense };
   }, [monthTransactions]);
 

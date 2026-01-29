@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Sparkles, TrendingUp, Shield } from 'lucide-react';
@@ -14,8 +14,15 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
-  const { login, register } = useAuth();
+  const { signIn, signUp, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,12 +30,16 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
-        const success = await login(email, password);
-        if (success) {
+        const { error } = await signIn(email, password);
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            toast.error('Email ou senha incorretos');
+          } else {
+            toast.error(error.message);
+          }
+        } else {
           toast.success('Bem-vindo de volta!');
           navigate('/');
-        } else {
-          toast.error('Email ou senha incorretos');
         }
       } else {
         if (!name.trim()) {
@@ -36,12 +47,16 @@ export default function AuthPage() {
           setIsLoading(false);
           return;
         }
-        const success = await register(name, email, password);
-        if (success) {
+        const { error } = await signUp(email, password, name);
+        if (error) {
+          if (error.message.includes('already registered')) {
+            toast.error('Este email já está cadastrado');
+          } else {
+            toast.error(error.message);
+          }
+        } else {
           toast.success('Conta criada com sucesso!');
           navigate('/');
-        } else {
-          toast.error('Este email já está cadastrado');
         }
       }
     } catch {
@@ -54,7 +69,7 @@ export default function AuthPage() {
   const features = [
     { icon: TrendingUp, text: 'Controle seus gastos' },
     { icon: Sparkles, text: 'Relatórios inteligentes' },
-    { icon: Shield, text: 'Dados seguros localmente' },
+    { icon: Shield, text: 'Dados salvos na nuvem' },
   ];
 
   return (
@@ -157,7 +172,7 @@ export default function AuthPage() {
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
             <input
               type={showPassword ? 'text' : 'password'}
-              placeholder="Senha"
+              placeholder="Senha (mínimo 6 caracteres)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -194,20 +209,10 @@ export default function AuthPage() {
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="flex items-center gap-4 my-8">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-xs text-muted-foreground">ou continue sem conta</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
-        {/* Skip Button */}
-        <button
-          onClick={() => navigate('/')}
-          className="w-full py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Continuar como visitante
-        </button>
+        {/* Info text */}
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          Ao criar uma conta, seus dados financeiros são sincronizados na nuvem de forma segura.
+        </p>
       </div>
     </div>
   );

@@ -3,7 +3,9 @@ import { useFinanceContext } from '@/contexts/FinanceContext';
 import { Plus, Trash2, X, Check } from 'lucide-react';
 import { getIconByName } from '@/lib/icons';
 import { cn } from '@/lib/utils';
-import { TransactionType, Category } from '@/types/finance';
+import { Category } from '@/hooks/useSupabaseFinance';
+
+type TransactionType = 'income' | 'expense';
 
 const availableIcons = [
   'Briefcase', 'Laptop', 'TrendingUp', 'Gift', 'Plus', 'DollarSign', 'CreditCard',
@@ -52,20 +54,20 @@ export default function Categories() {
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) return;
 
     if (editingCategory) {
-      updateCategory(editingCategory.id, { name, icon, color, type });
+      await updateCategory(editingCategory.id, { name, icon, color, type });
     } else {
-      addCategory({ name, icon, color, type });
+      await addCategory({ name, icon, color, type });
     }
     setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-      deleteCategory(id);
+      await deleteCategory(id);
     }
   };
 

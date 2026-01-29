@@ -1,11 +1,11 @@
-import { Home, BarChart3, FolderOpen, Settings } from 'lucide-react';
+import { Home, BarChart3, PiggyBank, Settings } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Início' },
   { path: '/reports', icon: BarChart3, label: 'Relatórios' },
-  { path: '/categories', icon: FolderOpen, label: 'Categorias' },
+  { path: '/savings', icon: PiggyBank, label: 'Poupança' },
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
 

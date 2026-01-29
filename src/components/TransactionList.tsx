@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getIconByName } from '@/lib/icons';
 import { Trash2 } from 'lucide-react';
-import { Transaction } from '@/types/finance';
+import { Transaction } from '@/hooks/useSupabaseFinance';
 
 interface TransactionItemProps {
   transaction: Transaction;
@@ -13,10 +13,14 @@ interface TransactionItemProps {
 
 export function TransactionItem({ transaction, showDelete = false }: TransactionItemProps) {
   const { getCategoryById, formatCurrency, deleteTransaction } = useFinanceContext();
-  const category = getCategoryById(transaction.categoryId);
+  const category = getCategoryById(transaction.category_id);
   
   const IconComponent = getIconByName(category?.icon || 'Circle');
   const isIncome = transaction.type === 'income';
+
+  const handleDelete = async () => {
+    await deleteTransaction(transaction.id);
+  };
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 touch-scale">
@@ -35,7 +39,7 @@ export function TransactionItem({ transaction, showDelete = false }: Transaction
       
       <div className="flex-1 min-w-0">
         <p className="font-medium text-foreground truncate">
-          {transaction.description || category?.name}
+          {transaction.description || category?.name || 'Transação'}
         </p>
         <p className="text-xs text-muted-foreground">
           {category?.name} • {format(parseISO(transaction.date), "d 'de' MMM", { locale: ptBR })}
@@ -47,12 +51,12 @@ export function TransactionItem({ transaction, showDelete = false }: Transaction
           'font-mono font-semibold',
           isIncome ? 'text-income' : 'text-expense'
         )}>
-          {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+          {isIncome ? '+' : '-'}{formatCurrency(Number(transaction.amount))}
         </span>
         
         {showDelete && (
           <button
-            onClick={() => deleteTransaction(transaction.id)}
+            onClick={handleDelete}
             className="p-2 text-muted-foreground hover:text-destructive transition-colors touch-scale"
             aria-label="Excluir transação"
           >
@@ -65,7 +69,25 @@ export function TransactionItem({ transaction, showDelete = false }: Transaction
 }
 
 export function TransactionList() {
-  const { recentTransactions } = useFinanceContext();
+  const { recentTransactions, isLoading } = useFinanceContext();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="p-3 rounded-xl bg-secondary/50 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-secondary" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-secondary rounded w-3/4" />
+                <div className="h-3 bg-secondary rounded w-1/2" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (recentTransactions.length === 0) {
     return (

@@ -10,6 +10,7 @@ import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import Categories from "./pages/Categories";
+import Savings from "./pages/Savings";
 import SettingsPage from "./pages/Settings";
 import AuthPage from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -31,6 +32,7 @@ const App = () => (
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/categories" element={<Categories />} />
+                  <Route path="/savings" element={<Savings />} />
                   <Route path="/settings" element={<SettingsPage />} />
                 </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
