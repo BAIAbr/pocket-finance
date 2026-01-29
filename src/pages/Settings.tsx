@@ -1,10 +1,17 @@
 import { useState } from 'react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
-import { Moon, DollarSign, Trash2, Info, Github, ExternalLink } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const { settings, setSettings, clearAllData } = useFinanceContext();
+  const { theme, toggleTheme } = useTheme();
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
 
   const currencies = [
@@ -16,6 +23,13 @@ export default function SettingsPage() {
   const handleClearData = () => {
     clearAllData();
     setShowConfirmClear(false);
+    toast.success('Dados limpos com sucesso');
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Até logo!');
+    navigate('/auth');
   };
 
   return (
@@ -26,21 +40,72 @@ export default function SettingsPage() {
       </header>
 
       <main className="px-4 space-y-6">
+        {/* User Section */}
+        <section className="card-finance">
+          <h2 className="font-semibold mb-4 flex items-center gap-2">
+            <User size={18} />
+            Conta
+          </h2>
+          {isAuthenticated && user ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl gradient-balance flex items-center justify-center text-white font-bold text-xl">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold">{user.name}</p>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale text-destructive"
+              >
+                <span>Sair da conta</span>
+                <LogOut size={18} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => navigate('/auth')}
+              className="w-full py-3 rounded-xl gradient-balance text-white font-medium touch-scale"
+            >
+              Entrar ou criar conta
+            </button>
+          )}
+        </section>
+
         {/* Appearance */}
         <section className="card-finance">
           <h2 className="font-semibold mb-4 flex items-center gap-2">
-            <Moon size={18} />
+            {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
             Aparência
           </h2>
-          <div className="flex items-center justify-between py-3">
+          <button
+            onClick={toggleTheme}
+            className="w-full flex items-center justify-between py-3"
+          >
             <div>
-              <p className="font-medium">Tema Escuro</p>
-              <p className="text-sm text-muted-foreground">Sempre ativo</p>
+              <p className="font-medium">Tema {theme === 'dark' ? 'Escuro' : 'Claro'}</p>
+              <p className="text-sm text-muted-foreground">
+                Toque para alternar
+              </p>
             </div>
-            <div className="w-12 h-7 rounded-full bg-accent flex items-center justify-end px-1">
-              <div className="w-5 h-5 rounded-full bg-white" />
+            <div 
+              className={cn(
+                'w-14 h-8 rounded-full flex items-center px-1 transition-all duration-300',
+                theme === 'dark' ? 'bg-accent justify-end' : 'bg-secondary justify-start'
+              )}
+            >
+              <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-md transition-all duration-300">
+                {theme === 'dark' ? (
+                  <Moon size={14} className="text-accent" />
+                ) : (
+                  <Sun size={14} className="text-warning" />
+                )}
+              </div>
             </div>
-          </div>
+          </button>
         </section>
 
         {/* Currency */}
@@ -132,24 +197,12 @@ export default function SettingsPage() {
               <span className="text-muted-foreground">Armazenamento</span>
               <span className="font-mono">LocalStorage</span>
             </div>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale"
-            >
-              <div className="flex items-center gap-3">
-                <Github size={20} />
-                <span>Ver no GitHub</span>
-              </div>
-              <ExternalLink size={16} className="text-muted-foreground" />
-            </a>
           </div>
         </section>
 
-        {/* GitHub Pages Info */}
+        {/* Footer */}
         <div className="text-center text-xs text-muted-foreground p-4">
-          <p>Feito com ❤️ para funcionar no GitHub Pages</p>
+          <p>FINANGO © 2025</p>
           <p className="mt-1">Seus dados ficam salvos localmente no navegador</p>
         </div>
       </main>
