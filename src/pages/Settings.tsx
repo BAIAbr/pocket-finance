@@ -1,18 +1,22 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export default function SettingsPage() {
   const { settings, setSettings, clearAllData, profile, updateProfile } = useFinanceContext();
   const { theme, toggleTheme } = useTheme();
-  const { isAuthenticated, signOut, profile: authProfile } = useAuth();
+  const { isAuthenticated, signOut, profile: authProfile, user } = useAuth();
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currencies = [
     { code: 'BRL', symbol: 'R$', name: 'Real Brasileiro' },
@@ -38,8 +42,93 @@ export default function SettingsPage() {
     setSettings({ ...settings, currency: currencyCode, currencySymbol });
   };
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecione uma imagem');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('A imagem deve ter no máximo 2MB');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+
+    try {
+      // Create unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Update profile with new avatar URL
+      await updateProfile({ avatar_url: publicUrl });
+      toast.success('Foto de perfil atualizada!');
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast.error('Erro ao enviar foto');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleInstallApp = () => {
+    // Check if app is installable (PWA)
+    const deferredPrompt = (window as any).deferredPrompt;
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult: any) => {
+        if (choiceResult.outcome === 'accepted') {
+          toast.success('App instalado com sucesso!');
+        }
+        (window as any).deferredPrompt = null;
+      });
+    } else {
+      // Show instructions based on platform
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+      
+      if (isIOS) {
+        toast.info('Para instalar: toque no ícone de compartilhar e selecione "Adicionar à Tela de Início"', {
+          duration: 5000,
+        });
+      } else if (isAndroid) {
+        toast.info('Para instalar: toque no menu do navegador e selecione "Instalar aplicativo"', {
+          duration: 5000,
+        });
+      } else {
+        toast.info('Para instalar: clique no ícone de instalação na barra de endereço do navegador', {
+          duration: 5000,
+        });
+      }
+    }
+  };
+
   const displayName = profile?.name || authProfile?.email?.split('@')[0] || 'Usuário';
   const displayEmail = profile?.email || authProfile?.email || '';
+  const avatarUrl = profile?.avatar_url || null;
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
@@ -49,6 +138,27 @@ export default function SettingsPage() {
       </header>
 
       <main className="px-4 space-y-6">
+        {/* Download App Button - Highly Visible */}
+        <section className="card-finance gradient-balance text-white">
+          <button
+            onClick={handleInstallApp}
+            className="w-full flex items-center justify-between touch-scale"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                <Download size={24} />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-lg">Baixar Aplicativo</p>
+                <p className="text-sm text-white/80">Instale no seu celular</p>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+              <Download size={20} />
+            </div>
+          </button>
+        </section>
+
         {/* User Section */}
         <section className="card-finance">
           <h2 className="font-semibold mb-4 flex items-center gap-2">
@@ -58,8 +168,33 @@ export default function SettingsPage() {
           {isAuthenticated ? (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl gradient-balance flex items-center justify-center text-white font-bold text-xl">
-                  {displayName.charAt(0).toUpperCase()}
+                <div className="relative">
+                  <Avatar className="w-16 h-16 cursor-pointer touch-scale" onClick={handleAvatarClick}>
+                    {avatarUrl ? (
+                      <AvatarImage src={avatarUrl} alt={displayName} />
+                    ) : null}
+                    <AvatarFallback className="gradient-balance text-white font-bold text-xl">
+                      {displayName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    onClick={handleAvatarClick}
+                    disabled={isUploadingAvatar}
+                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-accent flex items-center justify-center text-accent-foreground shadow-md touch-scale"
+                  >
+                    {isUploadingAvatar ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Camera size={14} />
+                    )}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
                 </div>
                 <div>
                   <p className="font-semibold">{displayName}</p>
@@ -221,6 +356,28 @@ export default function SettingsPage() {
               </span>
             </div>
           </div>
+        </section>
+
+        {/* Contact */}
+        <section className="card-finance">
+          <h2 className="font-semibold mb-4 flex items-center gap-2">
+            <Mail size={18} />
+            Contato
+          </h2>
+          <a
+            href="mailto:finangobr@gmail.com"
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full gradient-balance flex items-center justify-center">
+                <Mail size={18} className="text-white" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium">Email de Suporte</p>
+                <p className="text-sm text-muted-foreground">finangobr@gmail.com</p>
+              </div>
+            </div>
+          </a>
         </section>
 
         {/* Footer */}
