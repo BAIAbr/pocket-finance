@@ -1,12 +1,14 @@
 import React, { createContext, useContext } from 'react';
-import { useFinance } from '@/hooks/useFinance';
+import { useSupabaseFinance } from '@/hooks/useSupabaseFinance';
+import { useAuth } from '@/contexts/AuthContext';
 
-type FinanceContextType = ReturnType<typeof useFinance>;
+type FinanceContextType = ReturnType<typeof useSupabaseFinance>;
 
 const FinanceContext = createContext<FinanceContextType | null>(null);
 
 export function FinanceProvider({ children }: { children: React.ReactNode }) {
-  const finance = useFinance();
+  const { user } = useAuth();
+  const finance = useSupabaseFinance(user?.id ?? null);
   
   return (
     <FinanceContext.Provider value={finance}>

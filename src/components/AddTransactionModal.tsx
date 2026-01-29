@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { X, Check, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
-import { TransactionType } from '@/types/finance';
 import { cn } from '@/lib/utils';
 import { getIconByName } from '@/lib/icons';
 import { format } from 'date-fns';
@@ -14,32 +13,39 @@ interface AddTransactionModalProps {
 export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProps) {
   const { categories, addTransaction } = useFinanceContext();
   
-  const [type, setType] = useState<TransactionType>('expense');
+  const [type, setType] = useState<'income' | 'expense'>('expense');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredCategories = categories.filter(c => c.type === type);
 
-  const handleSubmit = () => {
-    if (!amount || !categoryId) return;
+  const handleSubmit = async () => {
+    if (!amount || !categoryId || isSubmitting) return;
 
-    addTransaction({
+    setIsSubmitting(true);
+    
+    const result = await addTransaction({
       type,
       amount: parseFloat(amount),
-      categoryId,
+      category_id: categoryId,
       description,
       date: new Date(date).toISOString(),
     });
 
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      resetForm();
-      onClose();
-    }, 1000);
+    if (result) {
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        resetForm();
+        onClose();
+      }, 1000);
+    }
+    
+    setIsSubmitting(false);
   };
 
   const resetForm = () => {
@@ -191,17 +197,21 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
               {/* Submit */}
               <button
                 onClick={handleSubmit}
-                disabled={!amount || !categoryId}
+                disabled={!amount || !categoryId || isSubmitting}
                 className={cn(
                   'w-full py-4 rounded-xl font-semibold text-white transition-all touch-scale',
-                  amount && categoryId
+                  amount && categoryId && !isSubmitting
                     ? type === 'income' 
                       ? 'gradient-income shadow-glow-income' 
                       : 'gradient-expense shadow-glow-expense'
                     : 'bg-muted text-muted-foreground cursor-not-allowed'
                 )}
               >
-                Adicionar {type === 'income' ? 'Entrada' : 'Saída'}
+                {isSubmitting ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
+                ) : (
+                  `Adicionar ${type === 'income' ? 'Entrada' : 'Saída'}`
+                )}
               </button>
             </div>
 
