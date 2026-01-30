@@ -65,9 +65,23 @@ export default function SettingsPage() {
     setIsUploadingAvatar(true);
 
     try {
-      // Create unique filename
+      // Create unique filename with timestamp to avoid caching issues
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExt}`;
+      const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
+
+      // Delete old avatar if exists
+      try {
+        const { data: files } = await supabase.storage
+          .from('avatars')
+          .list(user.id);
+        
+        if (files && files.length > 0) {
+          const filesToDelete = files.map(f => `${user.id}/${f.name}`);
+          await supabase.storage.from('avatars').remove(filesToDelete);
+        }
+      } catch (e) {
+        // Ignore errors when deleting old files
+      }
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage
@@ -78,13 +92,15 @@ export default function SettingsPage() {
         throw uploadError;
       }
 
-      // Get public URL
+      // Get public URL with cache-busting query param
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
+      const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
+
       // Update profile with new avatar URL
-      await updateProfile({ avatar_url: publicUrl });
+      await updateProfile({ avatar_url: urlWithCacheBust });
       toast.success('Foto de perfil atualizada!');
     } catch (error) {
       console.error('Error uploading avatar:', error);
