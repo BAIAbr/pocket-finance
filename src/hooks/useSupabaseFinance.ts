@@ -356,7 +356,8 @@ export function useSupabaseFinance(userId: string | null) {
   const depositToPiggyBank = useCallback(async (amount: number, description?: string) => {
     if (!userId || !piggyBank) return;
 
-    const newBalance = piggyBank.balance + amount;
+    const currentBalance = Number(piggyBank.balance) || 0;
+    const newBalance = currentBalance + amount;
 
     const [{ error: updateError }, { error: transactionError }] = await Promise.all([
       supabase.from('piggy_bank').update({ balance: newBalance }).eq('id', piggyBank.id),
@@ -390,12 +391,14 @@ export function useSupabaseFinance(userId: string | null) {
   const withdrawFromPiggyBank = useCallback(async (amount: number, description?: string) => {
     if (!userId || !piggyBank) return;
 
-    if (amount > piggyBank.balance) {
+    const currentBalance = Number(piggyBank.balance) || 0;
+    
+    if (amount > currentBalance) {
       toast.error('Saldo insuficiente no cofrinho');
       return;
     }
 
-    const newBalance = piggyBank.balance - amount;
+    const newBalance = currentBalance - amount;
 
     const [{ error: updateError }, { error: transactionError }] = await Promise.all([
       supabase.from('piggy_bank').update({ balance: newBalance }).eq('id', piggyBank.id),
