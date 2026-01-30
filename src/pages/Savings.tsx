@@ -309,7 +309,7 @@ export default function SavingsPage() {
                         'font-mono font-semibold',
                         tx.type === 'deposit' ? 'text-success' : 'text-destructive'
                       )}>
-                        {tx.type === 'deposit' ? '+' : '-'}{formatCurrency(Number(tx.amount))}
+                        {tx.type === 'deposit' ? '+' : ''}{formatCurrency(Number(tx.amount))}
                       </span>
                     </div>
                   ))}
