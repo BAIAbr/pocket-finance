@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useConfetti } from '@/hooks/useConfetti';
 import { 
   Target, 
   PiggyBank, 
@@ -32,10 +33,32 @@ export default function SavingsPage() {
     isLoading,
   } = useFinanceContext();
 
+  const { fireSuccess, fireGoalComplete } = useConfetti();
+
   const [activeTab, setActiveTab] = useState<'goals' | 'piggy'>('goals');
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showPiggyModal, setShowPiggyModal] = useState(false);
   const [showAddToGoalModal, setShowAddToGoalModal] = useState<string | null>(null);
+
+  // Wrapper functions with celebration
+  const handleAddToGoal = async (goalId: string, amount: number) => {
+    const goal = savingsGoals.find(g => g.id === goalId);
+    if (!goal) return;
+    
+    const willComplete = (Number(goal.current_amount) + amount) >= Number(goal.target_amount);
+    await addToSavingsGoal(goalId, amount);
+    
+    if (willComplete) {
+      fireGoalComplete();
+    } else {
+      fireSuccess();
+    }
+  };
+
+  const handleDeposit = async (amount: number, description?: string) => {
+    await depositToPiggyBank(amount, description);
+    fireSuccess();
+  };
 
   if (!isAuthenticated) {
     return (
@@ -336,7 +359,7 @@ export default function SavingsPage() {
         isOpen={!!showAddToGoalModal}
         goalId={showAddToGoalModal}
         onClose={() => setShowAddToGoalModal(null)}
-        onSubmit={addToSavingsGoal}
+        onSubmit={handleAddToGoal}
         formatCurrency={formatCurrency}
       />
 
@@ -344,7 +367,7 @@ export default function SavingsPage() {
       <PiggyBankModal
         isOpen={showPiggyModal}
         onClose={() => setShowPiggyModal(false)}
-        onDeposit={depositToPiggyBank}
+        onDeposit={handleDeposit}
         onWithdraw={withdrawFromPiggyBank}
         currentBalance={Number(piggyBank?.balance || 0)}
         formatCurrency={formatCurrency}
