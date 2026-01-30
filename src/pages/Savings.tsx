@@ -30,6 +30,7 @@ export default function SavingsPage() {
     deleteSavingsGoal,
     depositToPiggyBank,
     withdrawFromPiggyBank,
+    deletePiggyBankTransaction,
     isLoading,
   } = useFinanceContext();
 
@@ -328,12 +329,21 @@ export default function SavingsPage() {
                           </p>
                         </div>
                       </div>
-                      <span className={cn(
-                        'font-mono font-semibold',
-                        tx.type === 'deposit' ? 'text-success' : 'text-destructive'
-                      )}>
-                        {tx.type === 'deposit' ? '+' : ''}{formatCurrency(Number(tx.amount))}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          'font-mono font-semibold',
+                          tx.type === 'deposit' ? 'text-success' : 'text-destructive'
+                        )}>
+                          {tx.type === 'deposit' ? '+' : ''}{formatCurrency(Number(tx.amount))}
+                        </span>
+                        <button
+                          onClick={() => deletePiggyBankTransaction(tx.id)}
+                          className="p-2 text-muted-foreground hover:text-destructive transition-colors touch-scale"
+                          aria-label="Excluir transação"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
