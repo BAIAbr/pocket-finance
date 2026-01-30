@@ -429,6 +429,50 @@ export function useSupabaseFinance(userId: string | null) {
     toast.success(`${formatCurrency(amount)} retirado do cofrinho`);
   }, [userId, piggyBank]);
 
+  const deletePiggyBankTransaction = useCallback(async (transactionId: string) => {
+    if (!userId || !piggyBank) return false;
+
+    // Find the transaction to get its amount and type
+    const transaction = piggyBankTransactions.find(t => t.id === transactionId);
+    if (!transaction) {
+      toast.error('Transação não encontrada');
+      return false;
+    }
+
+    const currentBalance = Number(piggyBank.balance) || 0;
+    const transactionAmount = Number(transaction.amount);
+    
+    // Reverse the transaction effect on balance
+    let newBalance: number;
+    if (transaction.type === 'deposit') {
+      newBalance = currentBalance - transactionAmount;
+    } else {
+      newBalance = currentBalance + transactionAmount;
+    }
+
+    // Ensure balance doesn't go negative
+    if (newBalance < 0) {
+      toast.error('Não é possível excluir: saldo ficaria negativo');
+      return false;
+    }
+
+    const [{ error: deleteError }, { error: updateError }] = await Promise.all([
+      supabase.from('piggy_bank_transactions').delete().eq('id', transactionId),
+      supabase.from('piggy_bank').update({ balance: newBalance }).eq('id', piggyBank.id),
+    ]);
+
+    if (deleteError || updateError) {
+      console.error('Delete piggy transaction error:', deleteError || updateError);
+      toast.error('Erro ao excluir transação');
+      return false;
+    }
+
+    setPiggyBank(prev => prev ? { ...prev, balance: newBalance } : null);
+    setPiggyBankTransactions(prev => prev.filter(t => t.id !== transactionId));
+    toast.success('Transação excluída!');
+    return true;
+  }, [userId, piggyBank]);
+
   // === PROFILE ===
   const updateProfile = useCallback(async (updates: Partial<Profile>) => {
     if (!profile) return;
@@ -621,6 +665,7 @@ export function useSupabaseFinance(userId: string | null) {
     // Piggy bank actions
     depositToPiggyBank,
     withdrawFromPiggyBank,
+    deletePiggyBankTransaction,
 
     // Profile actions
     updateProfile,
