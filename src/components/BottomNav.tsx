@@ -14,8 +14,8 @@ export function BottomNav() {
   const navigate = useNavigate();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-border safe-bottom">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-border/50 safe-bottom">
+      <div className="flex items-center justify-around h-18 max-w-lg mx-auto py-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -23,20 +23,31 @@ export function BottomNav() {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                'nav-item touch-scale flex-1',
+                'nav-item touch-scale flex-1 relative group',
                 isActive && 'nav-item-active'
               )}
             >
-              <item.icon
-                size={22}
-                strokeWidth={isActive ? 2.5 : 2}
-                className={cn(
-                  'transition-all duration-200',
-                  isActive && 'drop-shadow-[0_0_8px_hsl(var(--primary))]'
-                )}
-              />
+              {/* Active indicator */}
+              {isActive && (
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-primary animate-fade-in" />
+              )}
+              
+              <div className={cn(
+                'w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200',
+                isActive ? 'bg-primary/15' : 'group-hover:bg-secondary'
+              )}>
+                <item.icon
+                  size={22}
+                  strokeWidth={isActive ? 2.5 : 2}
+                  className={cn(
+                    'transition-all duration-200',
+                    isActive && 'drop-shadow-[0_0_10px_hsl(var(--primary))]'
+                  )}
+                />
+              </div>
+              
               <span className={cn(
-                'text-xs font-medium transition-colors',
+                'text-xs font-medium transition-all duration-200 mt-1',
                 isActive ? 'text-primary' : 'text-muted-foreground'
               )}>
                 {item.label}
