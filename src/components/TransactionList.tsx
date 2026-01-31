@@ -23,17 +23,21 @@ export function TransactionItem({ transaction, showDelete = false }: Transaction
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 touch-scale">
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 touch-scale transaction-item group">
       <div 
         className={cn(
-          'w-10 h-10 rounded-full flex items-center justify-center',
-          isIncome ? 'bg-success/20' : 'bg-destructive/20'
+          'w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110',
+          isIncome ? 'bg-success/15' : 'bg-destructive/15'
         )}
-        style={{ backgroundColor: `${category?.color}20` }}
+        style={{ 
+          backgroundColor: `${category?.color}15`,
+          boxShadow: `0 4px 12px -4px ${category?.color}40`
+        }}
       >
         <IconComponent 
           size={20} 
           style={{ color: category?.color }}
+          className="transition-transform group-hover:scale-110"
         />
       </div>
       
@@ -41,14 +45,20 @@ export function TransactionItem({ transaction, showDelete = false }: Transaction
         <p className="font-medium text-foreground truncate">
           {transaction.description || category?.name || 'Transação'}
         </p>
-        <p className="text-xs text-muted-foreground">
-          {category?.name} • {format(parseISO(transaction.date), "d 'de' MMM", { locale: ptBR })}
+        <p className="text-xs text-muted-foreground mt-0.5">
+          <span className={cn(
+            'inline-block px-1.5 py-0.5 rounded text-xs mr-1.5',
+            isIncome ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
+          )}>
+            {category?.name}
+          </span>
+          {format(parseISO(transaction.date), "d 'de' MMM", { locale: ptBR })}
         </p>
       </div>
       
       <div className="flex items-center gap-2">
         <span className={cn(
-          'font-mono font-semibold',
+          'font-mono font-semibold text-sm',
           isIncome ? 'text-income' : 'text-expense'
         )}>
           {isIncome ? '+' : '-'}{formatCurrency(Number(transaction.amount))}
@@ -57,7 +67,7 @@ export function TransactionItem({ transaction, showDelete = false }: Transaction
         {showDelete && (
           <button
             onClick={handleDelete}
-            className="p-2 text-muted-foreground hover:text-destructive transition-colors touch-scale"
+            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 touch-scale"
             aria-label="Excluir transação"
           >
             <Trash2 size={16} />
