@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useConfetti } from '@/hooks/useConfetti';
 import { useCdiYield, cdiPercentageToAnnualRate, annualRateToCdiPercentage, estimateFutureBalance } from '@/hooks/useCdiYield';
 import { YieldChart } from '@/components/YieldChart';
+import { ConsolidatedYieldChart } from '@/components/ConsolidatedYieldChart';
 import { Slider } from '@/components/ui/slider';
 import { 
   PiggyBank, 
@@ -131,6 +132,21 @@ export default function SavingsPage() {
       </header>
 
       <main className="px-4 space-y-4">
+        {/* Consolidated Chart */}
+        <ConsolidatedYieldChart 
+          piggyBanks={piggyBanks.map(p => ({
+            id: p.id,
+            name: p.name,
+            balance: Number(p.balance),
+            principal_amount: Number(p.principal_amount),
+            cdi_rate_annual: Number(p.cdi_rate_annual),
+            yield_start_date: p.yield_start_date,
+            created_at: p.created_at,
+            color: p.color,
+          }))}
+          formatCurrency={formatCurrency}
+        />
+
         {/* Add Piggy Bank Button */}
         <button
           onClick={() => setShowCreateModal(true)}
