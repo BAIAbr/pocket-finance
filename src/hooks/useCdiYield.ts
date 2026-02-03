@@ -1,9 +1,28 @@
 import { useMemo } from 'react';
 
 // CDI Constants - Based on Brazilian Central Bank reference rate
-// Default to 14.15% annual (configurable per piggy bank)
-const DEFAULT_CDI_ANNUAL_RATE = 14.15; // 14.15% per year
+// Base CDI rate (taxa SELIC atual aproximada)
+const BASE_CDI_ANNUAL_RATE = 14.15; // 14.15% per year - taxa base do CDI
 const DAYS_IN_YEAR = 252; // Brazilian market uses 252 trading days
+
+// Default percentage of CDI (100% = paga exatamente o CDI)
+const DEFAULT_CDI_PERCENTAGE = 100;
+
+/**
+ * Convert CDI percentage to effective annual rate
+ * Ex: 100% CDI with base 14.15% = 14.15% annual
+ * Ex: 110% CDI with base 14.15% = 15.565% annual
+ */
+export function cdiPercentageToAnnualRate(cdiPercentage: number): number {
+  return (cdiPercentage / 100) * BASE_CDI_ANNUAL_RATE;
+}
+
+/**
+ * Convert annual rate back to CDI percentage
+ */
+export function annualRateToCdiPercentage(annualRate: number): number {
+  return (annualRate / BASE_CDI_ANNUAL_RATE) * 100;
+}
 
 export interface YieldCalculation {
   principalAmount: number;        // Valor aportado
@@ -13,6 +32,7 @@ export interface YieldCalculation {
   daysInvested: number;           // Dias investidos
   effectiveRate: number;          // Taxa efetiva no período
   annualRate: number;             // Taxa anual configurada
+  cdiPercentage: number;          // Percentual do CDI (100%, 110%, etc)
 }
 
 export interface YieldHistoryPoint {
@@ -130,7 +150,7 @@ function generateYieldHistory(
 export function useCdiYield(
   principal: number,
   startDate: Date | string | null,
-  annualRate: number = DEFAULT_CDI_ANNUAL_RATE
+  annualRate: number = BASE_CDI_ANNUAL_RATE
 ): YieldCalculation {
   return useMemo(() => {
     if (!startDate || principal <= 0) {
@@ -141,7 +161,8 @@ export function useCdiYield(
         dailyYield: 0,
         daysInvested: 0,
         effectiveRate: 0,
-        annualRate
+        annualRate,
+        cdiPercentage: annualRateToCdiPercentage(annualRate)
       };
     }
     
@@ -172,7 +193,8 @@ export function useCdiYield(
       dailyYield,
       daysInvested,
       effectiveRate,
-      annualRate
+      annualRate,
+      cdiPercentage: annualRateToCdiPercentage(annualRate)
     };
   }, [principal, startDate, annualRate]);
 }
@@ -183,7 +205,7 @@ export function useCdiYield(
 export function useYieldHistory(
   principal: number,
   startDate: Date | string | null,
-  annualRate: number = DEFAULT_CDI_ANNUAL_RATE
+  annualRate: number = BASE_CDI_ANNUAL_RATE
 ): YieldHistoryPoint[] {
   return useMemo(() => {
     if (!startDate || principal <= 0) {

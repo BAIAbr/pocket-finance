@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useCdiYield, formatPercentage } from '@/hooks/useCdiYield';
+import { useCdiYield, formatPercentage, annualRateToCdiPercentage, cdiPercentageToAnnualRate } from '@/hooks/useCdiYield';
 import { PiggyBank, TrendingUp, Wallet, Calendar, Info, Settings2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Slider } from '@/components/ui/slider';
@@ -20,12 +20,16 @@ export function YieldStatsCard({
   onRateChange
 }: YieldStatsCardProps) {
   const [showRateConfig, setShowRateConfig] = useState(false);
-  const [tempRate, setTempRate] = useState(annualRate);
+  // Convert annual rate to CDI percentage for display/editing
+  const currentCdiPercentage = annualRateToCdiPercentage(annualRate);
+  const [tempCdiPercentage, setTempCdiPercentage] = useState(currentCdiPercentage);
   const yieldCalc = useCdiYield(principal, startDate, annualRate);
   
   const handleSaveRate = () => {
     if (onRateChange) {
-      onRateChange(tempRate);
+      // Convert CDI percentage back to annual rate for storage
+      const newAnnualRate = cdiPercentageToAnnualRate(tempCdiPercentage);
+      onRateChange(newAnnualRate);
     }
     setShowRateConfig(false);
   };
@@ -114,7 +118,7 @@ export function YieldStatsCard({
       {showRateConfig ? (
         <div className="bg-accent/10 rounded-lg p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-foreground">Taxa CDI do seu banco</span>
+            <span className="text-sm font-medium text-foreground">% do CDI do seu banco</span>
             <button
               onClick={handleSaveRate}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-sm font-medium hover:bg-accent/90 transition-colors"
@@ -126,38 +130,39 @@ export function YieldStatsCard({
           
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Taxa anual</span>
-              <span className="font-mono font-semibold text-accent">{formatPercentage(tempRate)}</span>
+              <span className="text-muted-foreground">Percentual do CDI</span>
+              <span className="font-mono font-semibold text-accent">{tempCdiPercentage.toFixed(0)}% do CDI</span>
             </div>
             <Slider
-              value={[tempRate]}
-              onValueChange={(value) => setTempRate(value[0])}
-              min={5}
-              max={20}
-              step={0.05}
+              value={[tempCdiPercentage]}
+              onValueChange={(value) => setTempCdiPercentage(value[0])}
+              min={80}
+              max={130}
+              step={1}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>5%</span>
-              <span>20%</span>
+              <span>80%</span>
+              <span>100%</span>
+              <span>130%</span>
             </div>
           </div>
           
           <p className="text-xs text-muted-foreground">
-            💡 Consulte a taxa CDI do seu banco. A maioria paga entre 100% e 110% do CDI.
+            💡 A maioria dos bancos paga entre 100% e 110% do CDI. Alguns bancos digitais pagam até 120%.
           </p>
         </div>
       ) : (
         <button
           onClick={() => {
-            setTempRate(annualRate);
+            setTempCdiPercentage(currentCdiPercentage);
             setShowRateConfig(true);
           }}
           className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-accent/10 rounded-lg hover:bg-accent/20 transition-colors group"
         >
           <Info size={14} className="text-accent" />
           <p className="text-xs text-accent">
-            Rendimento estimado: 100% do CDI ({formatPercentage(yieldCalc.annualRate)} a.a.)
+            Rendimento: {yieldCalc.cdiPercentage.toFixed(0)}% do CDI ({formatPercentage(yieldCalc.annualRate)} a.a.)
           </p>
           <Settings2 size={14} className="text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>

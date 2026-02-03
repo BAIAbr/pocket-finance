@@ -6,8 +6,9 @@ import { useConfetti } from '@/hooks/useConfetti';
 import { useCdiYield } from '@/hooks/useCdiYield';
 import { YieldStatsCard } from '@/components/YieldStatsCard';
 import { YieldChart } from '@/components/YieldChart';
+import { GoalYieldCard } from '@/components/GoalYieldCard';
 import { 
-  Target, 
+  Target,
   PiggyBank, 
   Plus, 
   ArrowUpRight, 
@@ -168,101 +169,23 @@ export default function SavingsPage() {
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-muted-foreground">Em andamento</h3>
                 {activeGoals.map(goal => {
-                  // Calculate progress including piggy bank yield
                   const goalAmount = Number(goal.current_amount);
                   const targetAmount = Number(goal.target_amount);
                   
-                  // Proportional yield attribution based on goal's contribution
-                  const totalSaved = savingsGoals.reduce((sum, g) => sum + Number(g.current_amount), 0);
-                  const goalYieldShare = totalSaved > 0 
-                    ? (goalAmount / totalSaved) * piggyYield.totalYield 
-                    : 0;
-                  
-                  const goalWithYield = goalAmount + goalYieldShare;
-                  const progress = (goalWithYield / targetAmount) * 100;
-                  const progressWithoutYield = (goalAmount / targetAmount) * 100;
-                  
                   return (
-                    <div key={goal.id} className="card-finance">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="w-12 h-12 rounded-xl flex items-center justify-center"
-                            style={{ backgroundColor: `${goal.color}20` }}
-                          >
-                            <Target size={24} style={{ color: goal.color }} />
-                          </div>
-                          <div>
-                            <p className="font-semibold">{goal.name}</p>
-                            {goal.deadline && (
-                              <p className="text-xs text-muted-foreground">
-                                até {format(parseISO(goal.deadline), "d 'de' MMMM", { locale: ptBR })}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => deleteSavingsGoal(goal.id)}
-                          className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Progresso</span>
-                          <span className="font-mono font-medium">{Math.min(progress, 100).toFixed(0)}%</span>
-                        </div>
-                        
-                        {/* Progress bar with yield indicator */}
-                        <div className="h-3 bg-secondary rounded-full overflow-hidden relative">
-                          {/* Base progress (without yield) */}
-                          <div 
-                            className="h-full rounded-full transition-all duration-500 absolute left-0 top-0"
-                            style={{ 
-                              width: `${Math.min(progressWithoutYield, 100)}%`,
-                              backgroundColor: goal.color 
-                            }}
-                          />
-                          {/* Yield portion (lighter shade) */}
-                          {goalYieldShare > 0 && (
-                            <div 
-                              className="h-full rounded-r-full transition-all duration-500 absolute top-0 opacity-50"
-                              style={{ 
-                                left: `${Math.min(progressWithoutYield, 100)}%`,
-                                width: `${Math.min(progress - progressWithoutYield, 100 - progressWithoutYield)}%`,
-                                backgroundColor: goal.color 
-                              }}
-                            />
-                          )}
-                        </div>
-                        
-                        <div className="flex justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-muted-foreground">
-                              {formatCurrency(goalAmount)}
-                            </span>
-                            {goalYieldShare > 0.01 && (
-                              <span className="text-xs text-income flex items-center gap-1">
-                                <TrendingUp size={10} />
-                                +{formatCurrency(goalYieldShare)}
-                              </span>
-                            )}
-                          </div>
-                          <span className="font-mono font-semibold">
-                            {formatCurrency(targetAmount)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => setShowAddToGoalModal(goal.id)}
-                        className="w-full mt-4 py-2 rounded-lg bg-secondary text-sm font-medium hover:bg-secondary/80 transition-all touch-scale"
-                      >
-                        + Adicionar valor
-                      </button>
-                    </div>
+                    <GoalYieldCard
+                      key={goal.id}
+                      goalName={goal.name}
+                      goalColor={goal.color}
+                      principal={goalAmount}
+                      startDate={goal.created_at}
+                      annualRate={piggyAnnualRate}
+                      targetAmount={targetAmount}
+                      formatCurrency={formatCurrency}
+                      onAddValue={() => setShowAddToGoalModal(goal.id)}
+                      onDelete={() => deleteSavingsGoal(goal.id)}
+                      deadline={goal.deadline ? format(parseISO(goal.deadline), "d 'de' MMMM", { locale: ptBR }) : null}
+                    />
                   );
                 })}
               </div>
