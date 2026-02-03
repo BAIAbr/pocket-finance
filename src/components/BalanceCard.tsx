@@ -8,9 +8,8 @@ export function BalanceCard() {
   const { totalBalance, currentMonthStats, formatCurrency, piggyBank, isLoading } = useFinanceContext();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-
-  const piggyBalance = Number(piggyBank?.balance || 0);
-  const availableBalance = totalBalance - piggyBalance;
+  // Não descontar mais o cofrinho do saldo - mostrar saldo total diretamente
+  const availableBalance = totalBalance;
 
   if (isLoading) {
     return (
@@ -99,7 +98,7 @@ export function BalanceCard() {
                   <Sparkles size={12} className="text-amber-200 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <p className="font-mono text-2xl font-bold text-white">
-                  {formatCurrency(piggyBalance)}
+                  {formatCurrency(Number(piggyBank?.balance || 0))}
                 </p>
               </div>
             </div>

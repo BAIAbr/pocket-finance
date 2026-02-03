@@ -36,6 +36,7 @@ export default function SavingsPage() {
     depositToPiggyBank,
     withdrawFromPiggyBank,
     deletePiggyBankTransaction,
+    updatePiggyBankCdiRate,
     isLoading,
   } = useFinanceContext();
 
@@ -313,6 +314,7 @@ export default function SavingsPage() {
               startDate={piggyStartDate}
               annualRate={piggyAnnualRate}
               formatCurrency={formatCurrency}
+              onRateChange={updatePiggyBankCdiRate}
             />
 
             {/* Actions */}
