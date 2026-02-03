@@ -359,6 +359,23 @@ export function useSupabaseFinance(userId: string | null) {
   }, []);
 
   // === PIGGY BANK ===
+  const updatePiggyBankCdiRate = useCallback(async (rate: number) => {
+    if (!userId || !piggyBank) return;
+
+    const { error } = await supabase
+      .from('piggy_bank')
+      .update({ cdi_rate_annual: rate })
+      .eq('id', piggyBank.id);
+
+    if (error) {
+      toast.error('Erro ao atualizar taxa CDI');
+      return;
+    }
+
+    setPiggyBank(prev => prev ? { ...prev, cdi_rate_annual: rate } : null);
+    toast.success('Taxa CDI atualizada!');
+  }, [userId, piggyBank]);
+
   const depositToPiggyBank = useCallback(async (amount: number, description?: string) => {
     if (!userId || !piggyBank) return;
 
@@ -698,6 +715,7 @@ export function useSupabaseFinance(userId: string | null) {
     depositToPiggyBank,
     withdrawFromPiggyBank,
     deletePiggyBankTransaction,
+    updatePiggyBankCdiRate,
 
     // Profile actions
     updateProfile,
