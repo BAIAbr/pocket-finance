@@ -40,6 +40,13 @@ const COLOR_OPTIONS = [
   '#F97316', // Orange
 ];
 
+// Currency options
+const CURRENCY_OPTIONS = [
+  { code: 'BRL', symbol: 'R$', name: 'Real Brasileiro' },
+  { code: 'USD', symbol: '$', name: 'Dólar Americano' },
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+];
+
 export default function SavingsPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -268,6 +275,7 @@ interface PiggyBankCardProps {
     cdi_rate_annual: number;
     yield_start_date: string | null;
     created_at: string;
+    currency: string;
   };
   formatCurrency: (amount: number) => string;
   isExpanded: boolean;
@@ -285,6 +293,13 @@ interface PiggyBankCardProps {
   onDeleteTransaction: (id: string) => void;
 }
 
+// Currency formatter helper
+const formatCurrencyByCode = (amount: number, currencyCode: string): string => {
+  const currency = CURRENCY_OPTIONS.find(c => c.code === currencyCode);
+  const symbol = currency?.symbol || 'R$';
+  return `${symbol} ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
 function PiggyBankCard({
   piggy,
   formatCurrency,
@@ -301,6 +316,10 @@ function PiggyBankCard({
   const startDate = piggy.yield_start_date || piggy.created_at;
   const annualRate = Number(piggy.cdi_rate_annual) || 14.15;
   const targetAmount = Number(piggy.target_amount) || 0;
+  const currency = piggy.currency || 'BRL';
+  
+  // Use currency-specific formatting
+  const formatPiggy = (amount: number) => formatCurrencyByCode(amount, currency);
   
   const yieldCalc = useCdiYield(principal, startDate, annualRate);
   
@@ -313,6 +332,9 @@ function PiggyBankCard({
   const balance6Months = estimateFutureBalance(yieldCalc.updatedBalance, annualRate, 180);
   const balance12Months = estimateFutureBalance(yieldCalc.updatedBalance, annualRate, 365);
   
+  // Currency badge
+  const currencyInfo = CURRENCY_OPTIONS.find(c => c.code === currency);
+  
   return (
     <div className="card-finance">
       {/* Header */}
@@ -322,15 +344,20 @@ function PiggyBankCard({
       >
         <div className="flex items-center gap-3">
           <div 
-            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            className="w-12 h-12 rounded-xl flex items-center justify-center relative"
             style={{ backgroundColor: `${piggy.color}20` }}
           >
             <PiggyBank size={24} style={{ color: piggy.color }} />
+            {currency !== 'BRL' && (
+              <span className="absolute -bottom-1 -right-1 text-[10px] font-bold bg-accent text-accent-foreground px-1 rounded">
+                {currency}
+              </span>
+            )}
           </div>
           <div>
             <p className="font-semibold">{piggy.name}</p>
             <p className="font-mono text-lg font-bold text-foreground">
-              {formatCurrency(yieldCalc.updatedBalance)}
+              {formatPiggy(yieldCalc.updatedBalance)}
             </p>
           </div>
         </div>
@@ -356,7 +383,7 @@ function PiggyBankCard({
         <div className="mt-3 space-y-1">
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Progresso</span>
-            <span className="font-mono">{Math.min(progressWithYield, 100).toFixed(0)}% de {formatCurrency(targetAmount)}</span>
+            <span className="font-mono">{Math.min(progressWithYield, 100).toFixed(0)}% de {formatPiggy(targetAmount)}</span>
           </div>
           <div className="h-2 bg-secondary rounded-full overflow-hidden relative">
             <div 
@@ -385,7 +412,7 @@ function PiggyBankCard({
         <div className="flex items-center gap-2">
           <TrendingUp size={12} className="text-income" />
           <span className="text-xs text-income font-medium">
-            +{formatCurrency(yieldCalc.totalYield)} rendido
+            +{formatPiggy(yieldCalc.totalYield)} rendido
           </span>
         </div>
         <span className="text-xs text-income">
@@ -403,7 +430,7 @@ function PiggyBankCard({
                 <Wallet size={14} className="text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">Aportado</span>
               </div>
-              <p className="font-mono font-semibold">{formatCurrency(principal)}</p>
+              <p className="font-mono font-semibold">{formatPiggy(principal)}</p>
             </div>
             <div className="bg-secondary/50 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-1">
@@ -424,13 +451,13 @@ function PiggyBankCard({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Em 6 meses</p>
-                  <p className="font-mono font-semibold text-foreground">{formatCurrency(balance6Months)}</p>
-                  <p className="text-xs text-income">+{formatCurrency(balance6Months - yieldCalc.updatedBalance)}</p>
+                  <p className="font-mono font-semibold text-foreground">{formatPiggy(balance6Months)}</p>
+                  <p className="text-xs text-income">+{formatPiggy(balance6Months - yieldCalc.updatedBalance)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Em 12 meses</p>
-                  <p className="font-mono font-semibold text-foreground">{formatCurrency(balance12Months)}</p>
-                  <p className="text-xs text-income">+{formatCurrency(balance12Months - yieldCalc.updatedBalance)}</p>
+                  <p className="font-mono font-semibold text-foreground">{formatPiggy(balance12Months)}</p>
+                  <p className="text-xs text-income">+{formatPiggy(balance12Months - yieldCalc.updatedBalance)}</p>
                 </div>
               </div>
             </div>
@@ -466,7 +493,7 @@ function PiggyBankCard({
               principal={principal}
               startDate={startDate}
               annualRate={annualRate}
-              formatCurrency={formatCurrency}
+              formatCurrency={formatPiggy}
             />
           )}
           
@@ -491,7 +518,7 @@ function PiggyBankCard({
                       'font-mono text-sm font-medium',
                       tx.type === 'deposit' ? 'text-success' : 'text-destructive'
                     )}>
-                      {tx.type === 'deposit' ? '+' : '-'}{formatCurrency(Number(tx.amount))}
+                      {tx.type === 'deposit' ? '+' : '-'}{formatPiggy(Number(tx.amount))}
                     </span>
                     <button
                       onClick={() => onDeleteTransaction(tx.id)}
@@ -518,12 +545,13 @@ function CreatePiggyBankModal({
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
-  onSubmit: (data: { name: string; target_amount?: number | null; cdi_rate_annual?: number; color?: string }) => Promise<any>;
+  onSubmit: (data: { name: string; target_amount?: number | null; cdi_rate_annual?: number; color?: string; currency?: string }) => Promise<any>;
 }) {
   const [name, setName] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
   const [cdiPercentage, setCdiPercentage] = useState(100);
   const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0]);
+  const [selectedCurrency, setSelectedCurrency] = useState('BRL');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetForm = () => {
@@ -531,6 +559,7 @@ function CreatePiggyBankModal({
     setTargetAmount('');
     setCdiPercentage(100);
     setSelectedColor(COLOR_OPTIONS[0]);
+    setSelectedCurrency('BRL');
   };
 
   const handleSubmit = async () => {
@@ -543,6 +572,7 @@ function CreatePiggyBankModal({
         target_amount: targetAmount ? parseFloat(targetAmount) : null,
         cdi_rate_annual: cdiPercentageToAnnualRate(cdiPercentage),
         color: selectedColor,
+        currency: selectedCurrency,
       });
       
       resetForm();
@@ -607,9 +637,32 @@ function CreatePiggyBankModal({
           </div>
 
           <div>
+            <label className="block text-sm text-muted-foreground mb-2">Moeda</label>
+            <div className="flex gap-2">
+              {CURRENCY_OPTIONS.map((currency) => (
+                <button
+                  key={currency.code}
+                  onClick={() => setSelectedCurrency(currency.code)}
+                  className={cn(
+                    "flex-1 py-3 px-4 rounded-xl border-2 transition-all touch-scale",
+                    selectedCurrency === currency.code
+                      ? "border-accent bg-accent/10"
+                      : "border-border bg-secondary/50 hover:border-muted-foreground/50"
+                  )}
+                >
+                  <span className="block text-lg font-semibold">{currency.symbol}</span>
+                  <span className="block text-xs text-muted-foreground">{currency.code}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <label className="block text-sm text-muted-foreground mb-2">Meta (opcional)</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                {CURRENCY_OPTIONS.find(c => c.code === selectedCurrency)?.symbol || 'R$'}
+              </span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -826,7 +879,7 @@ function TransactionModal({
 }: { 
   isOpen: boolean;
   type: 'deposit' | 'withdraw';
-  piggy: { id: string; name: string; balance: number; principal_amount: number } | null;
+  piggy: { id: string; name: string; balance: number; principal_amount: number; currency?: string } | null;
   onClose: () => void;
   onDeposit: (piggyId: string, amount: number, description?: string) => Promise<void>;
   onWithdraw: (piggyId: string, amount: number, description?: string) => Promise<void>;
@@ -877,6 +930,8 @@ function TransactionModal({
   const isWithdraw = type === 'withdraw';
   const numAmount = parseFloat(amount) || 0;
   const exceedsBalance = isWithdraw && numAmount > currentBalance;
+  const currencySymbol = CURRENCY_OPTIONS.find(c => c.code === (piggy.currency || 'BRL'))?.symbol || 'R$';
+  const formatPiggyTx = (amount: number) => formatCurrencyByCode(amount, piggy.currency || 'BRL');
 
   return (
     <div className="fixed inset-0 z-50">
@@ -895,14 +950,14 @@ function TransactionModal({
           {isWithdraw && (
             <div className="flex justify-between text-sm p-3 bg-secondary/50 rounded-lg">
               <span className="text-muted-foreground">Saldo disponível</span>
-              <span className="font-mono font-semibold">{formatCurrency(currentBalance)}</span>
+              <span className="font-mono font-semibold">{formatPiggyTx(currentBalance)}</span>
             </div>
           )}
 
           <div>
             <label className="block text-sm text-muted-foreground mb-2">Valor</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
               <input
                 type="number"
                 inputMode="decimal"

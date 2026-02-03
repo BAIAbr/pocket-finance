@@ -53,6 +53,7 @@ export type Database = {
           cdi_rate_annual: number
           color: string
           created_at: string
+          currency: string
           icon: string
           id: string
           is_completed: boolean
@@ -70,6 +71,7 @@ export type Database = {
           cdi_rate_annual?: number
           color?: string
           created_at?: string
+          currency?: string
           icon?: string
           id?: string
           is_completed?: boolean
@@ -87,6 +89,7 @@ export type Database = {
           cdi_rate_annual?: number
           color?: string
           created_at?: string
+          currency?: string
           icon?: string
           id?: string
           is_completed?: boolean
