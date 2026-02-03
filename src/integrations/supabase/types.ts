@@ -50,24 +50,39 @@ export type Database = {
       piggy_bank: {
         Row: {
           balance: number
+          cdi_rate_annual: number
           created_at: string
           id: string
+          last_yield_calculation: string | null
+          principal_amount: number
+          total_yield: number
           updated_at: string
           user_id: string
+          yield_start_date: string | null
         }
         Insert: {
           balance?: number
+          cdi_rate_annual?: number
           created_at?: string
           id?: string
+          last_yield_calculation?: string | null
+          principal_amount?: number
+          total_yield?: number
           updated_at?: string
           user_id: string
+          yield_start_date?: string | null
         }
         Update: {
           balance?: number
+          cdi_rate_annual?: number
           created_at?: string
           id?: string
+          last_yield_calculation?: string | null
+          principal_amount?: number
+          total_yield?: number
           updated_at?: string
           user_id?: string
+          yield_start_date?: string | null
         }
         Relationships: []
       }
@@ -97,6 +112,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      piggy_bank_yield_history: {
+        Row: {
+          cdi_rate_used: number
+          created_at: string
+          cumulative_yield: number
+          daily_yield: number
+          date: string
+          id: string
+          piggy_bank_id: string
+          principal_at_date: number
+          user_id: string
+        }
+        Insert: {
+          cdi_rate_used: number
+          created_at?: string
+          cumulative_yield: number
+          daily_yield: number
+          date?: string
+          id?: string
+          piggy_bank_id: string
+          principal_at_date: number
+          user_id: string
+        }
+        Update: {
+          cdi_rate_used?: number
+          created_at?: string
+          cumulative_yield?: number
+          daily_yield?: number
+          date?: string
+          id?: string
+          piggy_bank_id?: string
+          principal_at_date?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "piggy_bank_yield_history_piggy_bank_id_fkey"
+            columns: ["piggy_bank_id"]
+            isOneToOne: false
+            referencedRelation: "piggy_bank"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

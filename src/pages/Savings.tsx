@@ -3,6 +3,9 @@ import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useConfetti } from '@/hooks/useConfetti';
+import { useCdiYield } from '@/hooks/useCdiYield';
+import { YieldStatsCard } from '@/components/YieldStatsCard';
+import { YieldChart } from '@/components/YieldChart';
 import { 
   Target, 
   PiggyBank, 
@@ -11,7 +14,9 @@ import {
   ArrowDownLeft, 
   Check,
   Trash2,
-  X
+  X,
+  TrendingUp,
+  Wallet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
@@ -100,6 +105,12 @@ export default function SavingsPage() {
     );
   }
 
+  // Get CDI yield for piggy bank
+  const piggyPrincipal = Number(piggyBank?.principal_amount || piggyBank?.balance || 0);
+  const piggyStartDate = piggyBank?.yield_start_date || piggyBank?.created_at || null;
+  const piggyAnnualRate = Number(piggyBank?.cdi_rate_annual || 14.15);
+  const piggyYield = useCdiYield(piggyPrincipal, piggyStartDate, piggyAnnualRate);
+
   const activeGoals = savingsGoals.filter(g => !g.is_completed);
   const completedGoals = savingsGoals.filter(g => g.is_completed);
 
@@ -156,7 +167,20 @@ export default function SavingsPage() {
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-muted-foreground">Em andamento</h3>
                 {activeGoals.map(goal => {
-                  const progress = (Number(goal.current_amount) / Number(goal.target_amount)) * 100;
+                  // Calculate progress including piggy bank yield
+                  const goalAmount = Number(goal.current_amount);
+                  const targetAmount = Number(goal.target_amount);
+                  
+                  // Proportional yield attribution based on goal's contribution
+                  const totalSaved = savingsGoals.reduce((sum, g) => sum + Number(g.current_amount), 0);
+                  const goalYieldShare = totalSaved > 0 
+                    ? (goalAmount / totalSaved) * piggyYield.totalYield 
+                    : 0;
+                  
+                  const goalWithYield = goalAmount + goalYieldShare;
+                  const progress = (goalWithYield / targetAmount) * 100;
+                  const progressWithoutYield = (goalAmount / targetAmount) * 100;
+                  
                   return (
                     <div key={goal.id} className="card-finance">
                       <div className="flex items-start justify-between mb-3">
@@ -187,23 +211,46 @@ export default function SavingsPage() {
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Progresso</span>
-                          <span className="font-mono font-medium">{progress.toFixed(0)}%</span>
+                          <span className="font-mono font-medium">{Math.min(progress, 100).toFixed(0)}%</span>
                         </div>
-                        <div className="h-3 bg-secondary rounded-full overflow-hidden">
+                        
+                        {/* Progress bar with yield indicator */}
+                        <div className="h-3 bg-secondary rounded-full overflow-hidden relative">
+                          {/* Base progress (without yield) */}
                           <div 
-                            className="h-full rounded-full transition-all duration-500"
+                            className="h-full rounded-full transition-all duration-500 absolute left-0 top-0"
                             style={{ 
-                              width: `${Math.min(progress, 100)}%`,
+                              width: `${Math.min(progressWithoutYield, 100)}%`,
                               backgroundColor: goal.color 
                             }}
                           />
+                          {/* Yield portion (lighter shade) */}
+                          {goalYieldShare > 0 && (
+                            <div 
+                              className="h-full rounded-r-full transition-all duration-500 absolute top-0 opacity-50"
+                              style={{ 
+                                left: `${Math.min(progressWithoutYield, 100)}%`,
+                                width: `${Math.min(progress - progressWithoutYield, 100 - progressWithoutYield)}%`,
+                                backgroundColor: goal.color 
+                              }}
+                            />
+                          )}
                         </div>
+                        
                         <div className="flex justify-between text-sm">
-                          <span className="font-mono text-muted-foreground">
-                            {formatCurrency(Number(goal.current_amount))}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-muted-foreground">
+                              {formatCurrency(goalAmount)}
+                            </span>
+                            {goalYieldShare > 0.01 && (
+                              <span className="text-xs text-income flex items-center gap-1">
+                                <TrendingUp size={10} />
+                                +{formatCurrency(goalYieldShare)}
+                              </span>
+                            )}
+                          </div>
                           <span className="font-mono font-semibold">
-                            {formatCurrency(Number(goal.target_amount))}
+                            {formatCurrency(targetAmount)}
                           </span>
                         </div>
                       </div>
@@ -260,19 +307,13 @@ export default function SavingsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Piggy Bank Balance */}
-            <div className="card-finance gradient-balance p-6 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-2">
-                  <PiggyBank size={24} className="text-white/80" />
-                  <span className="text-white/80 text-sm font-medium">Cofrinho</span>
-                </div>
-                <p className="font-mono text-4xl font-bold text-white tracking-tight">
-                  {formatCurrency(Number(piggyBank?.balance || 0))}
-                </p>
-              </div>
-            </div>
+            {/* Yield Stats Card - Main balance with yield info */}
+            <YieldStatsCard 
+              principal={piggyPrincipal}
+              startDate={piggyStartDate}
+              annualRate={piggyAnnualRate}
+              formatCurrency={formatCurrency}
+            />
 
             {/* Actions */}
             <div className="grid grid-cols-2 gap-3">
@@ -285,14 +326,14 @@ export default function SavingsPage() {
               </button>
               <button
                 onClick={() => {
-                  if (Number(piggyBank?.balance || 0) > 0) {
+                  if (piggyYield.updatedBalance > 0) {
                     setShowPiggyModal(true);
                   }
                 }}
-                disabled={Number(piggyBank?.balance || 0) === 0}
+                disabled={piggyYield.updatedBalance === 0}
                 className={cn(
                   "card-finance flex items-center justify-center gap-2 py-4 transition-all touch-scale",
-                  Number(piggyBank?.balance || 0) > 0
+                  piggyYield.updatedBalance > 0
                     ? "bg-destructive/10 hover:bg-destructive/20"
                     : "opacity-50 cursor-not-allowed"
                 )}
@@ -302,9 +343,19 @@ export default function SavingsPage() {
               </button>
             </div>
 
+            {/* Yield Evolution Chart */}
+            {piggyPrincipal > 0 && (
+              <YieldChart 
+                principal={piggyPrincipal}
+                startDate={piggyStartDate}
+                annualRate={piggyAnnualRate}
+                formatCurrency={formatCurrency}
+              />
+            )}
+
             {/* History */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground">Histórico</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">Histórico de Movimentações</h3>
               {piggyBankTransactions.length > 0 ? (
                 <div className="space-y-2">
                   {piggyBankTransactions.slice(0, 10).map(tx => (
@@ -379,7 +430,9 @@ export default function SavingsPage() {
         onClose={() => setShowPiggyModal(false)}
         onDeposit={handleDeposit}
         onWithdraw={withdrawFromPiggyBank}
-        currentBalance={Number(piggyBank?.balance || 0)}
+        currentBalance={piggyYield.updatedBalance}
+        principalAmount={piggyPrincipal}
+        totalYield={piggyYield.totalYield}
         formatCurrency={formatCurrency}
       />
     </div>
@@ -577,6 +630,8 @@ function PiggyBankModal({
   onDeposit,
   onWithdraw,
   currentBalance,
+  principalAmount,
+  totalYield,
   formatCurrency,
 }: {
   isOpen: boolean;
@@ -584,6 +639,8 @@ function PiggyBankModal({
   onDeposit: (amount: number, description?: string) => Promise<void>;
   onWithdraw: (amount: number, description?: string) => Promise<void>;
   currentBalance: number;
+  principalAmount?: number;
+  totalYield?: number;
   formatCurrency: (amount: number) => string;
 }) {
   const [type, setType] = useState<'deposit' | 'withdraw'>('deposit');
@@ -618,9 +675,23 @@ function PiggyBankModal({
         </div>
         
         <div className="p-4 space-y-4">
-          <p className="text-center text-sm text-muted-foreground">
-            Saldo atual: <span className="font-mono font-semibold text-foreground">{formatCurrency(currentBalance)}</span>
-          </p>
+          {/* Balance Display with Yield Info */}
+          <div className="text-center space-y-1">
+            <p className="text-sm text-muted-foreground">Saldo atualizado</p>
+            <p className="font-mono text-2xl font-bold text-foreground">{formatCurrency(currentBalance)}</p>
+            {totalYield !== undefined && totalYield > 0 && (
+              <div className="flex items-center justify-center gap-2 text-xs">
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <Wallet size={12} />
+                  Aportado: {formatCurrency(principalAmount || 0)}
+                </span>
+                <span className="text-income flex items-center gap-1">
+                  <TrendingUp size={12} />
+                  +{formatCurrency(totalYield)}
+                </span>
+              </div>
+            )}
+          </div>
 
           {/* Type Toggle */}
           <div className="flex gap-2 p-1 bg-secondary rounded-xl">

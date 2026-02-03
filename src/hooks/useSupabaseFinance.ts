@@ -46,6 +46,12 @@ export interface PiggyBank {
   balance: number;
   created_at: string;
   updated_at: string;
+  // Yield tracking fields
+  cdi_rate_annual: number;
+  yield_start_date: string | null;
+  principal_amount: number;
+  total_yield: number;
+  last_yield_calculation: string | null;
 }
 
 export interface PiggyBankTransaction {
@@ -357,10 +363,19 @@ export function useSupabaseFinance(userId: string | null) {
     if (!userId || !piggyBank) return;
 
     const currentBalance = Number(piggyBank.balance) || 0;
+    const currentPrincipal = Number(piggyBank.principal_amount) || 0;
     const newBalance = currentBalance + amount;
+    const newPrincipal = currentPrincipal + amount;
+    
+    // Set yield_start_date if this is the first deposit
+    const yieldStartDate = piggyBank.yield_start_date || new Date().toISOString();
 
     const [{ error: updateError }, { error: transactionError }] = await Promise.all([
-      supabase.from('piggy_bank').update({ balance: newBalance }).eq('id', piggyBank.id),
+      supabase.from('piggy_bank').update({ 
+        balance: newBalance,
+        principal_amount: newPrincipal,
+        yield_start_date: yieldStartDate,
+      }).eq('id', piggyBank.id),
       supabase.from('piggy_bank_transactions').insert({
         user_id: userId,
         type: 'deposit',
@@ -374,7 +389,12 @@ export function useSupabaseFinance(userId: string | null) {
       return;
     }
 
-    setPiggyBank(prev => prev ? { ...prev, balance: newBalance } : null);
+    setPiggyBank(prev => prev ? { 
+      ...prev, 
+      balance: newBalance,
+      principal_amount: newPrincipal,
+      yield_start_date: yieldStartDate,
+    } : null);
     
     const { data: transactionsData } = await supabase
       .from('piggy_bank_transactions')
@@ -392,6 +412,7 @@ export function useSupabaseFinance(userId: string | null) {
     if (!userId || !piggyBank) return;
 
     const currentBalance = Number(piggyBank.balance) || 0;
+    const currentPrincipal = Number(piggyBank.principal_amount) || 0;
     
     if (amount > currentBalance) {
       toast.error('Saldo insuficiente no cofrinho');
@@ -399,9 +420,16 @@ export function useSupabaseFinance(userId: string | null) {
     }
 
     const newBalance = currentBalance - amount;
+    // Proportionally reduce principal based on withdrawal
+    const withdrawalRatio = amount / currentBalance;
+    const principalWithdrawal = currentPrincipal * withdrawalRatio;
+    const newPrincipal = Math.max(0, currentPrincipal - principalWithdrawal);
 
     const [{ error: updateError }, { error: transactionError }] = await Promise.all([
-      supabase.from('piggy_bank').update({ balance: newBalance }).eq('id', piggyBank.id),
+      supabase.from('piggy_bank').update({ 
+        balance: newBalance,
+        principal_amount: newPrincipal,
+      }).eq('id', piggyBank.id),
       supabase.from('piggy_bank_transactions').insert({
         user_id: userId,
         type: 'withdraw',
@@ -415,7 +443,11 @@ export function useSupabaseFinance(userId: string | null) {
       return;
     }
 
-    setPiggyBank(prev => prev ? { ...prev, balance: newBalance } : null);
+    setPiggyBank(prev => prev ? { 
+      ...prev, 
+      balance: newBalance,
+      principal_amount: newPrincipal,
+    } : null);
     
     const { data: transactionsData } = await supabase
       .from('piggy_bank_transactions')
