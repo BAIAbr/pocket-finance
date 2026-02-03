@@ -1,9 +1,20 @@
 import { useState } from 'react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
-import { Plus, Trash2, X, Check } from 'lucide-react';
+import { Plus, Trash2, X, Check, Edit2 } from 'lucide-react';
 import { getIconByName } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 import { Category } from '@/hooks/useSupabaseFinance';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
 type TransactionType = 'income' | 'expense';
 
@@ -23,10 +34,11 @@ const availableColors = [
 ];
 
 export default function Categories() {
-  const { categories, addCategory, updateCategory, deleteCategory } = useFinanceContext();
+  const { categories, addCategory, updateCategory, deleteCategory, transactions } = useFinanceContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [activeType, setActiveType] = useState<TransactionType>('expense');
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
   // Modal state
   const [name, setName] = useState('');
@@ -35,6 +47,11 @@ export default function Categories() {
   const [type, setType] = useState<TransactionType>('expense');
 
   const filteredCategories = categories.filter(c => c.type === activeType);
+
+  // Count transactions per category
+  const getTransactionCount = (categoryId: string) => {
+    return transactions.filter(t => t.category_id === categoryId).length;
+  };
 
   const openAddModal = () => {
     setEditingCategory(null);
@@ -59,29 +76,46 @@ export default function Categories() {
 
     if (editingCategory) {
       await updateCategory(editingCategory.id, { name, icon, color, type });
+      toast.success('Categoria atualizada!');
     } else {
       await addCategory({ name, icon, color, type });
+      toast.success('Categoria criada!');
     }
     setIsModalOpen(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-      await deleteCategory(id);
+  const handleDeleteConfirm = async () => {
+    if (!categoryToDelete) return;
+    
+    const count = getTransactionCount(categoryToDelete.id);
+    await deleteCategory(categoryToDelete.id);
+    
+    if (count > 0) {
+      toast.success(`Categoria excluída. ${count} transações foram desvinculadas.`);
+    } else {
+      toast.success('Categoria excluída!');
     }
+    
+    setCategoryToDelete(null);
   };
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
       {/* Header */}
-      <header className="px-4 pt-6 pb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Categorias</h1>
-        <button
-          onClick={openAddModal}
-          className="p-2 rounded-full bg-accent text-accent-foreground touch-scale"
-        >
-          <Plus size={20} />
-        </button>
+      <header className="px-4 pt-6 pb-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Categorias</h1>
+          <button
+            onClick={openAddModal}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-accent-foreground touch-scale text-sm font-medium"
+          >
+            <Plus size={18} />
+            Nova
+          </button>
+        </div>
+        <p className="text-sm text-muted-foreground mt-1">
+          Gerencie suas categorias de receitas e despesas
+        </p>
       </header>
 
       <main className="px-4 space-y-6">
@@ -90,65 +124,97 @@ export default function Categories() {
           <button
             onClick={() => setActiveType('expense')}
             className={cn(
-              'flex-1 py-2 rounded-lg font-medium transition-all text-sm',
+              'flex-1 py-2.5 rounded-lg font-medium transition-all text-sm',
               activeType === 'expense' 
                 ? 'bg-destructive text-destructive-foreground' 
                 : 'text-muted-foreground'
             )}
           >
-            Saídas
+            Saídas ({categories.filter(c => c.type === 'expense').length})
           </button>
           <button
             onClick={() => setActiveType('income')}
             className={cn(
-              'flex-1 py-2 rounded-lg font-medium transition-all text-sm',
+              'flex-1 py-2.5 rounded-lg font-medium transition-all text-sm',
               activeType === 'income' 
                 ? 'bg-success text-success-foreground' 
                 : 'text-muted-foreground'
             )}
           >
-            Entradas
+            Entradas ({categories.filter(c => c.type === 'income').length})
           </button>
         </div>
 
         {/* Categories List */}
         <div className="space-y-2">
-          {filteredCategories.map(category => {
-            const IconComponent = getIconByName(category.icon);
-            return (
-              <div 
-                key={category.id}
-                className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border touch-scale"
-                onClick={() => openEditModal(category)}
+          {filteredCategories.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Nenhuma categoria encontrada</p>
+              <button
+                onClick={openAddModal}
+                className="mt-4 text-accent hover:underline text-sm"
               >
+                Criar primeira categoria
+              </button>
+            </div>
+          ) : (
+            filteredCategories.map(category => {
+              const IconComponent = getIconByName(category.icon);
+              const txCount = getTransactionCount(category.id);
+              
+              return (
                 <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: `${category.color}20` }}
+                  key={category.id}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border touch-scale cursor-pointer hover:bg-secondary/50 transition-colors"
+                  onClick={() => openEditModal(category)}
                 >
-                  <IconComponent size={24} style={{ color: category.color }} />
+                  <div 
+                    className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: `${category.color}20` }}
+                  >
+                    <IconComponent size={24} style={{ color: category.color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium truncate">{category.name}</p>
+                      {category.is_default && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
+                          Padrão
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {txCount} {txCount === 1 ? 'transação' : 'transações'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditModal(category);
+                      }}
+                      className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCategoryToDelete(category);
+                      }}
+                      className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-secondary"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium">{category.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {category.type === 'income' ? 'Entrada' : 'Saída'}
-                  </p>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(category.id);
-                  }}
-                  className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </main>
 
-      {/* Modal */}
+      {/* Edit/Create Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50">
           <div 
@@ -178,6 +244,7 @@ export default function Categories() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ex: Alimentação"
                   className="input-finance"
+                  autoFocus
                 />
               </div>
 
@@ -188,7 +255,7 @@ export default function Categories() {
                   <button
                     onClick={() => setType('expense')}
                     className={cn(
-                      'flex-1 py-2 rounded-lg font-medium transition-all text-sm',
+                      'flex-1 py-2.5 rounded-lg font-medium transition-all text-sm',
                       type === 'expense' 
                         ? 'bg-destructive text-destructive-foreground' 
                         : 'bg-secondary text-muted-foreground'
@@ -199,7 +266,7 @@ export default function Categories() {
                   <button
                     onClick={() => setType('income')}
                     className={cn(
-                      'flex-1 py-2 rounded-lg font-medium transition-all text-sm',
+                      'flex-1 py-2.5 rounded-lg font-medium transition-all text-sm',
                       type === 'income' 
                         ? 'bg-success text-success-foreground' 
                         : 'bg-secondary text-muted-foreground'
@@ -244,7 +311,7 @@ export default function Categories() {
                       onClick={() => setColor(c)}
                       className={cn(
                         'w-8 h-8 rounded-full transition-all',
-                        color === c && 'ring-2 ring-offset-2 ring-offset-card ring-white'
+                        color === c && 'ring-2 ring-offset-2 ring-offset-card ring-foreground'
                       )}
                       style={{ backgroundColor: c }}
                     />
@@ -281,7 +348,7 @@ export default function Categories() {
                 )}
               >
                 <Check size={20} />
-                Salvar
+                {editingCategory ? 'Salvar Alterações' : 'Criar Categoria'}
               </button>
             </div>
 
@@ -289,6 +356,34 @@ export default function Categories() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!categoryToDelete} onOpenChange={(open) => !open && setCategoryToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir categoria?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {categoryToDelete && getTransactionCount(categoryToDelete.id) > 0 ? (
+                <>
+                  Esta categoria possui <strong>{getTransactionCount(categoryToDelete.id)}</strong> transações vinculadas. 
+                  As transações serão mantidas, mas ficarão sem categoria.
+                </>
+              ) : (
+                'Esta ação não pode ser desfeita.'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
