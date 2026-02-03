@@ -5,9 +5,13 @@ import { TrendingUp, TrendingDown, Wallet, PiggyBank, Sparkles } from 'lucide-re
 import { useNavigate } from 'react-router-dom';
 
 export function BalanceCard() {
-  const { totalBalance, currentMonthStats, formatCurrency, piggyBank, isLoading } = useFinanceContext();
+  const { totalBalance, currentMonthStats, formatCurrency, piggyBanks, isLoading } = useFinanceContext();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  // Total saved across all piggy banks
+  const totalSaved = piggyBanks.reduce((sum, p) => sum + Number(p.balance || 0), 0);
+  
   // Não descontar mais o cofrinho do saldo - mostrar saldo total diretamente
   const availableBalance = totalBalance;
 
@@ -98,7 +102,7 @@ export function BalanceCard() {
                   <Sparkles size={12} className="text-amber-200 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <p className="font-mono text-2xl font-bold text-white">
-                  {formatCurrency(Number(piggyBank?.balance || 0))}
+                  {formatCurrency(totalSaved)}
                 </p>
               </div>
             </div>

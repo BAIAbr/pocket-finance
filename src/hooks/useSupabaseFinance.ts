@@ -52,11 +52,18 @@ export interface PiggyBank {
   principal_amount: number;
   total_yield: number;
   last_yield_calculation: string | null;
+  // New unified fields
+  name: string;
+  target_amount: number | null;
+  icon: string;
+  color: string;
+  is_completed: boolean;
 }
 
 export interface PiggyBankTransaction {
   id: string;
   user_id: string;
+  piggy_bank_id: string | null;
   type: 'deposit' | 'withdraw';
   amount: number;
   description: string | null;
@@ -105,7 +112,7 @@ export function useSupabaseFinance(userId: string | null) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
-  const [piggyBank, setPiggyBank] = useState<PiggyBank | null>(null);
+  const [piggyBanks, setPiggyBanks] = useState<PiggyBank[]>([]);
   const [piggyBankTransactions, setPiggyBankTransactions] = useState<PiggyBankTransaction[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [settings, setSettings] = useState<FinanceSettings>(defaultSettings);
@@ -117,7 +124,7 @@ export function useSupabaseFinance(userId: string | null) {
       setTransactions([]);
       setCategories([]);
       setSavingsGoals([]);
-      setPiggyBank(null);
+      setPiggyBanks([]);
       setPiggyBankTransactions([]);
       setProfile(null);
       setIsLoading(false);
@@ -131,22 +138,22 @@ export function useSupabaseFinance(userId: string | null) {
           transactionsRes,
           categoriesRes,
           savingsGoalsRes,
-          piggyBankRes,
+          piggyBanksRes,
           piggyBankTransactionsRes,
           profileRes,
         ] = await Promise.all([
           supabase.from('transactions').select('*').order('date', { ascending: false }),
           supabase.from('categories').select('*').order('name'),
           supabase.from('savings_goals').select('*').order('created_at', { ascending: false }),
-          supabase.from('piggy_bank').select('*').single(),
+          supabase.from('piggy_bank').select('*').order('created_at', { ascending: true }),
           supabase.from('piggy_bank_transactions').select('*').order('created_at', { ascending: false }),
-          supabase.from('profiles').select('*').single(),
+          supabase.from('profiles').select('*').maybeSingle(),
         ]);
 
         if (transactionsRes.data) setTransactions(transactionsRes.data as Transaction[]);
         if (categoriesRes.data) setCategories(categoriesRes.data as Category[]);
         if (savingsGoalsRes.data) setSavingsGoals(savingsGoalsRes.data as SavingsGoal[]);
-        if (piggyBankRes.data) setPiggyBank(piggyBankRes.data as PiggyBank);
+        if (piggyBanksRes.data) setPiggyBanks(piggyBanksRes.data as PiggyBank[]);
         if (piggyBankTransactionsRes.data) setPiggyBankTransactions(piggyBankTransactionsRes.data as PiggyBankTransaction[]);
         if (profileRes.data) {
           const profileData = profileRes.data as Profile;
@@ -358,43 +365,113 @@ export function useSupabaseFinance(userId: string | null) {
     toast.success('Meta excluída');
   }, []);
 
-  // === PIGGY BANK ===
-  const updatePiggyBankCdiRate = useCallback(async (rate: number) => {
-    if (!userId || !piggyBank) return;
+  // === PIGGY BANK (MULTIPLE) ===
+  const createPiggyBank = useCallback(async (data: {
+    name: string;
+    target_amount?: number | null;
+    icon?: string;
+    color?: string;
+    cdi_rate_annual?: number;
+  }) => {
+    if (!userId) return null;
+
+    const { data: newPiggy, error } = await supabase
+      .from('piggy_bank')
+      .insert({
+        user_id: userId,
+        name: data.name,
+        target_amount: data.target_amount || null,
+        icon: data.icon || 'PiggyBank',
+        color: data.color || '#10B981',
+        cdi_rate_annual: data.cdi_rate_annual || 14.15,
+        balance: 0,
+        principal_amount: 0,
+        total_yield: 0,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast.error('Erro ao criar cofrinho');
+      return null;
+    }
+
+    setPiggyBanks(prev => [...prev, newPiggy as PiggyBank]);
+    toast.success('Cofrinho criado!');
+    return newPiggy as PiggyBank;
+  }, [userId]);
+
+  const updatePiggyBank = useCallback(async (id: string, updates: Partial<PiggyBank>) => {
+    const { error } = await supabase
+      .from('piggy_bank')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Erro ao atualizar cofrinho');
+      return;
+    }
+
+    setPiggyBanks(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  }, []);
+
+  const updatePiggyBankCdiRate = useCallback(async (piggyBankId: string, rate: number) => {
+    if (!userId) return;
 
     const { error } = await supabase
       .from('piggy_bank')
       .update({ cdi_rate_annual: rate })
-      .eq('id', piggyBank.id);
+      .eq('id', piggyBankId);
 
     if (error) {
       toast.error('Erro ao atualizar taxa CDI');
       return;
     }
 
-    setPiggyBank(prev => prev ? { ...prev, cdi_rate_annual: rate } : null);
+    setPiggyBanks(prev => prev.map(p => p.id === piggyBankId ? { ...p, cdi_rate_annual: rate } : p));
     toast.success('Taxa CDI atualizada!');
-  }, [userId, piggyBank]);
+  }, [userId]);
 
-  const depositToPiggyBank = useCallback(async (amount: number, description?: string) => {
-    if (!userId || !piggyBank) return;
+  const deletePiggyBank = useCallback(async (id: string) => {
+    const { error } = await supabase.from('piggy_bank').delete().eq('id', id);
+    
+    if (error) {
+      toast.error('Erro ao excluir cofrinho');
+      return;
+    }
 
-    const currentBalance = Number(piggyBank.balance) || 0;
-    const currentPrincipal = Number(piggyBank.principal_amount) || 0;
+    setPiggyBanks(prev => prev.filter(p => p.id !== id));
+    toast.success('Cofrinho excluído');
+  }, []);
+
+  const depositToPiggyBank = useCallback(async (piggyBankId: string, amount: number, description?: string) => {
+    if (!userId) return;
+
+    const piggy = piggyBanks.find(p => p.id === piggyBankId);
+    if (!piggy) return;
+
+    const currentBalance = Number(piggy.balance) || 0;
+    const currentPrincipal = Number(piggy.principal_amount) || 0;
     const newBalance = currentBalance + amount;
     const newPrincipal = currentPrincipal + amount;
     
     // Set yield_start_date if this is the first deposit
-    const yieldStartDate = piggyBank.yield_start_date || new Date().toISOString();
+    const yieldStartDate = piggy.yield_start_date || new Date().toISOString();
+    
+    // Check if target is reached
+    const targetAmount = Number(piggy.target_amount) || 0;
+    const isCompleted = targetAmount > 0 && newBalance >= targetAmount;
 
     const [{ error: updateError }, { error: transactionError }] = await Promise.all([
       supabase.from('piggy_bank').update({ 
         balance: newBalance,
         principal_amount: newPrincipal,
         yield_start_date: yieldStartDate,
-      }).eq('id', piggyBank.id),
+        is_completed: isCompleted,
+      }).eq('id', piggyBankId),
       supabase.from('piggy_bank_transactions').insert({
         user_id: userId,
+        piggy_bank_id: piggyBankId,
         type: 'deposit',
         amount,
         description: description || null,
@@ -406,12 +483,13 @@ export function useSupabaseFinance(userId: string | null) {
       return;
     }
 
-    setPiggyBank(prev => prev ? { 
-      ...prev, 
+    setPiggyBanks(prev => prev.map(p => p.id === piggyBankId ? { 
+      ...p, 
       balance: newBalance,
       principal_amount: newPrincipal,
       yield_start_date: yieldStartDate,
-    } : null);
+      is_completed: isCompleted,
+    } : p));
     
     const { data: transactionsData } = await supabase
       .from('piggy_bank_transactions')
@@ -422,14 +500,21 @@ export function useSupabaseFinance(userId: string | null) {
       setPiggyBankTransactions(transactionsData as PiggyBankTransaction[]);
     }
 
-    toast.success(`+${formatCurrency(amount)} depositado no cofrinho!`);
-  }, [userId, piggyBank]);
+    if (isCompleted) {
+      toast.success('🎉 Meta alcançada!');
+    } else {
+      toast.success(`+${formatCurrency(amount)} depositado!`);
+    }
+  }, [userId, piggyBanks]);
 
-  const withdrawFromPiggyBank = useCallback(async (amount: number, description?: string) => {
-    if (!userId || !piggyBank) return;
+  const withdrawFromPiggyBank = useCallback(async (piggyBankId: string, amount: number, description?: string) => {
+    if (!userId) return;
 
-    const currentBalance = Number(piggyBank.balance) || 0;
-    const currentPrincipal = Number(piggyBank.principal_amount) || 0;
+    const piggy = piggyBanks.find(p => p.id === piggyBankId);
+    if (!piggy) return;
+
+    const currentBalance = Number(piggy.balance) || 0;
+    const currentPrincipal = Number(piggy.principal_amount) || 0;
     
     if (amount > currentBalance) {
       toast.error('Saldo insuficiente no cofrinho');
@@ -438,7 +523,7 @@ export function useSupabaseFinance(userId: string | null) {
 
     const newBalance = currentBalance - amount;
     // Proportionally reduce principal based on withdrawal
-    const withdrawalRatio = amount / currentBalance;
+    const withdrawalRatio = currentBalance > 0 ? amount / currentBalance : 0;
     const principalWithdrawal = currentPrincipal * withdrawalRatio;
     const newPrincipal = Math.max(0, currentPrincipal - principalWithdrawal);
 
@@ -446,9 +531,11 @@ export function useSupabaseFinance(userId: string | null) {
       supabase.from('piggy_bank').update({ 
         balance: newBalance,
         principal_amount: newPrincipal,
-      }).eq('id', piggyBank.id),
+        is_completed: false,
+      }).eq('id', piggyBankId),
       supabase.from('piggy_bank_transactions').insert({
         user_id: userId,
+        piggy_bank_id: piggyBankId,
         type: 'withdraw',
         amount,
         description: description || null,
@@ -460,11 +547,12 @@ export function useSupabaseFinance(userId: string | null) {
       return;
     }
 
-    setPiggyBank(prev => prev ? { 
-      ...prev, 
+    setPiggyBanks(prev => prev.map(p => p.id === piggyBankId ? { 
+      ...p, 
       balance: newBalance,
       principal_amount: newPrincipal,
-    } : null);
+      is_completed: false,
+    } : p));
     
     const { data: transactionsData } = await supabase
       .from('piggy_bank_transactions')
@@ -476,10 +564,10 @@ export function useSupabaseFinance(userId: string | null) {
     }
 
     toast.success(`${formatCurrency(amount)} retirado do cofrinho`);
-  }, [userId, piggyBank]);
+  }, [userId, piggyBanks]);
 
   const deletePiggyBankTransaction = useCallback(async (transactionId: string) => {
-    if (!userId || !piggyBank) return false;
+    if (!userId) return false;
 
     // Find the transaction to get its amount and type
     const transaction = piggyBankTransactions.find(t => t.id === transactionId);
@@ -488,15 +576,25 @@ export function useSupabaseFinance(userId: string | null) {
       return false;
     }
 
-    const currentBalance = Number(piggyBank.balance) || 0;
+    const piggy = piggyBanks.find(p => p.id === transaction.piggy_bank_id);
+    if (!piggy) {
+      toast.error('Cofrinho não encontrado');
+      return false;
+    }
+
+    const currentBalance = Number(piggy.balance) || 0;
+    const currentPrincipal = Number(piggy.principal_amount) || 0;
     const transactionAmount = Number(transaction.amount);
     
-    // Reverse the transaction effect on balance
+    // Reverse the transaction effect on balance and principal
     let newBalance: number;
+    let newPrincipal: number;
     if (transaction.type === 'deposit') {
       newBalance = currentBalance - transactionAmount;
+      newPrincipal = Math.max(0, currentPrincipal - transactionAmount);
     } else {
       newBalance = currentBalance + transactionAmount;
+      newPrincipal = currentPrincipal + transactionAmount;
     }
 
     // Ensure balance doesn't go negative
@@ -507,7 +605,10 @@ export function useSupabaseFinance(userId: string | null) {
 
     const [{ error: deleteError }, { error: updateError }] = await Promise.all([
       supabase.from('piggy_bank_transactions').delete().eq('id', transactionId),
-      supabase.from('piggy_bank').update({ balance: newBalance }).eq('id', piggyBank.id),
+      supabase.from('piggy_bank').update({ 
+        balance: newBalance,
+        principal_amount: newPrincipal,
+      }).eq('id', piggy.id),
     ]);
 
     if (deleteError || updateError) {
@@ -516,11 +617,11 @@ export function useSupabaseFinance(userId: string | null) {
       return false;
     }
 
-    setPiggyBank(prev => prev ? { ...prev, balance: newBalance } : null);
+    setPiggyBanks(prev => prev.map(p => p.id === piggy.id ? { ...p, balance: newBalance, principal_amount: newPrincipal } : p));
     setPiggyBankTransactions(prev => prev.filter(t => t.id !== transactionId));
     toast.success('Transação excluída!');
     return true;
-  }, [userId, piggyBank]);
+  }, [userId, piggyBanks, piggyBankTransactions]);
 
   // === PROFILE ===
   const updateProfile = useCallback(async (updates: Partial<Profile>) => {
@@ -673,7 +774,7 @@ export function useSupabaseFinance(userId: string | null) {
       setTransactions([]);
       setSavingsGoals([]);
       setPiggyBankTransactions([]);
-      setPiggyBank(prev => prev ? { ...prev, balance: 0 } : null);
+      setPiggyBanks(prev => prev.map(p => ({ ...p, balance: 0, principal_amount: 0 })));
       
       toast.success('Dados limpos com sucesso');
     } catch (error) {
@@ -686,7 +787,7 @@ export function useSupabaseFinance(userId: string | null) {
     transactions,
     categories,
     savingsGoals,
-    piggyBank,
+    piggyBanks,
     piggyBankTransactions,
     profile,
     settings,
@@ -712,6 +813,9 @@ export function useSupabaseFinance(userId: string | null) {
     deleteSavingsGoal,
 
     // Piggy bank actions
+    createPiggyBank,
+    updatePiggyBank,
+    deletePiggyBank,
     depositToPiggyBank,
     withdrawFromPiggyBank,
     deletePiggyBankTransaction,

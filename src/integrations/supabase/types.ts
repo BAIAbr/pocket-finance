@@ -51,10 +51,15 @@ export type Database = {
         Row: {
           balance: number
           cdi_rate_annual: number
+          color: string
           created_at: string
+          icon: string
           id: string
+          is_completed: boolean
           last_yield_calculation: string | null
+          name: string
           principal_amount: number
+          target_amount: number | null
           total_yield: number
           updated_at: string
           user_id: string
@@ -63,10 +68,15 @@ export type Database = {
         Insert: {
           balance?: number
           cdi_rate_annual?: number
+          color?: string
           created_at?: string
+          icon?: string
           id?: string
+          is_completed?: boolean
           last_yield_calculation?: string | null
+          name?: string
           principal_amount?: number
+          target_amount?: number | null
           total_yield?: number
           updated_at?: string
           user_id: string
@@ -75,10 +85,15 @@ export type Database = {
         Update: {
           balance?: number
           cdi_rate_annual?: number
+          color?: string
           created_at?: string
+          icon?: string
           id?: string
+          is_completed?: boolean
           last_yield_calculation?: string | null
+          name?: string
           principal_amount?: number
+          target_amount?: number | null
           total_yield?: number
           updated_at?: string
           user_id?: string
@@ -92,6 +107,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          piggy_bank_id: string | null
           type: string
           user_id: string
         }
@@ -100,6 +116,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          piggy_bank_id?: string | null
           type: string
           user_id: string
         }
@@ -108,10 +125,19 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          piggy_bank_id?: string | null
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "piggy_bank_transactions_piggy_bank_id_fkey"
+            columns: ["piggy_bank_id"]
+            isOneToOne: false
+            referencedRelation: "piggy_bank"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       piggy_bank_yield_history: {
         Row: {
