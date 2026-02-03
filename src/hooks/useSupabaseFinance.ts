@@ -58,6 +58,7 @@ export interface PiggyBank {
   icon: string;
   color: string;
   is_completed: boolean;
+  currency: string;
 }
 
 export interface PiggyBankTransaction {
@@ -372,6 +373,7 @@ export function useSupabaseFinance(userId: string | null) {
     icon?: string;
     color?: string;
     cdi_rate_annual?: number;
+    currency?: string;
   }) => {
     if (!userId) return null;
 
@@ -384,6 +386,7 @@ export function useSupabaseFinance(userId: string | null) {
         icon: data.icon || 'PiggyBank',
         color: data.color || '#10B981',
         cdi_rate_annual: data.cdi_rate_annual || 14.15,
+        currency: data.currency || 'BRL',
         balance: 0,
         principal_amount: 0,
         total_yield: 0,
