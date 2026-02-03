@@ -392,6 +392,7 @@ export function useSupabaseFinance(userId: string | null) {
       .single();
 
     if (error) {
+      console.error('Create piggy bank error:', error);
       toast.error('Erro ao criar cofrinho');
       return null;
     }

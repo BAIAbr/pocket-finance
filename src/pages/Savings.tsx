@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useConfetti } from '@/hooks/useConfetti';
-import { useCdiYield, cdiPercentageToAnnualRate, annualRateToCdiPercentage } from '@/hooks/useCdiYield';
+import { useCdiYield, cdiPercentageToAnnualRate, annualRateToCdiPercentage, estimateFutureBalance } from '@/hooks/useCdiYield';
 import { YieldChart } from '@/components/YieldChart';
 import { Slider } from '@/components/ui/slider';
 import { 
@@ -18,12 +18,26 @@ import {
   Wallet,
   Settings2,
   Info,
-  Target,
-  Calendar
+  Calendar,
+  Edit3,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+// Color options for piggy banks
+const COLOR_OPTIONS = [
+  '#10B981', // Emerald
+  '#3B82F6', // Blue
+  '#8B5CF6', // Purple
+  '#F59E0B', // Amber
+  '#EF4444', // Red
+  '#EC4899', // Pink
+  '#14B8A6', // Teal
+  '#F97316', // Orange
+];
 
 export default function SavingsPage() {
   const navigate = useNavigate();
@@ -33,6 +47,7 @@ export default function SavingsPage() {
     piggyBankTransactions,
     formatCurrency,
     createPiggyBank,
+    updatePiggyBank,
     updatePiggyBankCdiRate,
     depositToPiggyBank,
     withdrawFromPiggyBank,
@@ -46,7 +61,7 @@ export default function SavingsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPiggyId, setSelectedPiggyId] = useState<string | null>(null);
   const [showTransactionModal, setShowTransactionModal] = useState<{ piggyId: string; type: 'deposit' | 'withdraw' } | null>(null);
-  const [showConfigModal, setShowConfigModal] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState<string | null>(null);
 
   const handleDeposit = async (piggyId: string, amount: number, description?: string) => {
     const piggy = piggyBanks.find(p => p.id === piggyId);
@@ -138,7 +153,7 @@ export default function SavingsPage() {
                 onToggleExpand={() => setSelectedPiggyId(selectedPiggyId === piggy.id ? null : piggy.id)}
                 onDeposit={() => setShowTransactionModal({ piggyId: piggy.id, type: 'deposit' })}
                 onWithdraw={() => setShowTransactionModal({ piggyId: piggy.id, type: 'withdraw' })}
-                onConfigure={() => setShowConfigModal(piggy.id)}
+                onEdit={() => setShowEditModal(piggy.id)}
                 onDelete={() => deletePiggyBank(piggy.id)}
                 transactions={piggyBankTransactions.filter(t => t.piggy_bank_id === piggy.id)}
                 onDeleteTransaction={deletePiggyBankTransaction}
@@ -155,8 +170,11 @@ export default function SavingsPage() {
               <div key={piggy.id} className="card-finance opacity-70">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center">
-                      <Check size={20} className="text-success" />
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${piggy.color}20` }}
+                    >
+                      <Check size={20} style={{ color: piggy.color }} />
                     </div>
                     <div>
                       <p className="font-semibold">{piggy.name}</p>
@@ -193,6 +211,20 @@ export default function SavingsPage() {
         onSubmit={createPiggyBank}
       />
 
+      {/* Edit Modal */}
+      <EditPiggyBankModal
+        isOpen={!!showEditModal}
+        piggy={piggyBanks.find(p => p.id === showEditModal) || null}
+        onClose={() => setShowEditModal(null)}
+        onSave={(id, updates) => {
+          updatePiggyBank(id, updates);
+          if (updates.cdi_rate_annual !== undefined) {
+            updatePiggyBankCdiRate(id, updates.cdi_rate_annual);
+          }
+          setShowEditModal(null);
+        }}
+      />
+
       {/* Transaction Modal */}
       <TransactionModal
         isOpen={!!showTransactionModal}
@@ -202,19 +234,6 @@ export default function SavingsPage() {
         onDeposit={handleDeposit}
         onWithdraw={withdrawFromPiggyBank}
         formatCurrency={formatCurrency}
-      />
-
-      {/* CDI Config Modal */}
-      <CdiConfigModal
-        isOpen={!!showConfigModal}
-        piggy={piggyBanks.find(p => p.id === showConfigModal) || null}
-        onClose={() => setShowConfigModal(null)}
-        onSave={(rate) => {
-          if (showConfigModal) {
-            updatePiggyBankCdiRate(showConfigModal, rate);
-            setShowConfigModal(null);
-          }
-        }}
       />
     </div>
   );
@@ -239,7 +258,7 @@ interface PiggyBankCardProps {
   onToggleExpand: () => void;
   onDeposit: () => void;
   onWithdraw: () => void;
-  onConfigure: () => void;
+  onEdit: () => void;
   onDelete: () => void;
   transactions: Array<{
     id: string;
@@ -257,7 +276,7 @@ function PiggyBankCard({
   onToggleExpand,
   onDeposit,
   onWithdraw,
-  onConfigure,
+  onEdit,
   onDelete,
   transactions,
   onDeleteTransaction
@@ -273,6 +292,10 @@ function PiggyBankCard({
   const hasTarget = targetAmount > 0;
   const progressWithYield = hasTarget ? (yieldCalc.updatedBalance / targetAmount) * 100 : 0;
   const progressWithoutYield = hasTarget ? (principal / targetAmount) * 100 : 0;
+  
+  // Calculate projections
+  const balance6Months = estimateFutureBalance(yieldCalc.updatedBalance, annualRate, 180);
+  const balance12Months = estimateFutureBalance(yieldCalc.updatedBalance, annualRate, 365);
   
   return (
     <div className="card-finance">
@@ -295,12 +318,12 @@ function PiggyBankCard({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
-            onClick={(e) => { e.stopPropagation(); onConfigure(); }}
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
             className="p-2 text-muted-foreground hover:text-accent transition-colors"
           >
-            <Settings2 size={16} />
+            <Edit3 size={16} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
@@ -308,6 +331,7 @@ function PiggyBankCard({
           >
             <Trash2 size={16} />
           </button>
+          {isExpanded ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
         </div>
       </div>
       
@@ -373,6 +397,28 @@ function PiggyBankCard({
               <p className="font-mono font-semibold">{yieldCalc.daysInvested}</p>
             </div>
           </div>
+          
+          {/* Projections */}
+          {yieldCalc.updatedBalance > 0 && (
+            <div className="bg-accent/10 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp size={16} className="text-accent" />
+                <span className="text-sm font-medium text-accent">Projeção de Rendimentos</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Em 6 meses</p>
+                  <p className="font-mono font-semibold text-foreground">{formatCurrency(balance6Months)}</p>
+                  <p className="text-xs text-income">+{formatCurrency(balance6Months - yieldCalc.updatedBalance)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Em 12 meses</p>
+                  <p className="font-mono font-semibold text-foreground">{formatCurrency(balance12Months)}</p>
+                  <p className="text-xs text-income">+{formatCurrency(balance12Months - yieldCalc.updatedBalance)}</p>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Actions */}
           <div className="grid grid-cols-2 gap-3">
@@ -456,27 +502,44 @@ function CreatePiggyBankModal({
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
-  onSubmit: (data: { name: string; target_amount?: number | null; cdi_rate_annual?: number }) => Promise<any>;
+  onSubmit: (data: { name: string; target_amount?: number | null; cdi_rate_annual?: number; color?: string }) => Promise<any>;
 }) {
   const [name, setName] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
   const [cdiPercentage, setCdiPercentage] = useState(100);
+  const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
-    if (!name || isSubmitting) return;
-
-    setIsSubmitting(true);
-    await onSubmit({
-      name,
-      target_amount: targetAmount ? parseFloat(targetAmount) : null,
-      cdi_rate_annual: cdiPercentageToAnnualRate(cdiPercentage),
-    });
-    
+  const resetForm = () => {
     setName('');
     setTargetAmount('');
     setCdiPercentage(100);
-    setIsSubmitting(false);
+    setSelectedColor(COLOR_OPTIONS[0]);
+  };
+
+  const handleSubmit = async () => {
+    if (!name.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        name: name.trim(),
+        target_amount: targetAmount ? parseFloat(targetAmount) : null,
+        cdi_rate_annual: cdiPercentageToAnnualRate(cdiPercentage),
+        color: selectedColor,
+      });
+      
+      resetForm();
+      onClose();
+    } catch (error) {
+      console.error('Error creating piggy bank:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    resetForm();
     onClose();
   };
 
@@ -484,11 +547,11 @@ function CreatePiggyBankModal({
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl animate-slide-up max-h-[80vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose} />
+      <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl animate-slide-up max-h-[85vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
           <h2 className="text-lg font-semibold">Novo Cofrinho</h2>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary">
+          <button onClick={handleClose} className="p-2 rounded-full hover:bg-secondary">
             <X size={20} />
           </button>
         </div>
@@ -502,7 +565,29 @@ function CreatePiggyBankModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="input-finance"
+              maxLength={50}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm text-muted-foreground mb-2">Cor</label>
+            <div className="flex gap-2 flex-wrap">
+              {COLOR_OPTIONS.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => setSelectedColor(color)}
+                  className={cn(
+                    "w-10 h-10 rounded-xl transition-all touch-scale",
+                    selectedColor === color && "ring-2 ring-offset-2 ring-offset-background ring-accent"
+                  )}
+                  style={{ backgroundColor: color }}
+                >
+                  {selectedColor === color && (
+                    <Check size={16} className="text-white mx-auto" />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
@@ -516,6 +601,7 @@ function CreatePiggyBankModal({
                 value={targetAmount}
                 onChange={(e) => setTargetAmount(e.target.value)}
                 className="input-finance pl-12"
+                min="0"
               />
             </div>
             <p className="text-xs text-muted-foreground mt-1">Deixe vazio para um cofrinho sem meta</p>
@@ -545,10 +631,10 @@ function CreatePiggyBankModal({
 
           <button
             onClick={handleSubmit}
-            disabled={!name || isSubmitting}
+            disabled={!name.trim() || isSubmitting}
             className={cn(
               'w-full py-4 rounded-xl font-semibold text-white transition-all touch-scale',
-              name && !isSubmitting
+              name.trim() && !isSubmitting
                 ? 'gradient-income shadow-glow-income'
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
             )}
@@ -558,6 +644,153 @@ function CreatePiggyBankModal({
             ) : (
               'Criar Cofrinho'
             )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Edit Piggy Bank Modal
+function EditPiggyBankModal({ 
+  isOpen, 
+  piggy,
+  onClose, 
+  onSave
+}: { 
+  isOpen: boolean;
+  piggy: { id: string; name: string; target_amount: number | null; cdi_rate_annual: number; color: string } | null;
+  onClose: () => void;
+  onSave: (id: string, updates: { name?: string; target_amount?: number | null; cdi_rate_annual?: number; color?: string }) => void;
+}) {
+  const [name, setName] = useState('');
+  const [targetAmount, setTargetAmount] = useState('');
+  const [cdiPercentage, setCdiPercentage] = useState(100);
+  const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0]);
+
+  // Initialize form when piggy changes
+  useEffect(() => {
+    if (piggy) {
+      setName(piggy.name);
+      setTargetAmount(piggy.target_amount ? String(piggy.target_amount) : '');
+      setCdiPercentage(Math.round(annualRateToCdiPercentage(Number(piggy.cdi_rate_annual) || 14.15)));
+      setSelectedColor(piggy.color || COLOR_OPTIONS[0]);
+    }
+  }, [piggy]);
+
+  if (!isOpen || !piggy) return null;
+
+  const handleSave = () => {
+    if (!name.trim()) return;
+    
+    onSave(piggy.id, {
+      name: name.trim(),
+      target_amount: targetAmount ? parseFloat(targetAmount) : null,
+      cdi_rate_annual: cdiPercentageToAnnualRate(cdiPercentage),
+      color: selectedColor,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl animate-slide-up max-h-[85vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
+          <h2 className="text-lg font-semibold">Editar Cofrinho</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="p-4 space-y-4">
+          <div>
+            <label className="block text-sm text-muted-foreground mb-2">Nome do cofrinho</label>
+            <input
+              type="text"
+              placeholder="Ex: Viagem, Reserva de emergência"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="input-finance"
+              maxLength={50}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-muted-foreground mb-2">Cor</label>
+            <div className="flex gap-2 flex-wrap">
+              {COLOR_OPTIONS.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => setSelectedColor(color)}
+                  className={cn(
+                    "w-10 h-10 rounded-xl transition-all touch-scale",
+                    selectedColor === color && "ring-2 ring-offset-2 ring-offset-background ring-accent"
+                  )}
+                  style={{ backgroundColor: color }}
+                >
+                  {selectedColor === color && (
+                    <Check size={16} className="text-white mx-auto" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm text-muted-foreground mb-2">Meta (opcional)</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                placeholder="0,00"
+                value={targetAmount}
+                onChange={(e) => setTargetAmount(e.target.value)}
+                className="input-finance pl-12"
+                min="0"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm text-muted-foreground mb-2">% do CDI do seu banco</label>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Percentual</span>
+                <span className="font-mono font-semibold text-accent">{cdiPercentage}% do CDI</span>
+              </div>
+              <Slider
+                value={[cdiPercentage]}
+                onValueChange={(value) => setCdiPercentage(value[0])}
+                min={80}
+                max={130}
+                step={1}
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>80%</span>
+                <span>100%</span>
+                <span>130%</span>
+              </div>
+            </div>
+            <div className="flex items-start gap-2 mt-2 p-2 bg-accent/10 rounded-lg">
+              <Info size={14} className="text-accent mt-0.5" />
+              <p className="text-xs text-accent">
+                A maioria dos bancos paga entre 100% e 110% do CDI. Alguns bancos digitais pagam até 120%.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={!name.trim()}
+            className={cn(
+              'w-full py-4 rounded-xl font-semibold text-white transition-all touch-scale',
+              name.trim()
+                ? 'gradient-income shadow-glow-income'
+                : 'bg-muted text-muted-foreground cursor-not-allowed'
+            )}
+          >
+            Salvar
           </button>
         </div>
       </div>
@@ -587,24 +820,38 @@ function TransactionModal({
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const resetForm = () => {
+    setAmount('');
+    setDescription('');
+  };
+
   const handleSubmit = async () => {
     if (!amount || !piggy || isSubmitting) return;
 
     const numAmount = parseFloat(amount);
+    if (numAmount <= 0) return;
+    
     if (type === 'withdraw' && numAmount > Number(piggy.balance)) {
       return;
     }
 
     setIsSubmitting(true);
-    if (type === 'deposit') {
-      await onDeposit(piggy.id, numAmount, description || undefined);
-    } else {
-      await onWithdraw(piggy.id, numAmount, description || undefined);
+    try {
+      if (type === 'deposit') {
+        await onDeposit(piggy.id, numAmount, description.trim() || undefined);
+      } else {
+        await onWithdraw(piggy.id, numAmount, description.trim() || undefined);
+      }
+      
+      resetForm();
+      onClose();
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setAmount('');
-    setDescription('');
-    setIsSubmitting(false);
+  };
+
+  const handleClose = () => {
+    resetForm();
     onClose();
   };
 
@@ -617,13 +864,13 @@ function TransactionModal({
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose} />
       <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl animate-slide-up">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-semibold">
             {isWithdraw ? 'Retirar de' : 'Depositar em'} {piggy.name}
           </h2>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary">
+          <button onClick={handleClose} className="p-2 rounded-full hover:bg-secondary">
             <X size={20} />
           </button>
         </div>
@@ -647,6 +894,7 @@ function TransactionModal({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className={cn("input-finance pl-12", exceedsBalance && "border-destructive")}
+                min="0"
               />
             </div>
             {exceedsBalance && (
@@ -662,15 +910,16 @@ function TransactionModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="input-finance"
+              maxLength={100}
             />
           </div>
 
           <button
             onClick={handleSubmit}
-            disabled={!amount || exceedsBalance || isSubmitting}
+            disabled={!amount || numAmount <= 0 || exceedsBalance || isSubmitting}
             className={cn(
               'w-full py-4 rounded-xl font-semibold text-white transition-all touch-scale',
-              amount && !exceedsBalance && !isSubmitting
+              amount && numAmount > 0 && !exceedsBalance && !isSubmitting
                 ? isWithdraw ? 'bg-destructive' : 'gradient-income shadow-glow-income'
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
             )}
@@ -680,80 +929,6 @@ function TransactionModal({
             ) : (
               isWithdraw ? 'Retirar' : 'Depositar'
             )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// CDI Config Modal
-function CdiConfigModal({ 
-  isOpen, 
-  piggy,
-  onClose, 
-  onSave
-}: { 
-  isOpen: boolean;
-  piggy: { id: string; name: string; cdi_rate_annual: number } | null;
-  onClose: () => void;
-  onSave: (rate: number) => void;
-}) {
-  const [cdiPercentage, setCdiPercentage] = useState(100);
-
-  // Reset when opening
-  if (isOpen && piggy) {
-    const currentPercentage = annualRateToCdiPercentage(Number(piggy.cdi_rate_annual) || 14.15);
-    if (Math.abs(cdiPercentage - currentPercentage) > 1) {
-      setCdiPercentage(Math.round(currentPercentage));
-    }
-  }
-
-  if (!isOpen || !piggy) return null;
-
-  return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl animate-slide-up">
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-lg font-semibold">Configurar CDI - {piggy.name}</h2>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary">
-            <X size={20} />
-          </button>
-        </div>
-        
-        <div className="p-4 space-y-4">
-          <div className="flex items-start gap-3 p-3 bg-accent/10 rounded-lg">
-            <Info size={16} className="text-accent mt-0.5" />
-            <p className="text-sm text-accent">
-              Configure o percentual do CDI que seu banco paga. A maioria paga entre 100% e 110%.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Percentual do CDI</span>
-              <span className="font-mono font-semibold text-accent">{cdiPercentage}% do CDI</span>
-            </div>
-            <Slider
-              value={[cdiPercentage]}
-              onValueChange={(value) => setCdiPercentage(value[0])}
-              min={80}
-              max={130}
-              step={1}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>80%</span>
-              <span>100%</span>
-              <span>130%</span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => onSave(cdiPercentageToAnnualRate(cdiPercentage))}
-            className="w-full py-4 rounded-xl font-semibold text-white gradient-income shadow-glow-income transition-all touch-scale"
-          >
-            Salvar
           </button>
         </div>
       </div>
