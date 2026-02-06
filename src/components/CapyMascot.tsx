@@ -127,7 +127,7 @@ export function CapyMascot() {
   );
 }
 
-// Capy with full body
+// Capy with full body - CAPYBARA design
 export function CapyFullBody({ mood, size = 'md' }: { mood: CapyMood; size?: 'sm' | 'md' | 'lg' }) {
   const sizeClasses = {
     sm: 'w-16 h-20',
@@ -137,123 +137,123 @@ export function CapyFullBody({ mood, size = 'md' }: { mood: CapyMood; size?: 'sm
 
   return (
     <div className={`${sizeClasses[size]} relative transition-transform duration-300 hover:scale-105`}>
-      <svg viewBox="0 0 80 100" className="w-full h-full drop-shadow-lg">
-        {/* Back leg */}
-        <ellipse cx="55" cy="88" rx="8" ry="10" fill="#A68B5B" />
-        <ellipse cx="55" cy="95" rx="6" ry="4" fill="#8B7355" />
+      <svg viewBox="0 0 100 120" className="w-full h-full drop-shadow-lg">
+        {/* Back legs */}
+        <ellipse cx="70" cy="105" rx="10" ry="12" fill="#8B6914" />
+        <ellipse cx="70" cy="115" rx="8" ry="5" fill="#6B4F0A" />
         
-        {/* Body */}
-        <ellipse cx="45" cy="70" rx="28" ry="22" fill="#C4A574" />
+        {/* Body - large barrel shape like real capybara */}
+        <ellipse cx="50" cy="80" rx="38" ry="28" fill="#A67C00" />
         
-        {/* Front leg */}
-        <ellipse cx="25" cy="88" rx="7" ry="10" fill="#B8956A" />
-        <ellipse cx="25" cy="95" rx="5" ry="4" fill="#8B7355" />
+        {/* Body highlight */}
+        <ellipse cx="45" cy="85" rx="28" ry="18" fill="#BF9B30" opacity="0.5" />
         
-        {/* Belly highlight */}
-        <ellipse cx="42" cy="75" rx="18" ry="14" fill="#DEC9A6" opacity="0.6" />
+        {/* Front legs */}
+        <ellipse cx="25" cy="102" rx="9" ry="14" fill="#8B6914" />
+        <ellipse cx="25" cy="115" rx="7" ry="5" fill="#6B4F0A" />
         
-        {/* Tail (small bump) */}
-        <ellipse cx="70" cy="65" rx="5" ry="4" fill="#B8956A" />
+        {/* Head - rectangular/boxy like capybara */}
+        <rect x="8" y="25" rx="18" ry="18" width="50" height="45" fill="#A67C00" />
         
-        {/* Head */}
-        <ellipse cx="30" cy="40" rx="22" ry="20" fill="#C4A574" />
+        {/* Top of head - flatter */}
+        <ellipse cx="33" cy="28" rx="22" ry="10" fill="#A67C00" />
         
-        {/* Ears */}
-        <ellipse cx="15" cy="25" rx="6" ry="8" fill="#B8956A" />
-        <ellipse cx="45" cy="23" rx="6" ry="8" fill="#B8956A" />
-        <ellipse cx="15" cy="25" rx="4" ry="5" fill="#E8D4B8" />
-        <ellipse cx="45" cy="23" rx="4" ry="5" fill="#E8D4B8" />
+        {/* Small rounded ears on TOP of head (capybara style) */}
+        <ellipse cx="18" cy="20" rx="7" ry="8" fill="#8B6914" />
+        <ellipse cx="48" cy="20" rx="7" ry="8" fill="#8B6914" />
+        <ellipse cx="18" cy="20" rx="4" ry="5" fill="#D4A84B" />
+        <ellipse cx="48" cy="20" rx="4" ry="5" fill="#D4A84B" />
         
-        {/* Snout */}
-        <ellipse cx="30" cy="48" rx="14" ry="10" fill="#DEC9A6" />
+        {/* Large square snout - distinctive capybara feature */}
+        <rect x="12" y="45" rx="12" ry="10" width="42" height="28" fill="#BF9B30" />
         
-        {/* Nose */}
-        <ellipse cx="30" cy="44" rx="5" ry="3.5" fill="#8B7355" />
+        {/* Big nose/nostrils area */}
+        <ellipse cx="33" cy="52" rx="12" ry="8" fill="#6B4F0A" />
         
-        {/* Nostrils */}
-        <circle cx="27" cy="45" r="1.2" fill="#6B5344" />
-        <circle cx="33" cy="45" r="1.2" fill="#6B5344" />
+        {/* Nostrils - large and prominent */}
+        <ellipse cx="27" cy="52" rx="3" ry="4" fill="#4A3500" />
+        <ellipse cx="39" cy="52" rx="3" ry="4" fill="#4A3500" />
         
-        {/* Eyes based on mood */}
+        {/* Eyes - small and placed high (capybara have tiny eyes) */}
         {mood === 'sleepy' ? (
           <>
-            <line x1="20" y1="36" x2="28" y2="36" stroke="#4A3728" strokeWidth="2" strokeLinecap="round" />
-            <line x1="32" y1="36" x2="40" y2="36" stroke="#4A3728" strokeWidth="2" strokeLinecap="round" />
+            <line x1="20" y1="38" x2="28" y2="38" stroke="#4A3500" strokeWidth="2.5" strokeLinecap="round" />
+            <line x1="38" y1="38" x2="46" y2="38" stroke="#4A3500" strokeWidth="2.5" strokeLinecap="round" />
           </>
         ) : mood === 'happy' ? (
           <>
-            <path d="M20 38 Q24 33, 28 38" stroke="#4A3728" strokeWidth="2" fill="none" strokeLinecap="round" />
-            <path d="M32 38 Q36 33, 40 38" stroke="#4A3728" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M20 40 Q24 36, 28 40" stroke="#4A3500" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+            <path d="M38 40 Q42 36, 46 40" stroke="#4A3500" strokeWidth="2.5" fill="none" strokeLinecap="round" />
           </>
         ) : mood === 'alert' ? (
           <>
-            <circle cx="24" cy="36" r="4" fill="#4A3728" />
-            <circle cx="36" cy="36" r="4" fill="#4A3728" />
-            <circle cx="25" cy="35" r="1.5" fill="white" />
-            <circle cx="37" cy="35" r="1.5" fill="white" />
+            <circle cx="24" cy="38" r="4" fill="#4A3500" />
+            <circle cx="42" cy="38" r="4" fill="#4A3500" />
+            <circle cx="25" cy="37" r="1.5" fill="white" />
+            <circle cx="43" cy="37" r="1.5" fill="white" />
           </>
         ) : (
           <>
-            <circle cx="24" cy="36" r="3.5" fill="#4A3728" />
-            <circle cx="36" cy="36" r="3.5" fill="#4A3728" />
-            <circle cx="25" cy="35" r="1.2" fill="white" />
-            <circle cx="37" cy="35" r="1.2" fill="white" />
+            <circle cx="24" cy="38" r="3" fill="#4A3500" />
+            <circle cx="42" cy="38" r="3" fill="#4A3500" />
+            <circle cx="25" cy="37" r="1" fill="white" />
+            <circle cx="43" cy="37" r="1" fill="white" />
           </>
         )}
         
         {/* Eyebrows for worried/alert */}
         {(mood === 'worried' || mood === 'alert') && (
           <>
-            <path d="M18 30 Q22 28, 28 32" stroke="#4A3728" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-            <path d="M42 30 Q38 28, 32 32" stroke="#4A3728" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            <path d="M18 32 Q22 30, 28 34" stroke="#4A3500" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            <path d="M48 32 Q44 30, 38 34" stroke="#4A3500" strokeWidth="1.5" fill="none" strokeLinecap="round" />
           </>
         )}
         
-        {/* Mouth based on mood */}
+        {/* Mouth - under the big nose */}
         {mood === 'happy' ? (
-          <path d="M24 52 Q30 58, 36 52" stroke="#8B7355" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M26 64 Q33 70, 40 64" stroke="#6B4F0A" strokeWidth="2" fill="none" strokeLinecap="round" />
         ) : mood === 'worried' ? (
-          <path d="M24 54 Q30 50, 36 54" stroke="#8B7355" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M26 67 Q33 63, 40 67" stroke="#6B4F0A" strokeWidth="2" fill="none" strokeLinecap="round" />
         ) : mood === 'alert' ? (
-          <ellipse cx="30" cy="54" rx="3" ry="2.5" fill="#8B7355" />
+          <ellipse cx="33" cy="66" rx="4" ry="3" fill="#6B4F0A" />
         ) : mood === 'sleepy' ? (
-          <path d="M26 53 Q30 55, 34 53" stroke="#8B7355" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M28 65 Q33 67, 38 65" stroke="#6B4F0A" strokeWidth="2" fill="none" strokeLinecap="round" />
         ) : (
-          <line x1="26" y1="53" x2="34" y2="53" stroke="#8B7355" strokeWidth="2" strokeLinecap="round" />
+          <line x1="28" y1="65" x2="38" y2="65" stroke="#6B4F0A" strokeWidth="2" strokeLinecap="round" />
         )}
         
-        {/* Whisker dots */}
-        <circle cx="16" cy="46" r="1" fill="#B8956A" />
-        <circle cx="14" cy="50" r="1" fill="#B8956A" />
-        <circle cx="44" cy="46" r="1" fill="#B8956A" />
-        <circle cx="46" cy="50" r="1" fill="#B8956A" />
+        {/* Whisker spots */}
+        <circle cx="10" cy="55" r="1.5" fill="#8B6914" />
+        <circle cx="8" cy="60" r="1.5" fill="#8B6914" />
+        <circle cx="56" cy="55" r="1.5" fill="#8B6914" />
+        <circle cx="58" cy="60" r="1.5" fill="#8B6914" />
         
         {/* Blush for happy */}
         {mood === 'happy' && (
           <>
-            <ellipse cx="16" cy="42" rx="4" ry="2.5" fill="#E8A4A4" opacity="0.5" />
-            <ellipse cx="44" cy="42" rx="4" ry="2.5" fill="#E8A4A4" opacity="0.5" />
+            <ellipse cx="14" cy="48" rx="5" ry="3" fill="#E8A4A4" opacity="0.4" />
+            <ellipse cx="52" cy="48" rx="5" ry="3" fill="#E8A4A4" opacity="0.4" />
           </>
         )}
         
         {/* Z's for sleepy */}
         {mood === 'sleepy' && (
           <>
-            <text x="48" y="22" fill="#6B5344" fontSize="10" fontWeight="bold" opacity="0.7">z</text>
-            <text x="54" y="16" fill="#6B5344" fontSize="8" fontWeight="bold" opacity="0.5">z</text>
+            <text x="55" y="25" fill="#6B4F0A" fontSize="12" fontWeight="bold" opacity="0.7">z</text>
+            <text x="62" y="18" fill="#6B4F0A" fontSize="10" fontWeight="bold" opacity="0.5">z</text>
           </>
         )}
         
         {/* Exclamation for alert */}
         {mood === 'alert' && (
-          <text x="50" y="20" fill="hsl(var(--destructive))" fontSize="14" fontWeight="bold">!</text>
+          <text x="58" y="22" fill="hsl(var(--destructive))" fontSize="16" fontWeight="bold">!</text>
         )}
         
         {/* Sparkles for happy */}
         {mood === 'happy' && (
           <>
-            <text x="52" y="18" fill="#FFD700" fontSize="10">✦</text>
-            <text x="8" y="14" fill="#FFD700" fontSize="8" opacity="0.7">✦</text>
+            <text x="60" y="20" fill="#FFD700" fontSize="12">✦</text>
+            <text x="5" y="12" fill="#FFD700" fontSize="9" opacity="0.7">✦</text>
           </>
         )}
       </svg>
@@ -261,7 +261,7 @@ export function CapyFullBody({ mood, size = 'md' }: { mood: CapyMood; size?: 'sm
   );
 }
 
-// Compact avatar for modal
+// Compact avatar for modal - CAPYBARA design
 export function CapyAvatar({ mood, size = 'md' }: { mood: CapyMood; size?: 'sm' | 'md' | 'lg' }) {
   const sizeClasses = {
     sm: 'w-10 h-10',
@@ -272,95 +272,98 @@ export function CapyAvatar({ mood, size = 'md' }: { mood: CapyMood; size?: 'sm' 
   return (
     <div className={`${sizeClasses[size]} relative flex items-center justify-center`}>
       <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
-        {/* Body/Head */}
-        <ellipse cx="50" cy="55" rx="35" ry="30" fill="#C4A574" />
+        {/* Head - boxy/rectangular like capybara */}
+        <rect x="15" y="20" rx="20" ry="20" width="70" height="60" fill="#A67C00" />
         
-        {/* Ears */}
-        <ellipse cx="25" cy="35" rx="8" ry="10" fill="#B8956A" />
-        <ellipse cx="75" cy="35" rx="8" ry="10" fill="#B8956A" />
-        <ellipse cx="25" cy="35" rx="5" ry="6" fill="#E8D4B8" />
-        <ellipse cx="75" cy="35" rx="5" ry="6" fill="#E8D4B8" />
+        {/* Top of head */}
+        <ellipse cx="50" cy="25" rx="30" ry="12" fill="#A67C00" />
         
-        {/* Snout */}
-        <ellipse cx="50" cy="65" rx="20" ry="15" fill="#DEC9A6" />
+        {/* Small ears on TOP (capybara style) */}
+        <ellipse cx="28" cy="15" rx="8" ry="10" fill="#8B6914" />
+        <ellipse cx="72" cy="15" rx="8" ry="10" fill="#8B6914" />
+        <ellipse cx="28" cy="15" rx="5" ry="6" fill="#D4A84B" />
+        <ellipse cx="72" cy="15" rx="5" ry="6" fill="#D4A84B" />
         
-        {/* Nose */}
-        <ellipse cx="50" cy="58" rx="6" ry="4" fill="#8B7355" />
+        {/* Large square snout */}
+        <rect x="25" y="50" rx="15" ry="12" width="50" height="32" fill="#BF9B30" />
         
-        {/* Nostrils */}
-        <circle cx="47" cy="59" r="1.5" fill="#6B5344" />
-        <circle cx="53" cy="59" r="1.5" fill="#6B5344" />
+        {/* Big nose area */}
+        <ellipse cx="50" cy="58" rx="15" ry="10" fill="#6B4F0A" />
         
-        {/* Eyes based on mood */}
+        {/* Large nostrils */}
+        <ellipse cx="42" cy="58" rx="4" ry="5" fill="#4A3500" />
+        <ellipse cx="58" cy="58" rx="4" ry="5" fill="#4A3500" />
+        
+        {/* Small eyes placed high */}
         {mood === 'sleepy' ? (
           <>
-            <line x1="35" y1="48" x2="45" y2="48" stroke="#4A3728" strokeWidth="2" strokeLinecap="round" />
-            <line x1="55" y1="48" x2="65" y2="48" stroke="#4A3728" strokeWidth="2" strokeLinecap="round" />
+            <line x1="32" y1="40" x2="42" y2="40" stroke="#4A3500" strokeWidth="3" strokeLinecap="round" />
+            <line x1="58" y1="40" x2="68" y2="40" stroke="#4A3500" strokeWidth="3" strokeLinecap="round" />
           </>
         ) : mood === 'happy' ? (
           <>
-            <path d="M35 50 Q40 45, 45 50" stroke="#4A3728" strokeWidth="2" fill="none" strokeLinecap="round" />
-            <path d="M55 50 Q60 45, 65 50" stroke="#4A3728" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M32 42 Q37 36, 42 42" stroke="#4A3500" strokeWidth="3" fill="none" strokeLinecap="round" />
+            <path d="M58 42 Q63 36, 68 42" stroke="#4A3500" strokeWidth="3" fill="none" strokeLinecap="round" />
           </>
         ) : mood === 'alert' ? (
           <>
-            <circle cx="40" cy="48" r="5" fill="#4A3728" />
-            <circle cx="60" cy="48" r="5" fill="#4A3728" />
-            <circle cx="41" cy="47" r="2" fill="white" />
-            <circle cx="61" cy="47" r="2" fill="white" />
+            <circle cx="37" cy="40" r="5" fill="#4A3500" />
+            <circle cx="63" cy="40" r="5" fill="#4A3500" />
+            <circle cx="38" cy="39" r="2" fill="white" />
+            <circle cx="64" cy="39" r="2" fill="white" />
           </>
         ) : (
           <>
-            <circle cx="40" cy="48" r="4" fill="#4A3728" />
-            <circle cx="60" cy="48" r="4" fill="#4A3728" />
-            <circle cx="41" cy="47" r="1.5" fill="white" />
-            <circle cx="61" cy="47" r="1.5" fill="white" />
+            <circle cx="37" cy="40" r="4" fill="#4A3500" />
+            <circle cx="63" cy="40" r="4" fill="#4A3500" />
+            <circle cx="38" cy="39" r="1.5" fill="white" />
+            <circle cx="64" cy="39" r="1.5" fill="white" />
           </>
         )}
         
         {/* Eyebrows for worried/alert */}
         {(mood === 'worried' || mood === 'alert') && (
           <>
-            <path d="M33 40 Q38 38, 45 42" stroke="#4A3728" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-            <path d="M67 40 Q62 38, 55 42" stroke="#4A3728" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            <path d="M30 33 Q35 30, 44 35" stroke="#4A3500" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M70 33 Q65 30, 56 35" stroke="#4A3500" strokeWidth="2" fill="none" strokeLinecap="round" />
           </>
         )}
         
-        {/* Mouth based on mood */}
+        {/* Mouth */}
         {mood === 'happy' ? (
-          <path d="M42 70 Q50 76, 58 70" stroke="#8B7355" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M40 74 Q50 82, 60 74" stroke="#6B4F0A" strokeWidth="2.5" fill="none" strokeLinecap="round" />
         ) : mood === 'worried' ? (
-          <path d="M42 72 Q50 68, 58 72" stroke="#8B7355" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M40 78 Q50 72, 60 78" stroke="#6B4F0A" strokeWidth="2.5" fill="none" strokeLinecap="round" />
         ) : mood === 'alert' ? (
-          <ellipse cx="50" cy="72" rx="4" ry="3" fill="#8B7355" />
+          <ellipse cx="50" cy="76" rx="5" ry="4" fill="#6B4F0A" />
         ) : mood === 'sleepy' ? (
-          <path d="M45 71 Q50 73, 55 71" stroke="#8B7355" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M44 75 Q50 78, 56 75" stroke="#6B4F0A" strokeWidth="2.5" fill="none" strokeLinecap="round" />
         ) : (
-          <line x1="45" y1="71" x2="55" y2="71" stroke="#8B7355" strokeWidth="2" strokeLinecap="round" />
+          <line x1="44" y1="75" x2="56" y2="75" stroke="#6B4F0A" strokeWidth="2.5" strokeLinecap="round" />
         )}
         
-        {/* Whisker dots */}
-        <circle cx="30" cy="62" r="1" fill="#B8956A" />
-        <circle cx="28" cy="66" r="1" fill="#B8956A" />
-        <circle cx="70" cy="62" r="1" fill="#B8956A" />
-        <circle cx="72" cy="66" r="1" fill="#B8956A" />
+        {/* Whisker spots */}
+        <circle cx="20" cy="60" r="2" fill="#8B6914" />
+        <circle cx="18" cy="68" r="2" fill="#8B6914" />
+        <circle cx="80" cy="60" r="2" fill="#8B6914" />
+        <circle cx="82" cy="68" r="2" fill="#8B6914" />
         
         {/* Blush for happy */}
         {mood === 'happy' && (
           <>
-            <ellipse cx="30" cy="55" rx="5" ry="3" fill="#E8A4A4" opacity="0.5" />
-            <ellipse cx="70" cy="55" rx="5" ry="3" fill="#E8A4A4" opacity="0.5" />
+            <ellipse cx="25" cy="50" rx="6" ry="4" fill="#E8A4A4" opacity="0.4" />
+            <ellipse cx="75" cy="50" rx="6" ry="4" fill="#E8A4A4" opacity="0.4" />
           </>
         )}
         
         {/* Z's for sleepy */}
         {mood === 'sleepy' && (
-          <text x="72" y="38" fill="#6B5344" fontSize="12" fontWeight="bold" opacity="0.7">z</text>
+          <text x="78" y="28" fill="#6B4F0A" fontSize="14" fontWeight="bold" opacity="0.7">z</text>
         )}
         
         {/* Exclamation for alert */}
         {mood === 'alert' && (
-          <text x="78" y="35" fill="hsl(var(--destructive))" fontSize="14" fontWeight="bold">!</text>
+          <text x="82" y="25" fill="hsl(var(--destructive))" fontSize="16" fontWeight="bold">!</text>
         )}
       </svg>
     </div>
