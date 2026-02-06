@@ -4,7 +4,6 @@ import { TransactionList } from '@/components/TransactionList';
 import { MiniChart } from '@/components/MiniChart';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { AddTransactionModal } from '@/components/AddTransactionModal';
-import { CapyMascot } from '@/components/CapyMascot';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 
 export default function Dashboard() {
@@ -47,9 +46,6 @@ export default function Dashboard() {
           <TransactionList />
         </div>
       </main>
-
-      {/* Capy Mascot */}
-      <CapyMascot />
 
       {/* FAB */}
       <FloatingActionButton onClick={() => setIsModalOpen(true)} />
