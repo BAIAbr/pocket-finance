@@ -4,7 +4,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, Smile } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -17,6 +18,7 @@ export default function SettingsPage() {
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCapyHidden, setIsCapyHidden] = useLocalStorage('capy-hidden', false);
 
   const currencies = [
     { code: 'BRL', symbol: 'R$', name: 'Real Brasileiro' },
@@ -312,6 +314,38 @@ export default function SettingsPage() {
               </button>
             ))}
           </div>
+        </section>
+
+        {/* Capy Mascot */}
+        <section className="card-finance">
+          <h2 className="font-semibold mb-4 flex items-center gap-2">
+            <Smile size={18} />
+            Mascote Capy
+          </h2>
+          <button
+            onClick={() => {
+              setIsCapyHidden(!isCapyHidden);
+              toast.success(isCapyHidden ? 'Capy está de volta! 🐹' : 'Capy foi desativada');
+            }}
+            className="w-full flex items-center justify-between py-3"
+          >
+            <div>
+              <p className="font-medium">{isCapyHidden ? 'Capy desativada' : 'Capy ativada'}</p>
+              <p className="text-sm text-muted-foreground">
+                {isCapyHidden ? 'Clique para reativar sua guia financeira' : 'Sua capivara guia financeira'}
+              </p>
+            </div>
+            <div 
+              className={cn(
+                'w-14 h-8 rounded-full flex items-center px-1 transition-all duration-300',
+                !isCapyHidden ? 'bg-accent justify-end' : 'bg-secondary justify-start'
+              )}
+            >
+              <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-md transition-all duration-300">
+                <Smile size={14} className={cn(!isCapyHidden ? 'text-accent' : 'text-muted-foreground')} />
+              </div>
+            </div>
+          </button>
         </section>
 
         {/* Data */}
