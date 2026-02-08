@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import capyMascot from '@/assets/capy-mascot-new.png';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
   const [name, setName] = useState('');
@@ -18,7 +16,6 @@ export default function AuthPage() {
   const { signIn, signUp, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/');
@@ -68,111 +65,120 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-emerald-50 via-green-100 to-emerald-200 px-6 py-8">
-      {/* Mascot section */}
-      <div className="flex-shrink-0 flex justify-center pt-4 pb-2">
-        <img 
-          src={capyMascot} 
-          alt="Fin, a capivara mascote do Finango" 
-          className="w-64 h-auto max-h-56 object-contain drop-shadow-lg"
-        />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 p-4">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-20 -left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-48 h-48 bg-emerald-300/20 rounded-full blur-2xl" />
       </div>
 
-      {/* Title section */}
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-emerald-800 leading-tight">
-          Entre para cuidar<br />do seu dinheiro
-        </h1>
-        <p className="text-emerald-600/90 text-sm mt-2">
-          Sem complicação. Sem burocracia.
-        </p>
-      </div>
+      {/* Auth Card */}
+      <div className="relative w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-6 space-y-5">
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="text-xl font-bold text-gray-800">
+            {isLogin ? 'Entrar' : 'Criar conta'}
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            {isLogin ? 'Acesse sua conta' : 'Comece a organizar suas finanças'}
+          </p>
+        </div>
 
-      {/* Form section */}
-      <form onSubmit={handleSubmit} className="space-y-3 max-w-sm mx-auto w-full">
-        {/* Name field (only for signup) */}
-        {!isLogin && (
-          <div className="relative">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500">
-              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {/* Name field (signup only) */}
+          {!isLogin && (
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Nome"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full h-11 pl-10 pr-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+              />
             </div>
+          )}
+
+          {/* Email field */}
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
-              type="text"
-              placeholder="Nome"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full h-12 pl-12 pr-4 rounded-xl bg-white/95 border border-emerald-200 shadow-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
+              type="email"
+              placeholder="E-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full h-11 pl-10 pr-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
             />
           </div>
-        )}
 
-        {/* Email field */}
+          {/* Password field */}
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="password"
+              placeholder="Senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full h-11 pl-10 pr-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+            />
+          </div>
+
+          {/* Submit button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={cn(
+              'w-full h-11 rounded-lg font-semibold text-white text-sm shadow-lg transition-all',
+              'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 active:scale-[0.98]',
+              isLoading && 'opacity-70 cursor-not-allowed'
+            )}
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+            ) : (
+              isLogin ? 'Entrar' : 'Criar Conta'
+            )}
+          </button>
+        </form>
+
+        {/* Divider */}
         <div className="relative">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500" size={20} />
-          <input
-            type="email"
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full h-12 pl-12 pr-4 rounded-xl bg-white/95 border border-emerald-200 shadow-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
-          />
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-white px-2 text-gray-400">ou</span>
+          </div>
         </div>
 
-        {/* Password field */}
-        <div className="relative">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500" size={20} />
-          <input
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className="w-full h-12 pl-12 pr-4 rounded-xl bg-white/95 border border-emerald-200 shadow-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
-          />
-        </div>
-
-        {/* Submit button */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={cn(
-            'w-full h-12 rounded-xl font-semibold text-white text-base shadow-lg transition-all mt-2',
-            'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 active:scale-[0.98]',
-            isLoading && 'opacity-70 cursor-not-allowed'
-          )}
-        >
-          {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-          ) : (
-            isLogin ? 'Entrar' : 'Criar Conta'
-          )}
-        </button>
-      </form>
-
-      {/* Links */}
-      <div className="text-center mt-6 space-y-2">
-        <button
-          type="button"
-          onClick={() => setIsLogin(!isLogin)}
-          className="text-emerald-700 font-medium text-sm hover:underline"
-        >
-          {isLogin ? 'Criar conta' : 'Já tenho conta'}
-        </button>
-        
-        <div>
+        {/* Toggle link */}
+        <div className="text-center">
           <button
             type="button"
-            onClick={() => toast.info('Recurso em desenvolvimento')}
-            className="text-emerald-600/80 text-xs hover:underline"
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-emerald-600 font-medium text-sm hover:underline"
           >
-            Esqueci minha senha
+            {isLogin ? 'Criar uma conta' : 'Já tenho conta'}
           </button>
         </div>
+
+        {/* Forgot password */}
+        {isLogin && (
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => toast.info('Recurso em desenvolvimento')}
+              className="text-gray-400 text-xs hover:underline"
+            >
+              Esqueci minha senha
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
