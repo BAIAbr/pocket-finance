@@ -65,22 +65,15 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 p-4">
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 -left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 right-1/4 w-48 h-48 bg-emerald-300/20 rounded-full blur-2xl" />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center bg-background/80 backdrop-blur-md p-4">
       {/* Auth Card */}
-      <div className="relative w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-6 space-y-5">
+      <div className="relative w-full max-w-sm bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 p-6 space-y-5">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-xl font-bold text-gray-800">
+          <h1 className="text-xl font-bold text-foreground">
             {isLogin ? 'Entrar' : 'Criar conta'}
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             {isLogin ? 'Acesse sua conta' : 'Comece a organizar suas finanças'}
           </p>
         </div>
@@ -90,33 +83,33 @@ export default function AuthPage() {
           {/* Name field (signup only) */}
           {!isLogin && (
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
               <input
                 type="text"
                 placeholder="Nome"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full h-11 pl-10 pr-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                className="w-full h-11 pl-10 pr-4 rounded-lg bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
               />
             </div>
           )}
 
           {/* Email field */}
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
             <input
               type="email"
               placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full h-11 pl-10 pr-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+              className="w-full h-11 pl-10 pr-4 rounded-lg bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
             />
           </div>
 
           {/* Password field */}
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
             <input
               type="password"
               placeholder="Senha"
@@ -124,7 +117,7 @@ export default function AuthPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full h-11 pl-10 pr-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+              className="w-full h-11 pl-10 pr-4 rounded-lg bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
             />
           </div>
 
@@ -133,8 +126,8 @@ export default function AuthPage() {
             type="submit"
             disabled={isLoading}
             className={cn(
-              'w-full h-11 rounded-lg font-semibold text-white text-sm shadow-lg transition-all',
-              'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 active:scale-[0.98]',
+              'w-full h-11 rounded-lg font-semibold text-primary-foreground text-sm shadow-lg transition-all',
+              'bg-primary hover:bg-primary/90 active:scale-[0.98]',
               isLoading && 'opacity-70 cursor-not-allowed'
             )}
           >
@@ -149,10 +142,10 @@ export default function AuthPage() {
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
+            <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-2 text-gray-400">ou</span>
+            <span className="bg-card px-2 text-muted-foreground">ou</span>
           </div>
         </div>
 
@@ -161,7 +154,7 @@ export default function AuthPage() {
           <button
             type="button"
             onClick={() => setIsLogin(!isLogin)}
-            className="text-emerald-600 font-medium text-sm hover:underline"
+            className="text-primary font-medium text-sm hover:underline"
           >
             {isLogin ? 'Criar uma conta' : 'Já tenho conta'}
           </button>
@@ -173,7 +166,7 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => toast.info('Recurso em desenvolvimento')}
-              className="text-gray-400 text-xs hover:underline"
+              className="text-muted-foreground text-xs hover:underline"
             >
               Esqueci minha senha
             </button>
