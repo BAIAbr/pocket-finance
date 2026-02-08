@@ -68,29 +68,40 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-b from-emerald-50 via-green-100 to-emerald-200">
-      {/* Decorative sparkles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[35%] left-8 w-2 h-2 bg-amber-300 rounded-full animate-pulse" />
-        <div className="absolute top-[30%] right-12 w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }} />
-        <div className="absolute top-[40%] left-1/4 w-1 h-1 bg-amber-300 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-        <div className="absolute top-[25%] right-1/3 w-2 h-2 bg-amber-200 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
-      </div>
-
-      {/* Mascot section - Main visual element at top */}
-      <div className="flex-shrink-0 pt-8 px-4 flex justify-center" style={{ minHeight: '45vh' }}>
+    <div className="min-h-screen flex flex-col relative overflow-x-hidden">
+      {/* Hero Image Section - Full width background */}
+      <div 
+        className="relative w-full flex-shrink-0"
+        style={{ height: '50vh', minHeight: '320px' }}
+      >
+        {/* Hero background image */}
         <img 
           src={capyMascot} 
           alt="Fin, a capivara mascote do Finango" 
-          className="w-full max-w-sm h-auto object-contain drop-shadow-xl"
-          style={{ maxHeight: '42vh' }}
+          className="absolute inset-0 w-full h-full object-cover object-top"
         />
+        
+        {/* Gradient overlay at bottom for smooth transition */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
+          style={{ 
+            background: 'linear-gradient(to top, rgb(209 250 229) 0%, transparent 100%)' 
+          }}
+        />
+        
+        {/* Decorative sparkles on hero */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-16 left-8 w-2 h-2 bg-amber-300/80 rounded-full animate-pulse" />
+          <div className="absolute top-24 right-12 w-1.5 h-1.5 bg-amber-400/80 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }} />
+          <div className="absolute top-32 left-1/4 w-1 h-1 bg-amber-300/70 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+          <div className="absolute top-20 right-1/3 w-2 h-2 bg-amber-200/80 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+        </div>
       </div>
 
-      {/* Content section */}
-      <div className="flex-1 flex flex-col px-6 pb-8">
+      {/* Content section with form */}
+      <div className="flex-1 flex flex-col px-6 pb-8 bg-gradient-to-b from-emerald-100 to-emerald-200 -mt-4 relative z-10">
         {/* Text section */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-5 pt-2">
           <h1 className="text-2xl font-bold text-emerald-800 leading-tight">
             Entre para cuidar<br />do seu dinheiro
           </h1>
