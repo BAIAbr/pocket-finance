@@ -99,16 +99,7 @@ export default function AuthPage() {
       </div>
 
       {/* Content section with form */}
-      <div className="flex-1 flex flex-col px-6 pb-8 bg-gradient-to-b from-emerald-100 to-emerald-200 -mt-4 relative z-10">
-        {/* Text section */}
-        <div className="text-center mb-5 pt-2">
-          <h1 className="text-2xl font-bold text-emerald-800 leading-tight">
-            Entre para cuidar<br />do seu dinheiro
-          </h1>
-          <p className="text-emerald-600/90 text-sm mt-2">
-            Sem complicação. Sem burocracia.
-          </p>
-        </div>
+      <div className="flex-1 flex flex-col px-6 pb-8 bg-gradient-to-b from-emerald-100 to-emerald-200 -mt-4 relative z-10 pt-4">
 
         {/* Form section */}
         <form onSubmit={handleSubmit} className="space-y-3 max-w-sm mx-auto w-full">
