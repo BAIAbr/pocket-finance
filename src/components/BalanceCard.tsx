@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Wallet, PiggyBank, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { CapyMascot } from './CapyMascot';
 
 export function BalanceCard() {
   const { totalBalance, currentMonthStats, formatCurrency, piggyBanks, isLoading } = useFinanceContext();
@@ -41,28 +40,19 @@ export function BalanceCard() {
         <div className="absolute top-1/2 right-1/4 w-24 h-24 bg-white/3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         
         <div className="relative z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                  <Wallet size={16} className="text-white" />
-                </div>
-                <span className="text-white/90 text-sm font-medium tracking-wide">Saldo Disponível</span>
-              </div>
-              
-              <p className={cn(
-                'font-mono text-4xl font-bold mb-6 tracking-tight transition-all duration-300',
-                availableBalance >= 0 ? 'text-white' : 'text-rose-200'
-              )}>
-                {formatCurrency(availableBalance)}
-              </p>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <Wallet size={16} className="text-white" />
             </div>
-            
-            {/* Capy Mascot */}
-            <div className="flex-shrink-0 -mr-2 -mt-2">
-              <CapyMascot />
-            </div>
+            <span className="text-white/90 text-sm font-medium tracking-wide">Saldo Disponível</span>
           </div>
+          
+          <p className={cn(
+            'font-mono text-4xl font-bold mb-6 tracking-tight transition-all duration-300',
+            availableBalance >= 0 ? 'text-white' : 'text-rose-200'
+          )}>
+            {formatCurrency(availableBalance)}
+          </p>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm border border-white/10 hover:bg-white/15 transition-all duration-200 group/card">
