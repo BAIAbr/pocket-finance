@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Loader2, User, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PasswordRequirement {
   label: string;
@@ -102,7 +103,15 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background/80 backdrop-blur-md p-4">
       {/* Auth Card */}
-      <div className="relative w-full max-w-sm bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 p-6 space-y-5">
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{
+          duration: 0.5,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+        className="relative w-full max-w-sm bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 p-6 space-y-5"
+      >
         {/* Logo */}
         <div className="text-center mb-2">
           <h2 className="text-2xl font-black tracking-tight text-primary">
@@ -267,7 +276,7 @@ export default function AuthPage() {
             </button>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }
