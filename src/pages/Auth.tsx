@@ -68,6 +68,13 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-background/80 backdrop-blur-md p-4">
       {/* Auth Card */}
       <div className="relative w-full max-w-sm bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 p-6 space-y-5">
+        {/* Logo */}
+        <div className="text-center mb-2">
+          <h2 className="text-2xl font-black tracking-tight text-primary">
+            FINANGO
+          </h2>
+        </div>
+
         {/* Header */}
         <div className="text-center">
           <h1 className="text-xl font-bold text-foreground">
