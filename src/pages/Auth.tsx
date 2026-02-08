@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import capyMascot from '@/assets/capy-mascot.png';
+import capyMascot from '@/assets/capy-login-mascot.jpeg';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
