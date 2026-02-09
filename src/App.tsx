@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
+import AIInsights from "./pages/AIInsights";
 import Categories from "./pages/Categories";
 import Savings from "./pages/Savings";
 import SettingsPage from "./pages/Settings";
@@ -31,6 +32,7 @@ const App = () => (
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/reports" element={<Reports />} />
+                  <Route path="/ai-insights" element={<AIInsights />} />
                   <Route path="/categories" element={<Categories />} />
                   <Route path="/savings" element={<Savings />} />
                   <Route path="/settings" element={<SettingsPage />} />
