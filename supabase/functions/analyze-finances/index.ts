@@ -130,7 +130,7 @@ Use linguagem simples e amigável. Os insights devem ser curtos e práticos. Se 
     });
   } catch (error) {
     console.error('Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Erro interno ao processar sua solicitação' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
