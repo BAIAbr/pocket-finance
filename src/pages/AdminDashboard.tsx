@@ -129,12 +129,39 @@ export default function AdminDashboard() {
     return days;
   }, [sessions]);
 
+  const formatDateBR = (isoString: string | null) => {
+    if (!isoString) return { data: '', horario: '' };
+    const date = parseISO(isoString);
+    // Convert to Brazil timezone (UTC-3)
+    const brDate = new Date(date.getTime() - 3 * 60 * 60 * 1000);
+    return {
+      data: format(brDate, 'dd/MM/yyyy', { locale: ptBR }),
+      horario: format(brDate, 'HH:mm:ss'),
+    };
+  };
+
+  const formatMinutes = (minutes: number) => {
+    const hrs = Math.floor(Number(minutes) / 60);
+    const mins = Math.round(Number(minutes) % 60);
+    if (hrs > 0) return `${hrs}h ${mins}min`;
+    return `${mins}min`;
+  };
+
   const exportCSV = () => {
-    const header = 'user_id,last_login_at,total_time_online,total_sessions,average_session_time,status_usuario,created_at\n';
-    const rows = analytics.map(a =>
-      `${a.user_id},${a.last_login_at || ''},${a.total_time_online},${a.total_sessions},${a.average_session_time},${a.status_usuario},${a.created_at}`
-    ).join('\n');
-    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const header = 'Nome,Email,Último Login (Data),Último Login (Horário),Tempo Total no Site,Total de Sessões,Tempo Médio por Sessão,Status,Data de Cadastro\n';
+    const rows = analytics.map(a => {
+      const profile = profiles.find(p => p.user_id === a.user_id);
+      const nome = profile?.name || '';
+      const email = profile?.email || '';
+      const { data: loginData, horario: loginHorario } = formatDateBR(a.last_login_at);
+      const tempoTotal = formatMinutes(a.total_time_online);
+      const tempoMedio = formatMinutes(a.average_session_time);
+      const statusMap: Record<string, string> = { ativo: 'Ativo', em_risco: 'Em risco', inativo: 'Inativo' };
+      const status = statusMap[a.status_usuario] || a.status_usuario;
+      const { data: cadastroData } = formatDateBR(a.created_at);
+      return `"${nome}","${email}",${loginData},${loginHorario},"${tempoTotal}",${a.total_sessions},"${tempoMedio}",${status},${cadastroData}`;
+    }).join('\n');
+    const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
