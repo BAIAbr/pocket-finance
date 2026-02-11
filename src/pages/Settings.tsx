@@ -3,10 +3,11 @@ import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, Smile, ShieldCheck } from 'lucide-react';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, Smile, ShieldCheck, Bell, BellOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -16,6 +17,7 @@ export default function SettingsPage() {
   const { theme, toggleTheme } = useTheme();
   const { isAuthenticated, signOut, profile: authProfile, user } = useAuth();
   const { isAdmin } = useAdminCheck(user?.id);
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed, isLoading: pushLoading, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } = usePushNotifications(user?.id);
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -361,6 +363,51 @@ export default function SettingsPage() {
             </div>
           </button>
         </section>
+
+        {/* Push Notifications */}
+        {isAuthenticated && pushSupported && (
+          <section className="card-finance">
+            <h2 className="font-semibold mb-4 flex items-center gap-2">
+              <Bell size={18} />
+              Notificações
+            </h2>
+            <button
+              onClick={async () => {
+                if (pushSubscribed) {
+                  const ok = await pushUnsubscribe();
+                  if (ok) toast.success('Notificações desativadas');
+                } else {
+                  const ok = await pushSubscribe();
+                  if (ok) toast.success('Notificações ativadas! 🔔');
+                  else toast('Permissão de notificação negada', { description: 'Habilite nas configurações do navegador.' });
+                }
+              }}
+              disabled={pushLoading}
+              className="w-full flex items-center justify-between py-3"
+            >
+              <div>
+                <p className="font-medium">{pushSubscribed ? 'Notificações ativadas' : 'Notificações desativadas'}</p>
+                <p className="text-sm text-muted-foreground">
+                  {pushSubscribed ? 'Receba lembretes para manter suas finanças em dia' : 'Ative para receber lembretes inteligentes'}
+                </p>
+              </div>
+              <div
+                className={cn(
+                  'w-14 h-8 rounded-full flex items-center px-1 transition-all duration-300',
+                  pushSubscribed ? 'bg-accent justify-end' : 'bg-secondary justify-start'
+                )}
+              >
+                <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-md transition-all duration-300">
+                  {pushSubscribed ? (
+                    <Bell size={14} className="text-accent" />
+                  ) : (
+                    <BellOff size={14} className="text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+            </button>
+          </section>
+        )}
 
         {/* Data */}
         {isAuthenticated && (

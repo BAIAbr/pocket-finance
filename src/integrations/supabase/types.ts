@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_config: {
+        Row: {
+          created_at: string
+          key: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string
@@ -43,6 +61,33 @@ export type Database = {
           is_default?: boolean
           name?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications_log: {
+        Row: {
+          id: string
+          message: string
+          notification_level: number
+          sent_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          message: string
+          notification_level: number
+          sent_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          message?: string
+          notification_level?: number
+          sent_at?: string
+          status?: string
           user_id?: string
         }
         Relationships: []
@@ -194,6 +239,7 @@ export type Database = {
           email: string
           id: string
           name: string
+          push_notifications_enabled: boolean
           updated_at: string
           user_id: string
         }
@@ -204,6 +250,7 @@ export type Database = {
           email: string
           id?: string
           name: string
+          push_notifications_enabled?: boolean
           updated_at?: string
           user_id: string
         }
@@ -214,7 +261,35 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          push_notifications_enabled?: boolean
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
           user_id?: string
         }
         Relationships: []
