@@ -3,10 +3,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
-import { Loader2, Users, Clock, Activity, TrendingUp, TrendingDown, Download, ArrowLeft } from 'lucide-react';
+import { Loader2, Users, Clock, Activity, TrendingUp, TrendingDown, Download, ArrowLeft, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts';
@@ -43,6 +44,8 @@ export default function AdminDashboard() {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'ativo' | 'inativo'>('all');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -290,7 +293,33 @@ export default function AdminDashboard() {
             Lista de Usuários
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
+          {/* Search & Filter */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 text-sm"
+              />
+            </div>
+            <div className="flex gap-1">
+              {(['all', 'ativo', 'inativo'] as const).map((filter) => (
+                <Button
+                  key={filter}
+                  variant={statusFilter === filter ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter(filter)}
+                  className="text-xs"
+                >
+                  {filter === 'all' ? 'Todos' : filter === 'ativo' ? 'Ativos' : 'Inativos'}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -302,35 +331,46 @@ export default function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {profiles.map((profile) => {
-                const userAnalytics = analytics.find(a => a.user_id === profile.user_id);
-                const lastActivity = userAnalytics?.last_login_at ? parseISO(userAnalytics.last_login_at) : null;
-                const isActive = lastActivity ? isAfter(lastActivity, subDays(new Date(), 30)) : false;
+              {profiles
+                .filter((profile) => {
+                  const q = searchQuery.toLowerCase();
+                  const matchesSearch = !q || profile.name?.toLowerCase().includes(q) || profile.email.toLowerCase().includes(q);
+                  if (!matchesSearch) return false;
+                  if (statusFilter === 'all') return true;
+                  const userAnalytics = analytics.find(a => a.user_id === profile.user_id);
+                  const lastActivity = userAnalytics?.last_login_at ? parseISO(userAnalytics.last_login_at) : null;
+                  const isActive = lastActivity ? isAfter(lastActivity, subDays(new Date(), 30)) : false;
+                  return statusFilter === 'ativo' ? isActive : !isActive;
+                })
+                .map((profile) => {
+                  const userAnalytics = analytics.find(a => a.user_id === profile.user_id);
+                  const lastActivity = userAnalytics?.last_login_at ? parseISO(userAnalytics.last_login_at) : null;
+                  const isActive = lastActivity ? isAfter(lastActivity, subDays(new Date(), 30)) : false;
 
-                return (
-                  <TableRow key={profile.user_id}>
-                    <TableCell className="font-medium">
-                      {profile.name || profile.email}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {profile.email}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={isActive ? 'default' : 'destructive'} className="text-xs">
-                        {isActive ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {lastActivity
-                        ? format(lastActivity, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
-                        : 'Nunca'}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {format(parseISO(profile.created_at), 'dd/MM/yyyy', { locale: ptBR })}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                  return (
+                    <TableRow key={profile.user_id}>
+                      <TableCell className="font-medium">
+                        {profile.name || profile.email}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {profile.email}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={isActive ? 'default' : 'destructive'} className="text-xs">
+                          {isActive ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {lastActivity
+                          ? format(lastActivity, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+                          : 'Nunca'}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {format(parseISO(profile.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
             </TableBody>
           </Table>
         </CardContent>
@@ -345,8 +385,8 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyActiveData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} className="text-muted-foreground" interval={4} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10 }} className="text-muted-foreground" />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }} interval={4} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }} />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }}
                   labelStyle={{ color: 'hsl(var(--foreground))' }}
@@ -368,8 +408,8 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dailyAvgTimeData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} className="text-muted-foreground" interval={4} />
-                <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }} interval={4} />
+                <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }} />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }}
                   labelStyle={{ color: 'hsl(var(--foreground))' }}
