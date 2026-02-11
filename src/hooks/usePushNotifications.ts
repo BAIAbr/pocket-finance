@@ -47,14 +47,6 @@ export function usePushNotifications(userId: string | undefined) {
       // Register service worker
       const registration = await navigator.serviceWorker.register('/sw.js');
       await navigator.serviceWorker.ready;
-
-      // Get VAPID public key from edge function
-      const vapidRes = await supabase.functions.invoke('manage-push', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        body: null,
-      });
-
       // Use fetch directly for GET with query params
       const baseUrl = import.meta.env.VITE_SUPABASE_URL;
       const vapidResponse = await fetch(
