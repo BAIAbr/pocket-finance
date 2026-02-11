@@ -2,9 +2,13 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { BottomNav } from '@/components/BottomNav';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { useSessionTracker } from '@/hooks/useSessionTracker';
 
 export function AppLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  // Track user sessions
+  useSessionTracker(user?.id);
 
   // Show loading while checking auth
   if (isLoading) {
