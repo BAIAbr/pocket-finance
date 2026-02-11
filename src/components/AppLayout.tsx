@@ -29,7 +29,7 @@ export function AppLayout() {
       <div className="flex-1">
         <Outlet />
       </div>
-      <footer className="text-center text-xs text-muted-foreground py-4 pb-24">
+      <footer className="text-center text-xs text-muted-foreground py-4 pb-28">
         Copyright © Finango – Todos os direitos reservados.
       </footer>
       <BottomNav />
