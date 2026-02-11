@@ -4,11 +4,27 @@ import { TransactionList } from '@/components/TransactionList';
 import { MiniChart } from '@/components/MiniChart';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { AddTransactionModal } from '@/components/AddTransactionModal';
+import { StreakBanner } from '@/components/StreakBanner';
+import { WeeklySummaryCard } from '@/components/WeeklySummaryCard';
 import { useFinanceContext } from '@/contexts/FinanceContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useStreak } from '@/hooks/useStreak';
+import { useWeeklySummary } from '@/hooks/useWeeklySummary';
 
 export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { currentMonthStats } = useFinanceContext();
+  const { currentMonthStats, transactions, categories } = useFinanceContext();
+  const { user } = useAuth();
+  const { currentStreak, hasRegisteredToday, updateStreak, isLoading: streakLoading } = useStreak(user?.id ?? null);
+  const weeklySummary = useWeeklySummary(transactions as any, categories as any, currentStreak);
+
+  // When user adds a transaction, also update streak
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    // Refresh streak after adding a transaction
+    updateStreak();
+  };
 
   return (
     <div className="min-h-screen bg-background pb-28 safe-top">
@@ -25,6 +41,28 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="px-4 space-y-5">
+        {/* Streak Banner */}
+        {!streakLoading && (
+          <div className="animate-fade-in">
+            <StreakBanner
+              currentStreak={currentStreak}
+              hasRegisteredToday={hasRegisteredToday}
+              onRegisterClick={handleOpenModal}
+            />
+          </div>
+        )}
+
+        {/* Weekly Summary */}
+        <div className="animate-fade-in">
+          <WeeklySummaryCard
+            totalSpent={weeklySummary.totalSpent}
+            variationPercent={weeklySummary.variationPercent}
+            topCategory={weeklySummary.topCategory}
+            currentStreak={currentStreak}
+            isVisible={weeklySummary.isVisible}
+          />
+        </div>
+
         {/* Balance Card */}
         <div className="animate-fade-in">
           <BalanceCard />
@@ -48,12 +86,12 @@ export default function Dashboard() {
       </main>
 
       {/* FAB */}
-      <FloatingActionButton onClick={() => setIsModalOpen(true)} />
+      <FloatingActionButton onClick={handleOpenModal} />
 
       {/* Modal */}
       <AddTransactionModal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        onClose={handleCloseModal} 
       />
     </div>
   );

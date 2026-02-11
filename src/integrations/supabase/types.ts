@@ -381,35 +381,47 @@ export type Database = {
         Row: {
           average_session_time: number
           created_at: string
+          current_streak: number
           id: string
+          last_activity_date: string | null
           last_login_at: string | null
+          missed_days_in_week: number
           status_usuario: string
           total_sessions: number
           total_time_online: number
           updated_at: string
           user_id: string
+          week_cycle_start: string | null
         }
         Insert: {
           average_session_time?: number
           created_at?: string
+          current_streak?: number
           id?: string
+          last_activity_date?: string | null
           last_login_at?: string | null
+          missed_days_in_week?: number
           status_usuario?: string
           total_sessions?: number
           total_time_online?: number
           updated_at?: string
           user_id: string
+          week_cycle_start?: string | null
         }
         Update: {
           average_session_time?: number
           created_at?: string
+          current_streak?: number
           id?: string
+          last_activity_date?: string | null
           last_login_at?: string | null
+          missed_days_in_week?: number
           status_usuario?: string
           total_sessions?: number
           total_time_online?: number
           updated_at?: string
           user_id?: string
+          week_cycle_start?: string | null
         }
         Relationships: []
       }
