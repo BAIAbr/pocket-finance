@@ -2,10 +2,11 @@ import { useState, useRef } from 'react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, Smile } from 'lucide-react';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, Smile, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -14,6 +15,7 @@ export default function SettingsPage() {
   const { settings, setSettings, clearAllData, profile, updateProfile } = useFinanceContext();
   const { theme, toggleTheme } = useTheme();
   const { isAuthenticated, signOut, profile: authProfile, user } = useAuth();
+  const { isAdmin } = useAdminCheck(user?.id);
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -230,6 +232,18 @@ export default function SettingsPage() {
                 <span>Sair da conta</span>
                 <LogOut size={18} />
               </button>
+              {isAdmin && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="w-full flex items-center justify-between p-3 rounded-xl bg-primary/10 hover:bg-primary/20 transition-all touch-scale text-primary"
+                >
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={18} />
+                    <span className="font-medium">Painel Administrativo</span>
+                  </div>
+                  <ShieldCheck size={18} />
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-3">
