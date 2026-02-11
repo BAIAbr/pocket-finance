@@ -3,9 +3,10 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 
 
 export function MiniChart() {
   const { getMonthlyStats } = useFinanceContext();
-  const stats = getMonthlyStats(6);
+  const allStats = getMonthlyStats(6);
+  const stats = allStats.filter(s => s.income > 0 || s.expense > 0);
 
-  if (stats.every(s => s.income === 0 && s.expense === 0)) {
+  if (stats.length === 0) {
     return (
       <div className="card-finance h-40 flex items-center justify-center">
         <p className="text-muted-foreground text-sm">
