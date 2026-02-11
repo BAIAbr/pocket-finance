@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface PushManagerRegistration extends ServiceWorkerRegistration {
+  pushManager: PushManager;
+}
+
 export function usePushNotifications(userId: string | undefined) {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -31,7 +35,7 @@ export function usePushNotifications(userId: string | undefined) {
   const checkSubscription = useCallback(async () => {
     try {
       const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
+      const subscription = await (registration as PushManagerRegistration).pushManager.getSubscription();
       setIsSubscribed(!!subscription);
     } catch {
       setIsSubscribed(false);
@@ -70,7 +74,7 @@ export function usePushNotifications(userId: string | undefined) {
       const applicationServerKey = urlBase64ToUint8Array(publicKey);
 
       // Subscribe to push
-      const subscription = await registration.pushManager.subscribe({
+      const subscription = await (registration as PushManagerRegistration).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
       });
@@ -105,7 +109,7 @@ export function usePushNotifications(userId: string | undefined) {
 
     try {
       const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
+      const subscription = await (registration as PushManagerRegistration).pushManager.getSubscription();
 
       if (subscription) {
         const endpoint = subscription.endpoint;
