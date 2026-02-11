@@ -30,7 +30,7 @@ export function AppLayout() {
         <Outlet />
       </div>
       <footer className="text-center text-xs text-muted-foreground py-4 pb-24">
-        © {new Date().getFullYear()} Todos os direitos reservados FINANGO
+        Copyright © Finango – Todos os direitos reservados.
       </footer>
       <BottomNav />
     </div>
