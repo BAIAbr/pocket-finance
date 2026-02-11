@@ -434,6 +434,7 @@ export default function SettingsPage() {
                 Nuvem
               </span>
             </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">Seus dados são sincronizados de forma segura</p>
           </div>
         </section>
 
@@ -458,11 +459,6 @@ export default function SettingsPage() {
             </div>
           </a>
         </section>
-
-        {/* Footer */}
-        <div className="text-center text-xs text-muted-foreground pt-2 pb-4">
-          <p>Seus dados são sincronizados de forma segura</p>
-        </div>
       </main>
     </div>
   );
