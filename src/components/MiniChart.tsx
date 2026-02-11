@@ -17,14 +17,26 @@ export function MiniChart() {
 
   return (
     <div className="card-finance">
-      <h3 className="text-sm font-medium text-muted-foreground mb-4">Últimos 6 meses</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-medium text-foreground">Últimos 6 meses</h3>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'hsl(var(--income))' }} />
+            <span className="text-xs text-foreground">Entradas</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'hsl(var(--expense))' }} />
+            <span className="text-xs text-foreground">Saídas</span>
+          </div>
+        </div>
+      </div>
       <ResponsiveContainer width="100%" height={120}>
         <BarChart data={stats} barGap={4}>
           <XAxis 
             dataKey="month" 
             axisLine={false}
             tickLine={false}
-            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+            tick={{ fill: 'hsl(var(--foreground))', fontSize: 10 }}
           />
           <YAxis hide />
           <Tooltip
@@ -33,8 +45,10 @@ export function MiniChart() {
               border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
               fontSize: '12px',
+              color: 'hsl(var(--foreground))',
             }}
             labelStyle={{ color: 'hsl(var(--foreground))' }}
+            itemStyle={{ color: 'hsl(var(--foreground))' }}
           />
           <Bar dataKey="income" radius={[4, 4, 0, 0]} name="Entradas">
             {stats.map((_, index) => (
