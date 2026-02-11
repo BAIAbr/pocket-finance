@@ -445,7 +445,7 @@ export default function SettingsPage() {
             Contato
           </h2>
           <a
-            href="mailto:finangobr@gmail.com"
+            href="mailto:suporte@finango.online"
             className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale"
           >
             <div className="flex items-center gap-3">
@@ -454,7 +454,7 @@ export default function SettingsPage() {
               </div>
               <div className="text-left">
                 <p className="font-medium">Email de Suporte</p>
-                <p className="text-sm text-muted-foreground">finangobr@gmail.com</p>
+                <p className="text-sm text-muted-foreground">suporte@finango.online</p>
               </div>
             </div>
           </a>
