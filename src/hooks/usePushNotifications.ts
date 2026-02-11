@@ -13,7 +13,16 @@ export function usePushNotifications(userId: string | undefined) {
 
     if (supported) {
       setPermission(Notification.permission);
-      checkSubscription();
+      // Only check subscription if service worker is already registered
+      navigator.serviceWorker.getRegistration('/sw.js').then((reg) => {
+        if (reg) {
+          checkSubscription();
+        } else {
+          setIsLoading(false);
+        }
+      }).catch(() => {
+        setIsLoading(false);
+      });
     } else {
       setIsLoading(false);
     }
