@@ -7,6 +7,8 @@ import { Loader2, Users, Clock, Activity, TrendingUp, TrendingDown, Download, Ar
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts';
 import { format, subDays, isAfter, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -27,11 +29,19 @@ interface SessionRow {
   duration_minutes: number;
 }
 
+interface ProfileRow {
+  user_id: string;
+  name: string;
+  email: string;
+  created_at: string;
+}
+
 export default function AdminDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const { isAdmin, isLoading: adminLoading } = useAdminCheck(user?.id);
   const [analytics, setAnalytics] = useState<AnalyticsRow[]>([]);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
+  const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -39,17 +49,19 @@ export default function AdminDashboard() {
     if (!isAdmin || adminLoading) return;
 
     const fetchData = async () => {
-      const [analyticsRes, sessionsRes] = await Promise.all([
+      const [analyticsRes, sessionsRes, profilesRes] = await Promise.all([
         supabase.from('user_analytics').select('*'),
         supabase
           .from('user_sessions')
           .select('user_id, login_at, duration_minutes')
           .gte('login_at', subDays(new Date(), 30).toISOString())
           .order('login_at', { ascending: true }),
+        supabase.from('profiles').select('user_id, name, email, created_at'),
       ]);
 
       if (analyticsRes.data) setAnalytics(analyticsRes.data as AnalyticsRow[]);
       if (sessionsRes.data) setSessions(sessionsRes.data as SessionRow[]);
+      if (profilesRes.data) setProfiles(profilesRes.data as ProfileRow[]);
       setLoading(false);
     };
 
@@ -270,7 +282,60 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
-      {/* Chart: Active users per day */}
+      {/* Users Table */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Users size={16} />
+            Lista de Usuários
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Última atividade</TableHead>
+                <TableHead>Cadastro</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {profiles.map((profile) => {
+                const userAnalytics = analytics.find(a => a.user_id === profile.user_id);
+                const lastActivity = userAnalytics?.last_login_at ? parseISO(userAnalytics.last_login_at) : null;
+                const isActive = lastActivity ? isAfter(lastActivity, subDays(new Date(), 30)) : false;
+
+                return (
+                  <TableRow key={profile.user_id}>
+                    <TableCell className="font-medium">
+                      {profile.name || profile.email}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {profile.email}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={isActive ? 'default' : 'destructive'} className="text-xs">
+                        {isActive ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {lastActivity
+                        ? format(lastActivity, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+                        : 'Nunca'}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {format(parseISO(profile.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Usuários ativos por dia (30 dias)</CardTitle>
