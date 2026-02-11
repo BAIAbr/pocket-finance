@@ -80,7 +80,7 @@ export default function Reports() {
 
         {/* Monthly Comparison Chart */}
         <div className="card-finance">
-          <h3 className="text-sm font-medium text-muted-foreground mb-4">Comparação Mensal</h3>
+          <h3 className="text-sm font-medium text-foreground mb-4">Comparação Mensal</h3>
           {monthlyStats.some(s => s.income > 0 || s.expense > 0) ? (
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={monthlyStats} barGap={4}>
@@ -88,7 +88,7 @@ export default function Reports() {
                   dataKey="month" 
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }}
                 />
                 <YAxis hide />
                 <Tooltip
@@ -97,7 +97,10 @@ export default function Reports() {
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
                     fontSize: '12px',
+                    color: 'hsl(var(--foreground))',
                   }}
+                  labelStyle={{ color: 'hsl(var(--foreground))' }}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
                   formatter={(value: number) => formatCurrency(value)}
                 />
                 <Bar dataKey="income" radius={[4, 4, 0, 0]} name="Entradas">
