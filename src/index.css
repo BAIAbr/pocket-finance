@@ -89,7 +89,7 @@
     --secondary-foreground: 210 40% 98%;
 
     --muted: 222 30% 12%;
-    --muted-foreground: 215 20% 55%;
+    --muted-foreground: 215 20% 65%;
 
     --accent: 250 89% 67%;
     --accent-foreground: 210 40% 98%;
@@ -102,8 +102,8 @@
     --ring: 250 89% 67%;
 
     /* Custom Finance Colors (dark) */
-    --income: 160 84% 39%;
-    --expense: 346 77% 55%;
+    --income: 160 84% 48%;
+    --expense: 346 77% 60%;
     --balance-start: 250 89% 67%;
     --balance-end: 280 85% 60%;
 
