@@ -6,7 +6,7 @@ const navItems = [
   { path: '/', icon: Home, label: 'Início' },
   { path: '/reports', icon: BarChart3, label: 'Relatórios' },
   { path: '/ai-insights', icon: Brain, label: 'IA' },
-  { path: '/savings', icon: PiggyBank, label: 'Poupança' },
+  { path: '/savings', icon: PiggyBank, label: 'Cofrinho' },
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
 
