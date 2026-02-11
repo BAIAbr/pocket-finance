@@ -16,7 +16,7 @@ export default function Dashboard() {
       <header className="px-4 pt-6 pb-4 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         <div className="relative">
-          <p className="text-muted-foreground text-sm font-medium">Olá! 👋</p>
+          <p className="text-muted-foreground text-sm font-medium">Resumo financeiro</p>
           <h1 className="text-2xl font-bold capitalize bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
             {currentMonthStats.month}
           </h1>
