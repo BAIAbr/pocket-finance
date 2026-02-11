@@ -1,6 +1,35 @@
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 
+const formatBRL = (value: number) =>
+  Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  const income = Number(payload.find((p: any) => p.dataKey === 'income')?.value ?? 0);
+  const expense = Number(payload.find((p: any) => p.dataKey === 'expense')?.value ?? 0);
+  const balance = income - expense;
+  return (
+    <div
+      style={{
+        backgroundColor: 'hsl(var(--popover))',
+        border: '1px solid hsl(var(--border))',
+        borderRadius: '8px',
+        padding: '8px 12px',
+        fontSize: '12px',
+        color: 'hsl(var(--foreground))',
+      }}
+    >
+      <p className="font-medium mb-1">{label}</p>
+      <p style={{ color: 'hsl(var(--income))' }}>Entradas: {formatBRL(income)}</p>
+      <p style={{ color: 'hsl(var(--expense))' }}>Saídas: {formatBRL(expense)}</p>
+      <p className="mt-1 font-semibold" style={{ color: balance >= 0 ? 'hsl(142 71% 45%)' : 'hsl(0 84% 60%)' }}>
+        Saldo: {formatBRL(balance)}
+      </p>
+    </div>
+  );
+};
+
 export function MiniChart() {
   const { getMonthlyStats } = useFinanceContext();
   const allStats = getMonthlyStats(6);
@@ -40,17 +69,7 @@ export function MiniChart() {
             tick={{ fill: 'hsl(var(--foreground))', fontSize: 10 }}
           />
           <YAxis hide />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: 'hsl(var(--popover))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              fontSize: '12px',
-              color: 'hsl(var(--foreground))',
-            }}
-            labelStyle={{ color: 'hsl(var(--foreground))' }}
-            itemStyle={{ color: 'hsl(var(--foreground))' }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Bar dataKey="income" radius={[4, 4, 0, 0]} name="Entradas">
             {stats.map((_, index) => (
               <Cell key={`income-${index}`} fill="hsl(var(--income))" />
