@@ -52,17 +52,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Weekly Summary */}
-        <div className="animate-fade-in">
-          <WeeklySummaryCard
-            totalSpent={weeklySummary.totalSpent}
-            variationPercent={weeklySummary.variationPercent}
-            topCategory={weeklySummary.topCategory}
-            currentStreak={currentStreak}
-            isVisible={weeklySummary.isVisible}
-          />
-        </div>
-
         {/* Balance Card */}
         <div className="animate-fade-in">
           <BalanceCard />
@@ -71,6 +60,17 @@ export default function Dashboard() {
         {/* Chart */}
         <div className="animate-fade-in stagger-1">
           <MiniChart />
+        </div>
+
+        {/* Weekly Summary */}
+        <div className="animate-fade-in stagger-2">
+          <WeeklySummaryCard
+            totalSpent={weeklySummary.totalSpent}
+            variationPercent={weeklySummary.variationPercent}
+            topCategory={weeklySummary.topCategory}
+            currentStreak={currentStreak}
+            isVisible={weeklySummary.isVisible}
+          />
         </div>
 
         {/* Recent Transactions */}
