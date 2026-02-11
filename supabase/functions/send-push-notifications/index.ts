@@ -56,17 +56,13 @@ async function encryptPayload(p256dhB64: string, authB64: string, payload: strin
   const subscriberAuth = base64UrlToBuffer(authB64);
   const payloadBytes = new TextEncoder().encode(payload);
 
-  // Generate local ECDH key pair
   const localKP = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
   const localPubRaw = new Uint8Array(await crypto.subtle.exportKey('raw', localKP.publicKey));
 
-  // Import subscriber public key for ECDH
   const subscriberKey = await crypto.subtle.importKey('raw', subscriberPubRaw, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
 
-  // Shared secret
   const sharedSecret = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: subscriberKey }, localKP.privateKey, 256));
 
-  // RFC 8291 key derivation
   const keyInfo = concat(new TextEncoder().encode('WebPush: info\0'), subscriberPubRaw, localPubRaw);
   const prk = await hkdfExtract(subscriberAuth, sharedSecret);
   const ikm = await hkdfExpand(prk, keyInfo, 32);
@@ -76,12 +72,10 @@ async function encryptPayload(p256dhB64: string, authB64: string, payload: strin
   const cek = await hkdfExpand(contentPrk, new TextEncoder().encode('Content-Encoding: aes128gcm\0'), 16);
   const nonce = await hkdfExpand(contentPrk, new TextEncoder().encode('Content-Encoding: nonce\0'), 12);
 
-  // Encrypt with AES-128-GCM (add delimiter byte 0x02)
   const paddedPayload = concat(payloadBytes, new Uint8Array([2]));
   const encKey = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['encrypt']);
   const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, encKey, paddedPayload));
 
-  // aes128gcm content coding: salt(16) + rs(4) + idlen(1) + keyid(65) + ciphertext
   const rs = new Uint8Array(4);
   new DataView(rs.buffer).setUint32(0, 4096);
 
@@ -150,6 +144,48 @@ serve(async (req) => {
   }
 
   try {
+    // Verify caller is an authenticated admin
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const callerUserId = claimsData.claims.sub;
+
+    // Check admin role
+    const { data: role } = await userClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', callerUserId)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (!role) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Admin verified — proceed with service role client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -168,7 +204,6 @@ serve(async (req) => {
     const vapidPublicKey = vapidPub.value;
     const vapidPrivateKeyJwk = JSON.parse(vapidPriv.value) as JsonWebKey;
 
-    // Get all users with push notifications enabled and their analytics
     const { data: profiles } = await supabase
       .from('profiles')
       .select('user_id, name, email, push_notifications_enabled')
@@ -182,13 +217,11 @@ serve(async (req) => {
 
     const userIds = profiles.map(p => p.user_id);
 
-    // Get analytics for these users
     const { data: analytics } = await supabase
       .from('user_analytics')
       .select('user_id, last_login_at')
       .in('user_id', userIds);
 
-    // Get push subscriptions
     const { data: subscriptions } = await supabase
       .from('push_subscriptions')
       .select('*')
@@ -200,7 +233,6 @@ serve(async (req) => {
       });
     }
 
-    // Get recent notifications to avoid spam (last 7 days)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data: recentNotifs } = await supabase
       .from('notifications_log')
@@ -213,7 +245,6 @@ serve(async (req) => {
       recentNotifMap.get(n.user_id)!.add(n.notification_level);
     });
 
-    // Check if user had any notification in the last 7 days
     const recentAnySent = new Map<string, boolean>();
     (recentNotifs || []).forEach(n => {
       recentAnySent.set(n.user_id, true);
@@ -231,7 +262,6 @@ serve(async (req) => {
     let totalSent = 0;
     const now = Date.now();
 
-    // Try to get personalized data for each user
     for (const profile of profiles) {
       const userId = profile.user_id;
       const lastLogin = analyticsMap.get(userId);
@@ -239,17 +269,14 @@ serve(async (req) => {
 
       if (!userSubs || !lastLogin) continue;
 
-      // Max 1 notification per week per user
       if (recentAnySent.get(userId)) continue;
 
       const daysSinceLogin = Math.floor((now - new Date(lastLogin).getTime()) / (1000 * 60 * 60 * 24));
 
-      // Find the appropriate notification level
       let matchedLevel: NotificationLevel | null = null;
       for (let i = NOTIFICATION_LEVELS.length - 1; i >= 0; i--) {
         const level = NOTIFICATION_LEVELS[i];
         if (daysSinceLogin >= level.days) {
-          // Check if this level was already sent
           const sentLevels = recentNotifMap.get(userId);
           if (!sentLevels?.has(level.level)) {
             matchedLevel = level;
@@ -260,11 +287,9 @@ serve(async (req) => {
 
       if (!matchedLevel) continue;
 
-      // Try to personalize the message
       let personalizedBody = matchedLevel.body;
 
       try {
-        // Check for active savings goals
         const { data: goals } = await supabase
           .from('savings_goals')
           .select('name')
@@ -286,14 +311,12 @@ serve(async (req) => {
         tag: `finango-level-${matchedLevel.level}`,
       });
 
-      // Send to all user subscriptions
       for (const sub of userSubs) {
         const success = await sendPush(
           sub.endpoint, sub.p256dh, sub.auth,
           pushPayload, vapidPrivateKeyJwk, vapidPublicKey
         );
 
-        // Log the notification
         await supabase.from('notifications_log').insert({
           user_id: userId,
           notification_level: matchedLevel.level,
@@ -303,7 +326,6 @@ serve(async (req) => {
 
         if (success) totalSent++;
 
-        // Remove invalid subscriptions (410 Gone)
         if (!success) {
           await supabase.from('push_subscriptions').delete().eq('id', sub.id);
         }
