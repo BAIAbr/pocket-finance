@@ -460,9 +460,8 @@ export default function SettingsPage() {
         </section>
 
         {/* Footer */}
-        <div className="text-center text-xs text-muted-foreground p-4">
-          <p>FINANGO © 2025</p>
-          <p className="mt-1">Seus dados são sincronizados de forma segura</p>
+        <div className="text-center text-xs text-muted-foreground pt-2 pb-4">
+          <p>Seus dados são sincronizados de forma segura</p>
         </div>
       </main>
     </div>
