@@ -15,6 +15,7 @@ import Savings from "./pages/Savings";
 import SettingsPage from "./pages/Settings";
 import AuthPage from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
+import FinancialHistory from "./pages/FinancialHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
                   <Route path="/categories" element={<Categories />} />
                   <Route path="/savings" element={<Savings />} />
                   <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/history" element={<FinancialHistory />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                 </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
