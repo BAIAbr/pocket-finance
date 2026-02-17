@@ -343,7 +343,10 @@ export default function FinancialHistory() {
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '0.75rem',
                     fontSize: '0.8rem',
+                    color: 'hsl(var(--foreground))',
                   }}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                  labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
                 />
               </PieChart>
             </ResponsiveContainer>
