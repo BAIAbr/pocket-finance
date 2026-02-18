@@ -214,11 +214,12 @@ export default function FinancialHistory() {
     return { income, expense, balance: income - expense, avgDaily: expense / days };
   }, [filteredTransactions, start, end]);
 
-  // Line chart data
+  // Line chart data - reactive to active tab
+  const chartType = activeTab === 'income' ? 'income' : 'expense';
   const lineData = useMemo(() => {
     const dayMap = new Map<string, number>();
     filteredTransactions
-      .filter(t => t.type === 'expense')
+      .filter(t => t.type === chartType)
       .forEach(t => {
         const key = t.date;
         dayMap.set(key, (dayMap.get(key) || 0) + Number(t.amount));
@@ -229,7 +230,7 @@ export default function FinancialHistory() {
         date: format(parseISO(date), 'dd/MM', { locale: ptBR }),
         total,
       }));
-  }, [filteredTransactions]);
+  }, [filteredTransactions, chartType]);
 
   // Pie chart data
   const pieData = useMemo(() => {
@@ -391,14 +392,14 @@ export default function FinancialHistory() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {lineData.length > 1 && (
             <Card className="p-4 card-finance animate-fade-in stagger-2">
-              <h3 className="text-sm font-semibold mb-3">Gastos por dia</h3>
+              <h3 className="text-sm font-semibold mb-3">{activeTab === 'income' ? 'Entradas por dia' : 'Gastos por dia'}</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={lineData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                   <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                   <RechartsTooltip
-                    formatter={(value: number) => [formatCurrency(value), 'Gasto']}
+                    formatter={(value: number) => [formatCurrency(value), activeTab === 'income' ? 'Entrada' : 'Gasto']}
                     contentStyle={{
                       background: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
@@ -406,7 +407,7 @@ export default function FinancialHistory() {
                       fontSize: '0.8rem',
                     }}
                   />
-                  <Line type="monotone" dataKey="total" stroke="hsl(var(--expense))" strokeWidth={2} dot={{ r: 3, fill: 'hsl(var(--expense))' }} activeDot={{ r: 5 }} />
+                  <Line type="monotone" dataKey="total" stroke={activeTab === 'income' ? 'hsl(var(--income))' : 'hsl(var(--expense))'} strokeWidth={2} dot={{ r: 3, fill: activeTab === 'income' ? 'hsl(var(--income))' : 'hsl(var(--expense))' }} activeDot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
             </Card>
