@@ -65,10 +65,10 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-semibold text-lg">Últimas Transações</h2>
               <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
-                Este mês
+                Últimos 7 dias
               </span>
             </div>
-            <TransactionList />
+            <TransactionList compact />
           </div>
         </div>
       </main>
