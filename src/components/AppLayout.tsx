@@ -1,5 +1,6 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { BottomNav } from '@/components/BottomNav';
+import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { useSessionTracker } from '@/hooks/useSessionTracker';
@@ -25,14 +26,24 @@ export function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <div className="flex-1">
-        <Outlet />
+    <div className="min-h-screen bg-background flex">
+      {/* Desktop Sidebar */}
+      <DesktopSidebar />
+
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        <div className="flex-1">
+          <Outlet />
+        </div>
+        <footer className="text-center text-xs text-muted-foreground py-4 pb-28 lg:pb-4">
+          <span className="lg:hidden">Copyright © Finango – Todos os direitos reservados.</span>
+        </footer>
+
+        {/* Mobile Bottom Nav */}
+        <div className="lg:hidden">
+          <BottomNav />
+        </div>
       </div>
-      <footer className="text-center text-xs text-muted-foreground py-4 pb-28">
-        Copyright © Finango – Todos os direitos reservados.
-      </footer>
-      <BottomNav />
     </div>
   );
 }
