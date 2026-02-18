@@ -232,11 +232,12 @@ export default function FinancialHistory() {
       }));
   }, [filteredTransactions, chartType]);
 
-  // Pie chart data
+  // Pie chart data - reactive to tab
   const pieData = useMemo(() => {
+    const typeFilter = activeTab === 'income' ? 'income' : 'expense';
     const catMap = new Map<string, number>();
     filteredTransactions
-      .filter(t => t.type === 'expense')
+      .filter(t => t.type === typeFilter)
       .forEach(t => {
         const catId = t.category_id || 'other';
         catMap.set(catId, (catMap.get(catId) || 0) + Number(t.amount));
@@ -247,7 +248,7 @@ export default function FinancialHistory() {
         return { name: cat?.name || 'Outros', value: total, color: cat?.color || '#888' };
       })
       .sort((a, b) => b.value - a.value);
-  }, [filteredTransactions, getCategoryById]);
+  }, [filteredTransactions, getCategoryById, activeTab]);
 
   // Export CSV
   const exportCSV = useCallback(() => {
@@ -415,7 +416,7 @@ export default function FinancialHistory() {
 
           {pieData.length > 0 && (
             <Card className="p-4 card-finance animate-fade-in stagger-3">
-              <h3 className="text-sm font-semibold mb-3">Gastos por categoria</h3>
+              <h3 className="text-sm font-semibold mb-3">{activeTab === 'income' ? 'Entradas por categoria' : 'Gastos por categoria'}</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40} paddingAngle={3} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
