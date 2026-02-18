@@ -1,10 +1,12 @@
 import { useFinanceContext } from '@/contexts/FinanceContext';
-import { parseISO, format } from 'date-fns';
+import { parseISO, format, isAfter, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getIconByName } from '@/lib/icons';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ChevronRight } from 'lucide-react';
 import { Transaction } from '@/hooks/useSupabaseFinance';
+import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
 
 interface TransactionItemProps {
   transaction: Transaction;
@@ -78,8 +80,22 @@ export function TransactionItem({ transaction, showDelete = false }: Transaction
   );
 }
 
-export function TransactionList() {
+interface TransactionListProps {
+  compact?: boolean;
+}
+
+export function TransactionList({ compact = false }: TransactionListProps) {
   const { recentTransactions, isLoading } = useFinanceContext();
+  const navigate = useNavigate();
+
+  const displayTransactions = useMemo(() => {
+    if (!compact) return recentTransactions;
+    const sevenDaysAgo = subDays(new Date(), 7);
+    const weekTransactions = recentTransactions.filter(t =>
+      isAfter(parseISO(t.date), sevenDaysAgo)
+    );
+    return weekTransactions.slice(0, 5);
+  }, [recentTransactions, compact]);
 
   if (isLoading) {
     return (
@@ -99,7 +115,7 @@ export function TransactionList() {
     );
   }
 
-  if (recentTransactions.length === 0) {
+  if (displayTransactions.length === 0) {
     return (
       <div className="card-finance text-center py-8">
         <p className="text-muted-foreground">Nenhuma transação ainda</p>
@@ -112,13 +128,23 @@ export function TransactionList() {
 
   return (
     <div className="space-y-2">
-      {recentTransactions.map(transaction => (
+      {displayTransactions.map(transaction => (
         <TransactionItem 
           key={transaction.id} 
           transaction={transaction}
-          showDelete
+          showDelete={!compact}
         />
       ))}
+
+      {compact && recentTransactions.length > displayTransactions.length && (
+        <button
+          onClick={() => navigate('/history')}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary/10 text-primary text-sm font-medium hover:bg-primary/15 transition-colors"
+        >
+          Ver mês completo
+          <ChevronRight size={16} />
+        </button>
+      )}
     </div>
   );
 }
