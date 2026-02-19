@@ -177,7 +177,7 @@ Responda APENAS com o JSON, sem explicação.`;
     });
   } catch (e) {
     console.error("generate-weekly-missions error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "Erro ao gerar missões semanais. Tente novamente mais tarde." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
