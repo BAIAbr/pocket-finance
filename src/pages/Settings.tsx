@@ -293,33 +293,32 @@ export default function SettingsPage() {
             </div>
           </button>
 
-          {/* Color Scheme Presets */}
+          {/* Theme Presets */}
           <div className="mt-4 pt-4 border-t border-border">
             <div className="flex items-center gap-2 mb-3">
               <Palette size={16} className="text-muted-foreground" />
-              <p className="font-medium text-sm">Cor principal</p>
+              <p className="font-medium text-sm">Tema</p>
             </div>
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+            <div className="grid grid-cols-2 gap-2">
               {COLOR_SCHEMES.map(scheme => (
                 <button
                   key={scheme.id}
                   onClick={() => setColorScheme(scheme.id)}
                   className={cn(
-                    'flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all touch-scale',
+                    'flex items-center gap-3 p-3 rounded-xl transition-all touch-scale text-left',
                     colorScheme === scheme.id
-                      ? 'bg-secondary ring-2 ring-primary'
-                      : 'hover:bg-secondary/50'
+                      ? 'bg-primary/15 ring-2 ring-primary'
+                      : 'bg-secondary/50 hover:bg-secondary'
                   )}
                 >
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-transform"
-                    style={{ background: theme === 'dark' ? scheme.previewDark : scheme.preview }}
-                  >
-                    {colorScheme === scheme.id && (
-                      <Check size={16} className="text-white" />
-                    )}
+                  <span className="text-xl">{scheme.emoji}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{scheme.name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{scheme.description}</p>
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-medium">{scheme.name}</span>
+                  {colorScheme === scheme.id && (
+                    <Check size={16} className="text-primary ml-auto shrink-0" />
+                  )}
                 </button>
               ))}
             </div>
