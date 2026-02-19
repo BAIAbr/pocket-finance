@@ -3,16 +3,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
-import { Loader2, Users, Clock, Activity, TrendingUp, TrendingDown, Download, ArrowLeft, Search } from 'lucide-react';
+import { Loader2, Users, Clock, Activity, TrendingUp, TrendingDown, Download, ArrowLeft, Search, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts';
 import { format, subDays, isAfter, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import AdminAchievements from '@/components/AdminAchievements';
 
 interface AnalyticsRow {
   user_id: string;
@@ -209,7 +211,7 @@ export default function AdminDashboard() {
           </Button>
           <div>
             <h1 className="text-xl font-bold text-foreground">Painel Admin</h1>
-            <p className="text-sm text-muted-foreground">Analytics de engajamento</p>
+            <p className="text-sm text-muted-foreground">Gerenciamento completo</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2">
@@ -217,6 +219,20 @@ export default function AdminDashboard() {
           CSV
         </Button>
       </div>
+
+      <Tabs defaultValue="analytics" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="analytics" className="gap-1.5">
+            <Activity size={14} />
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value="achievements" className="gap-1.5">
+            <Trophy size={14} />
+            Conquistas
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="analytics" className="space-y-6">
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-3">
@@ -447,6 +463,12 @@ export default function AdminDashboard() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="achievements">
+          <AdminAchievements />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
