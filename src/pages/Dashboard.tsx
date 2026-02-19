@@ -1,20 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BalanceCard } from '@/components/BalanceCard';
 import { TransactionList } from '@/components/TransactionList';
 import { MiniChart } from '@/components/MiniChart';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { AddTransactionModal } from '@/components/AddTransactionModal';
+import { MissionHomeCard } from '@/components/MissionHomeCard';
 
 import { WeeklySummaryCard } from '@/components/WeeklySummaryCard';
 import { useFinanceContext } from '@/contexts/FinanceContext';
-
+import { useMissionContext } from '@/contexts/MissionContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useStreak } from '@/hooks/useStreak';
 
 import { useWeeklySummary } from '@/hooks/useWeeklySummary';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { currentMonthStats, transactions, categories } = useFinanceContext();
+  const { recentCompletions, markHomeShown, viewDetails, checkMissions } = useMissionContext();
+  const { user } = useAuth();
+  const { currentStreak } = useStreak(user?.id ?? null);
   const weeklySummary = useWeeklySummary(transactions as any, categories as any, 0);
+
+  // Check missions on dashboard load
+  useEffect(() => {
+    if (!user?.id || !transactions) return;
+
+    const fetchAndCheck = async () => {
+      const incomeCount = (transactions as any[]).filter((t: any) => t.type === 'income').length;
+      const expenseCount = (transactions as any[]).filter((t: any) => t.type === 'expense').length;
+
+      const [goalsRes, piggyRes] = await Promise.all([
+        supabase.from('savings_goals').select('id, is_completed').eq('user_id', user.id),
+        supabase.from('piggy_bank').select('id').eq('user_id', user.id),
+      ]);
+
+      checkMissions({
+        transactionCount: (transactions as any[]).length,
+        incomeCount,
+        expenseCount,
+        streak: currentStreak,
+        savingsGoalCount: goalsRes.data?.length ?? 0,
+        completedGoalCount: goalsRes.data?.filter(g => g.is_completed).length ?? 0,
+        piggyBankCount: piggyRes.data?.length ?? 0,
+        monthlyBalance: currentMonthStats.balance,
+      });
+    };
+
+    fetchAndCheck();
+  }, [user?.id, transactions, currentStreak]);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
@@ -34,6 +69,13 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="px-4 lg:px-8 space-y-5">
+        {/* Mission highlight card */}
+        <MissionHomeCard
+          completions={recentCompletions}
+          onViewDetails={viewDetails}
+          onDismiss={markHomeShown}
+        />
+
         {/* Desktop: 2-column grid / Mobile: stacked */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Balance Card */}
