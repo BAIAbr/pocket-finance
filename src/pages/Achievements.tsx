@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Trophy, Lock, CheckCircle2, Sparkles, Star, Flame, Target } from 'lucide-react';
+import { getIconByName } from '@/lib/icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +23,7 @@ const RARITY_SECTION_STYLE: Record<string, { icon: React.ElementType; headerGrad
 function MissionCard({ mission, isCompleted, completedAt }: { mission: Mission; isCompleted: boolean; completedAt?: string }) {
   const rarity = RARITY_CONFIG[mission.rarity] ?? RARITY_CONFIG.common;
   const isLegendary = mission.rarity === 'legendary';
+  const IconComponent = getIconByName(mission.icon);
 
   return (
     <motion.div
@@ -55,7 +57,7 @@ function MissionCard({ mission, isCompleted, completedAt }: { mission: Mission; 
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
         >
           {isCompleted ? (
-            <span className="drop-shadow-md">{mission.icon}</span>
+            <IconComponent size={22} className="text-white drop-shadow-md" />
           ) : (
             <Lock size={20} className="text-muted-foreground" />
           )}
@@ -188,13 +190,14 @@ export default function Achievements() {
               {weeklyMissions.map((wm) => {
                 const wmRarity = RARITY_CONFIG[wm.rarity] ?? RARITY_CONFIG.common;
                 const progress = wm.target_value > 0 ? Math.min(100, (wm.current_value / wm.target_value) * 100) : 0;
+                const WmIcon = getIconByName(wm.icon);
                 return (
                   <div key={wm.id} className={cn(
                     'rounded-lg border p-3',
                     wm.is_completed ? `${wmRarity.border} ${wmRarity.bg}` : 'border-border/50'
                   )}>
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-lg">{wm.icon}</span>
+                      <WmIcon size={18} className="text-primary shrink-0" />
                       <span className="text-sm font-medium flex-1 truncate">{wm.title}</span>
                       {wm.is_completed && <CheckCircle2 size={14} className="text-green-500" />}
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
