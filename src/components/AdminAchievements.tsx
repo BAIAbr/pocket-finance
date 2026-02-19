@@ -11,8 +11,17 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { getIconByName } from '@/lib/icons';
 import { RARITY_CONFIG } from '@/hooks/useMissions';
-import { Plus, Pencil, Trash2, Upload, ImageIcon, Loader2, Trophy, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, ImageIcon, Loader2, Trophy, X, Flame, Star, Sparkles, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const RARITY_ORDER = ['legendary', 'epic', 'rare', 'common'] as const;
+
+const RARITY_SECTION_STYLE: Record<string, { icon: React.ElementType; headerGradient: string }> = {
+  legendary: { icon: Flame, headerGradient: 'from-yellow-500/20 via-orange-500/10 to-transparent' },
+  epic: { icon: Star, headerGradient: 'from-purple-500/20 via-pink-500/10 to-transparent' },
+  rare: { icon: Sparkles, headerGradient: 'from-blue-500/20 via-cyan-500/10 to-transparent' },
+  common: { icon: Target, headerGradient: 'from-slate-500/20 via-slate-400/10 to-transparent' },
+};
 
 interface MissionRow {
   id: string;
@@ -47,6 +56,7 @@ export default function AdminAchievements() {
   const [deletingMission, setDeletingMission] = useState<MissionRow | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [removeExistingImage, setRemoveExistingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -74,6 +84,7 @@ export default function AdminAchievements() {
     setForm({ name: '', description: '', key: '', icon: 'Trophy', xp_reward: 10, category: 'general', medal_type: 'bronze', rarity: 'common' });
     setImagePreview(null);
     setImageFile(null);
+    setRemoveExistingImage(false);
     setDialogOpen(true);
   };
 
@@ -82,6 +93,7 @@ export default function AdminAchievements() {
     setForm({ name: m.name, description: m.description, key: m.key, icon: m.icon, xp_reward: m.xp_reward, category: m.category, medal_type: m.medal_type, rarity: m.rarity });
     setImagePreview(m.image_url);
     setImageFile(null);
+    setRemoveExistingImage(false);
     setDialogOpen(true);
   };
 
@@ -105,6 +117,14 @@ export default function AdminAchievements() {
   };
 
   const uploadImage = async (missionId: string): Promise<string | null> => {
+    // If user chose to remove existing image
+    if (removeExistingImage && !imageFile) {
+      if (editingMission?.image_url) {
+        const oldPath = editingMission.image_url.split('/achievements/')[1];
+        if (oldPath) await supabase.storage.from('achievements').remove([oldPath]);
+      }
+      return null;
+    }
     if (!imageFile) return editingMission?.image_url ?? null;
 
     setUploading(true);
@@ -233,44 +253,68 @@ export default function AdminAchievements() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {missions.map((m) => {
-            const rarity = RARITY_CONFIG[m.rarity] ?? RARITY_CONFIG.common;
-            const IconComp = getIconByName(m.icon);
+        <CardContent className="space-y-4">
+          {RARITY_ORDER.map((rarityKey) => {
+            const group = missions.filter(m => (m.rarity || 'common') === rarityKey);
+            if (group.length === 0) return null;
+            const config = RARITY_CONFIG[rarityKey];
+            const sectionStyle = RARITY_SECTION_STYLE[rarityKey];
+            const SectionIcon = sectionStyle.icon;
+
             return (
-              <div key={m.id} className={cn(
-                'flex items-center gap-3 rounded-lg border p-3',
-                rarity.border, rarity.bg
-              )}>
-                {m.image_url ? (
-                  <img
-                    src={m.image_url}
-                    alt={m.name}
-                    className="w-10 h-10 rounded-lg object-contain bg-transparent"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br', rarity.color)}>
-                    <IconComp size={18} className="text-white" />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{m.name}</p>
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                      {rarity.emoji} {rarity.label}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground">+{m.xp_reward} XP</span>
+              <div key={rarityKey} className="space-y-2">
+                <div className={cn('rounded-lg p-2.5 bg-gradient-to-r', sectionStyle.headerGradient)}>
+                  <div className="flex items-center gap-2">
+                    <SectionIcon size={16} className="text-foreground/70" />
+                    <h3 className="font-bold text-sm">{config.emoji} {config.label}</h3>
+                    <span className="text-[10px] text-muted-foreground ml-auto">{group.length}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(m)}>
-                    <Pencil size={14} />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setDeletingMission(m); setDeleteDialogOpen(true); }}>
-                    <Trash2 size={14} />
-                  </Button>
-                </div>
+
+                {group.map((m) => {
+                  const rarity = RARITY_CONFIG[m.rarity] ?? RARITY_CONFIG.common;
+                  const IconComp = getIconByName(m.icon);
+                  return (
+                    <div key={m.id} className={cn(
+                      'flex items-center gap-3 rounded-lg border p-3',
+                      rarity.border, rarity.bg
+                    )}>
+                      {m.image_url ? (
+                        <div className="relative group shrink-0">
+                          <img src={m.image_url} alt={m.name} className="w-10 h-10 rounded-lg object-contain bg-transparent" loading="lazy" />
+                          <button
+                            onClick={async () => {
+                              const path = m.image_url!.split('/achievements/')[1];
+                              if (path) await supabase.storage.from('achievements').remove([path]);
+                              await supabase.from('missions').update({ image_url: null } as any).eq('id', m.id);
+                              toast.success('Imagem removida.');
+                              fetchMissions();
+                            }}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br shrink-0', rarity.color)}>
+                          <IconComp size={18} className="text-white" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{m.name}</p>
+                        <span className="text-[10px] text-muted-foreground">+{m.xp_reward} XP</span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(m)}>
+                          <Pencil size={14} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => { setDeletingMission(m); setDeleteDialogOpen(true); }}>
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
@@ -308,7 +352,7 @@ export default function AdminAchievements() {
                     {imagePreview ? 'Alterar' : 'Enviar'}
                   </Button>
                   {imagePreview && (
-                    <Button variant="ghost" size="sm" className="gap-1 text-destructive" onClick={() => { setImagePreview(null); setImageFile(null); }}>
+                    <Button variant="ghost" size="sm" className="gap-1 text-destructive" onClick={() => { setImagePreview(null); setImageFile(null); setRemoveExistingImage(true); }}>
                       <X size={14} />
                       Remover
                     </Button>
