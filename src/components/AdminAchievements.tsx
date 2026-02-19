@@ -44,7 +44,7 @@ const ICON_OPTIONS = [
   'ShoppingBag', 'Briefcase', 'GraduationCap', 'Shield', 'Gem', 'Rocket',
 ];
 
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_IMAGE_SIZE = 50 * 1024 * 1024; // 50MB - praticamente sem limite
 
 const DEFAULT_RARITY_LABELS: Record<string, string> = {
   common: 'Comum',
@@ -451,7 +451,7 @@ export default function AdminAchievements() {
                         <Upload size={14} /> Enviar
                       </Button>
                     )}
-                    <p className="text-[10px] text-muted-foreground">PNG, JPG, WEBP • Máx 2MB • Transparência OK</p>
+                    <p className="text-[10px] text-muted-foreground">PNG, JPG, WEBP • Sem limite de tamanho • Transparência OK</p>
                   </div>
                 </div>
               )}
