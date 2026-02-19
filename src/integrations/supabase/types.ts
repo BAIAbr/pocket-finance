@@ -65,6 +65,42 @@ export type Database = {
         }
         Relationships: []
       }
+      missions: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          key: string
+          medal_type: string
+          name: string
+          xp_reward: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          icon?: string
+          id?: string
+          key: string
+          medal_type?: string
+          name: string
+          xp_reward?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          key?: string
+          medal_type?: string
+          name?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       notifications_log: {
         Row: {
           id: string
@@ -425,6 +461,77 @@ export type Database = {
         }
         Relationships: []
       }
+      user_gamification_notifications: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          is_read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_read?: boolean
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_mission_history: {
+        Row: {
+          completed_at: string
+          id: string
+          mission_id: string
+          shown_home: boolean
+          shown_popup: boolean
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          mission_id: string
+          shown_home?: boolean
+          shown_popup?: boolean
+          user_id: string
+          xp_earned?: number
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          mission_id?: string
+          shown_home?: boolean
+          shown_popup?: boolean
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_mission_history_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -469,6 +576,33 @@ export type Database = {
           id?: string
           login_at?: string
           logout_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_xp: {
+        Row: {
+          created_at: string
+          id: string
+          level: number
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level?: number
+          total_xp?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: number
+          total_xp?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
