@@ -202,14 +202,15 @@ export default function Achievements() {
                     'rounded-lg border p-3',
                     wm.is_completed ? `${wmRarity.border} ${wmRarity.bg}` : 'border-border/50'
                   )}>
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <WmIcon size={18} className="text-primary shrink-0" />
-                      <span className="text-sm font-medium flex-1 truncate">{wm.title}</span>
+                    <div className="flex items-center gap-2 mb-1">
+                      <WmIcon size={16} className="text-primary shrink-0" />
+                      <span className="text-xs font-medium flex-1 truncate">{wm.title}</span>
                       {wm.is_completed && <CheckCircle2 size={14} className="text-green-500" />}
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">
                         {wmRarity.emoji} {wmRarity.label}
                       </Badge>
                     </div>
+                    <p className="text-[11px] text-muted-foreground line-clamp-1 mb-1.5">{wm.description}</p>
                     <Progress value={progress} className="h-1.5 mb-1" />
                     <div className="flex justify-between text-[10px] text-muted-foreground">
                       <span>{wm.current_value}/{wm.target_value}</span>
