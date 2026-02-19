@@ -45,7 +45,7 @@ export function MissionHomeCard({ completions, onViewDetails, onDismiss }: Props
               <div className="flex items-center gap-2">
                 <p className="text-xs text-muted-foreground">+{latest.xp_earned} XP</p>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${rarity.bg} ${rarity.border} border`}>
-                  {rarity.emoji} {rarity.label}
+                  <span className={rarity.emojiColor}>{rarity.emoji}</span> {rarity.label}
                 </span>
               </div>
             </div>

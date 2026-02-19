@@ -87,7 +87,7 @@ function MissionCard({ mission, isCompleted, completedAt, rarityLabel }: { missi
 
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-              {rarity.emoji} {rarityLabel || rarity.label}
+              <span className={rarity.emojiColor}>{rarity.emoji}</span> {rarityLabel || rarity.label}
             </Badge>
             <span className="text-[10px] text-muted-foreground font-medium">
               +{mission.xp_reward} XP
@@ -219,7 +219,7 @@ export default function Achievements() {
                       <span className="text-xs font-medium flex-1 truncate">{wm.title}</span>
                       {wm.is_completed && <CheckCircle2 size={14} className="text-green-500" />}
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">
-                        {wmRarity.emoji} {wmRarity.label}
+                        <span className={wmRarity.emojiColor}>{wmRarity.emoji}</span> {wmRarity.label}
                       </Badge>
                     </div>
                     <p className="text-[11px] text-muted-foreground line-clamp-1 mb-1.5">{wm.description}</p>

@@ -36,7 +36,7 @@ export function MissionDetailModal({ completion, userXP, totalMissions, complete
         <div className="flex flex-col items-center text-center space-y-4">
           {/* Rarity badge */}
           <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${rarity.bg} ${rarity.border} border`}>
-            {rarity.emoji} {rarity.label}
+            <span className={rarity.emojiColor}>{rarity.emoji}</span> {rarity.label}
           </span>
 
           {/* Large medal/trophy */}
