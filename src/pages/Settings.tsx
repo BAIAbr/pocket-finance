@@ -4,12 +4,14 @@ import { useTheme, COLOR_SCHEMES } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useMissionContext } from '@/contexts/MissionContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check } from 'lucide-react';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
 
 export default function SettingsPage() {
   const { settings, setSettings, clearAllData, profile, updateProfile } = useFinanceContext();
@@ -17,6 +19,7 @@ export default function SettingsPage() {
   const { isAuthenticated, signOut, profile: authProfile, user } = useAuth();
   const { isAdmin } = useAdminCheck(user?.id);
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, isLoading: pushLoading, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } = usePushNotifications(user?.id);
+  const { userXP } = useMissionContext();
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -222,6 +225,25 @@ export default function SettingsPage() {
                   <p className="text-sm text-muted-foreground">{displayEmail}</p>
                 </div>
               </div>
+
+              {/* XP & Level + Conquistas */}
+              <button
+                onClick={() => navigate('/achievements')}
+                className="w-full p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-sm">
+                    <Trophy size={18} className="text-primary-foreground" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="font-semibold text-sm">Nível {userXP.level}</p>
+                    <p className="text-xs text-muted-foreground">{userXP.total_xp} XP total</p>
+                  </div>
+                  <span className="text-xs text-primary font-medium">Ver Conquistas →</span>
+                </div>
+                <Progress value={(userXP.total_xp % 200) / 200 * 100} className="h-1.5" />
+                <p className="text-[10px] text-muted-foreground mt-1 text-left">Faltam {200 - (userXP.total_xp % 200)} XP para o Nível {userXP.level + 1}</p>
+              </button>
               <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 p-3 rounded-xl">
                 <Cloud size={14} className="text-primary" />
                 <span>Dados sincronizados na nuvem</span>
