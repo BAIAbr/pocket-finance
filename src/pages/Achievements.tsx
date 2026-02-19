@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useMissionContext } from '@/contexts/MissionContext';
 import { RARITY_CONFIG, type Mission } from '@/hooks/useMissions';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 const XP_PER_LEVEL = 200;
 
@@ -20,28 +21,45 @@ const RARITY_SECTION_STYLE: Record<string, { icon: React.ElementType; headerGrad
 
 function MissionCard({ mission, isCompleted, completedAt }: { mission: Mission; isCompleted: boolean; completedAt?: string }) {
   const rarity = RARITY_CONFIG[mission.rarity] ?? RARITY_CONFIG.common;
+  const isLegendary = mission.rarity === 'legendary';
 
   return (
-    <div className={cn(
-      'relative rounded-xl border p-4 transition-all duration-300',
-      isCompleted
-        ? `${rarity.border} ${rarity.bg} shadow-lg ${rarity.glow}`
-        : 'border-border/50 bg-card/50 opacity-70'
-    )}>
-      {/* Trophy icon */}
-      <div className="flex items-start gap-3">
-        <div className={cn(
-          'w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0',
-          isCompleted
-            ? `bg-gradient-to-br ${rarity.color} shadow-md`
-            : 'bg-muted'
-        )}>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        'relative rounded-xl border p-4 transition-all duration-300 overflow-hidden',
+        isCompleted
+          ? `${rarity.border} ${rarity.bg} shadow-lg ${rarity.glow}`
+          : 'border-border/50 bg-card/50 opacity-70',
+        isLegendary && isCompleted && 'legendary-trophy'
+      )}
+    >
+      {/* Legendary shimmer overlay */}
+      {isLegendary && isCompleted && (
+        <div className="absolute inset-0 legendary-shimmer pointer-events-none" />
+      )}
+
+      <div className="relative flex items-start gap-3">
+        <motion.div
+          className={cn(
+            'w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0',
+            isCompleted
+              ? `bg-gradient-to-br ${rarity.color} shadow-md`
+              : 'bg-muted'
+          )}
+          animate={isLegendary && isCompleted ? {
+            scale: [1, 1.08, 1],
+            rotate: [0, 3, -3, 0],
+          } : {}}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        >
           {isCompleted ? (
             <span className="drop-shadow-md">{mission.icon}</span>
           ) : (
             <Lock size={20} className="text-muted-foreground" />
           )}
-        </div>
+        </motion.div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -73,7 +91,7 @@ function MissionCard({ mission, isCompleted, completedAt }: { mission: Mission; 
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -163,7 +181,7 @@ export default function Achievements() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Sparkles size={18} className="text-primary" />
-                Missões Semanais IA
+                Missões Semanais
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">

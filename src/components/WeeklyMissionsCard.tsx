@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { getIconByName } from '@/lib/icons';
 import { WeeklyMission, RARITY_CONFIG } from '@/hooks/useMissions';
-import { Sparkles, RefreshCw, Clock } from 'lucide-react';
+import { Sparkles, RefreshCw, Clock, Trophy } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
   missions: WeeklyMission[];
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function WeeklyMissionsCard({ missions, isLoading, onGenerate }: Props) {
+  const navigate = useNavigate();
   const activeMissions = missions.filter(m => !m.is_completed);
   const completedCount = missions.filter(m => m.is_completed).length;
 
@@ -24,7 +26,7 @@ export function WeeklyMissionsCard({ missions, isLoading, onGenerate }: Props) {
             <Sparkles className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="font-semibold text-foreground">Missões Semanais IA</h3>
+            <h3 className="font-semibold text-foreground">Missões Semanais</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Gere missões personalizadas baseadas no seu perfil financeiro
             </p>
@@ -49,7 +51,7 @@ export function WeeklyMissionsCard({ missions, isLoading, onGenerate }: Props) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            Missões Semanais IA
+            Missões Semanais
           </CardTitle>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="w-3 h-3" />
@@ -96,6 +98,16 @@ export function WeeklyMissionsCard({ missions, isLoading, onGenerate }: Props) {
             </motion.div>
           );
         })}
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full gap-2 mt-2"
+          onClick={() => navigate('/achievements')}
+        >
+          <Trophy className="w-4 h-4" />
+          Ver Conquistas
+        </Button>
       </CardContent>
     </Card>
   );

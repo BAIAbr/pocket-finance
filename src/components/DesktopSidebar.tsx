@@ -1,6 +1,10 @@
 import { Home, History, Brain, PiggyBank, Settings, Trophy } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useMissionContext } from '@/contexts/MissionContext';
+import { Progress } from '@/components/ui/progress';
+
+const XP_PER_LEVEL = 200;
 
 const navItems = [
   { path: '/', icon: Home, label: 'Início' },
@@ -14,6 +18,8 @@ const navItems = [
 export function DesktopSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { userXP } = useMissionContext();
+  const currentLevelXP = userXP.total_xp % XP_PER_LEVEL;
 
   return (
     <aside className="hidden lg:flex flex-col w-64 min-h-screen border-r border-border/50 bg-card/50 backdrop-blur-sm">
@@ -23,6 +29,23 @@ export function DesktopSidebar() {
           Finango
         </h1>
         <p className="text-xs text-muted-foreground mt-0.5">Gestão Financeira</p>
+      </div>
+
+      {/* XP Indicator */}
+      <div className="px-4 py-3 border-b border-border/30">
+        <button
+          onClick={() => navigate('/achievements')}
+          className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-secondary/80 transition-colors"
+        >
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-sm">
+            <span className="text-primary-foreground text-xs font-bold">{userXP.level}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-foreground">Nível {userXP.level}</p>
+            <Progress value={(currentLevelXP / XP_PER_LEVEL) * 100} className="h-1.5 mt-1" />
+            <p className="text-[10px] text-muted-foreground mt-0.5">{userXP.total_xp} XP</p>
+          </div>
+        </button>
       </div>
 
       {/* Nav Items */}
