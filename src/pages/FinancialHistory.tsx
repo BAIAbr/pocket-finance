@@ -278,7 +278,7 @@ export default function FinancialHistory() {
   }, [filteredTransactions, getCategoryById, formatCurrency]);
 
   return (
-    <div className="min-h-screen bg-background pb-28 lg:pb-8 safe-top">
+    <div className="min-h-screen bg-background pb-28 lg:pb-8 safe-top overflow-x-hidden">
       <header className="px-4 lg:px-8 pt-6 pb-4 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         <div className="relative flex items-center justify-between">
@@ -292,7 +292,7 @@ export default function FinancialHistory() {
         </div>
       </header>
 
-      <main className="px-4 lg:px-8 space-y-5">
+      <main className="px-4 lg:px-8 space-y-5 overflow-x-hidden max-w-full">
         {/* Quick Filters */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 animate-fade-in">
           {quickFilters.map(f => (
@@ -415,11 +415,11 @@ export default function FinancialHistory() {
           )}
 
           {pieData.length > 0 && (
-            <Card className="p-4 card-finance animate-fade-in stagger-3">
+            <Card className="p-4 card-finance animate-fade-in stagger-3 overflow-hidden">
               <h3 className="text-sm font-semibold mb-3">{activeTab === 'income' ? 'Entradas por categoria' : 'Gastos por categoria'}</h3>
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} innerRadius={35} paddingAngle={3} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={55} innerRadius={30} paddingAngle={3} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={9}>
                     {pieData.map((entry, index) => (
                       <Cell key={index} fill={entry.color || CHART_COLORS[index % CHART_COLORS.length]} />
                     ))}
