@@ -8,7 +8,6 @@ const XP_PER_LEVEL = 200;
 
 const navItems = [
   { path: '/', icon: Home, label: 'Início' },
-  { path: '/achievements', icon: Trophy, label: 'Conquistas' },
   { path: '/history', icon: History, label: 'Histórico' },
   { path: '/ai-insights', icon: Brain, label: 'IA Insights' },
   { path: '/savings', icon: PiggyBank, label: 'Cofrinho' },

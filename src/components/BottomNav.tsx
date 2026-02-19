@@ -1,10 +1,10 @@
-import { Home, Brain, PiggyBank, Settings, Trophy } from 'lucide-react';
+import { Home, Brain, PiggyBank, Settings, History } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Início' },
-  { path: '/achievements', icon: Trophy, label: 'Conquistas' },
+  { path: '/history', icon: History, label: 'Histórico' },
   { path: '/ai-insights', icon: Brain, label: 'IA' },
   { path: '/savings', icon: PiggyBank, label: 'Cofrinho' },
   { path: '/settings', icon: Settings, label: 'Ajustes' },
