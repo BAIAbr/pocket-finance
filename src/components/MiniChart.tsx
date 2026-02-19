@@ -69,7 +69,7 @@ export function MiniChart() {
             tick={{ fill: 'hsl(var(--foreground))', fontSize: 10 }}
           />
           <YAxis hide />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip />} cursor={false} />
           <Bar dataKey="income" radius={[4, 4, 0, 0]} name="Entradas">
             {stats.map((_, index) => (
               <Cell key={`income-${index}`} fill="hsl(var(--income))" />
