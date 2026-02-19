@@ -90,19 +90,19 @@ function CategoryGroup({
     <div className="rounded-xl border border-border/50 overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-3 p-3 bg-secondary/30 hover:bg-secondary/50 transition-colors"
+        className="w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-secondary/30 hover:bg-secondary/50 transition-colors"
       >
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ backgroundColor: `${categoryColor}15` }}
         >
-          <IconComponent size={18} style={{ color: categoryColor }} />
+          <IconComponent size={16} style={{ color: categoryColor }} />
         </div>
         <div className="flex-1 text-left min-w-0">
           <p className="font-medium text-sm truncate">{categoryName}</p>
           <p className="text-xs text-muted-foreground">{transactions.length} transaç{transactions.length === 1 ? 'ão' : 'ões'}</p>
         </div>
-        <span className="font-mono font-semibold text-sm text-expense shrink-0">
+        <span className="font-mono font-semibold text-xs sm:text-sm text-expense shrink-0">
           {formatCurrency(totalAmount)}
         </span>
         {isOpen ? <ChevronDown size={16} className="text-muted-foreground shrink-0" /> : <ChevronRight size={16} className="text-muted-foreground shrink-0" />}
@@ -116,9 +116,9 @@ function CategoryGroup({
             const isIncome = transaction.type === 'income';
 
             return (
-              <div key={transaction.id} className="flex items-center gap-3 p-3 pl-6">
+              <div key={transaction.id} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 pl-4 sm:pl-6">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <p className="font-medium text-sm text-foreground truncate">
                       {transaction.description || cat?.name || 'Transação'}
                     </p>
@@ -128,7 +128,7 @@ function CategoryGroup({
                     {format(parseISO(transaction.date), "d 'de' MMM", { locale: ptBR })}
                   </p>
                 </div>
-                <span className={cn('font-mono font-semibold text-sm', isIncome ? 'text-income' : 'text-expense')}>
+                <span className={cn('font-mono font-semibold text-xs sm:text-sm shrink-0', isIncome ? 'text-income' : 'text-expense')}>
                   {isIncome ? '+' : '-'}{formatCurrency(Number(transaction.amount))}
                 </span>
               </div>
@@ -417,9 +417,9 @@ export default function FinancialHistory() {
           {pieData.length > 0 && (
             <Card className="p-4 card-finance animate-fade-in stagger-3">
               <h3 className="text-sm font-semibold mb-3">{activeTab === 'income' ? 'Entradas por categoria' : 'Gastos por categoria'}</h3>
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40} paddingAngle={3} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} innerRadius={35} paddingAngle={3} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
                     {pieData.map((entry, index) => (
                       <Cell key={index} fill={entry.color || CHART_COLORS[index % CHART_COLORS.length]} />
                     ))}
@@ -505,28 +505,31 @@ export default function FinancialHistory() {
                   const isIncome = transaction.type === 'income';
 
                   return (
-                    <div key={transaction.id} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 touch-scale transaction-item group">
+                    <div key={transaction.id} className="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl bg-secondary/50 touch-scale transaction-item group">
                       <div
-                        className="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110"
-                        style={{ backgroundColor: `${cat?.color}15`, boxShadow: `0 4px 12px -4px ${cat?.color}40` }}
+                        className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: `${cat?.color}15` }}
                       >
-                        <IconComponent size={20} style={{ color: cat?.color }} className="transition-transform group-hover:scale-110" />
+                        <IconComponent size={18} style={{ color: cat?.color }} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="font-medium text-foreground truncate">
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-1">
+                          <p className="font-medium text-sm text-foreground truncate">
                             {transaction.description || cat?.name || 'Transação'}
                           </p>
                           <FireBadge level={fireInfo.level} reasons={fireInfo.reasons} size="sm" />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          <span className={cn('inline-block px-1.5 py-0.5 rounded text-xs mr-1.5', isIncome ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive')}>
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                          <span className={cn('inline-block px-1 py-0.5 rounded text-[10px] sm:text-xs mr-1', isIncome ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive')}>
                             {cat?.name}
                           </span>
                           {format(parseISO(transaction.date), "d 'de' MMM", { locale: ptBR })}
                         </p>
                       </div>
-                      <span className={cn('font-mono font-semibold text-sm', isIncome ? 'text-income' : 'text-expense')}>
+                      <span className={cn(
+                        'font-mono font-semibold text-xs sm:text-sm shrink-0 ml-1',
+                        isIncome ? 'text-income' : 'text-expense'
+                      )}>
                         {isIncome ? '+' : '-'}{formatCurrency(Number(transaction.amount))}
                       </span>
                     </div>
