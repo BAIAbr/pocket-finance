@@ -60,44 +60,50 @@ export function WeeklyMissionsCard({ missions, isLoading, onGenerate }: Props) {
         </div>
         <p className="text-xs text-muted-foreground">{completedCount}/{missions.length} completas</p>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {missions.map((mission, i) => {
-          const Icon = getIconByName(mission.icon);
-          const rarity = RARITY_CONFIG[mission.rarity] || RARITY_CONFIG.common;
-          const progress = mission.target_value > 0 ? (mission.current_value / mission.target_value) * 100 : 0;
+      <CardContent className="pb-4">
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide">
+          {missions.map((mission, i) => {
+            const Icon = getIconByName(mission.icon);
+            const rarity = RARITY_CONFIG[mission.rarity] || RARITY_CONFIG.common;
+            const progress = mission.target_value > 0 ? (mission.current_value / mission.target_value) * 100 : 0;
 
-          return (
-            <motion.div
-              key={mission.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className={`flex items-start gap-3 p-3 rounded-lg ${mission.is_completed ? 'bg-primary/5 opacity-60' : 'bg-secondary/50'}`}
-            >
-              <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${rarity.color} flex items-center justify-center flex-shrink-0 ${mission.is_completed ? 'opacity-50' : ''}`}>
-                <Icon className="w-4 h-4 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <p className={`text-sm font-semibold ${mission.is_completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-                    {mission.title}
-                  </p>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${rarity.bg} ${rarity.border} border`}>
-                    {rarity.emoji}
-                  </span>
+            return (
+              <motion.div
+                key={mission.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className={`flex-shrink-0 w-[75vw] max-w-[280px] snap-start p-3 rounded-xl ${mission.is_completed ? 'bg-primary/5 opacity-60' : 'bg-secondary/50'}`}
+              >
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${rarity.color} flex items-center justify-center flex-shrink-0 ${mission.is_completed ? 'opacity-50' : ''}`}>
+                    <Icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className={`text-sm font-semibold truncate ${mission.is_completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                        {mission.title}
+                      </p>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0 ${rarity.bg} ${rarity.border} border`}>
+                        {rarity.emoji}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{mission.description}</p>
-                <div className="flex items-center gap-2 mt-1.5">
+                <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+                  {mission.description}
+                </p>
+                <div className="flex items-center gap-2">
                   <Progress value={Math.min(progress, 100)} className="h-1.5 flex-1" />
                   <span className="text-[10px] text-muted-foreground font-medium">
                     {mission.current_value}/{mission.target_value}
                   </span>
                   <span className="text-[10px] font-bold text-primary">+{mission.xp_reward} XP</span>
                 </div>
-              </div>
-            </motion.div>
-          );
-        })}
+              </motion.div>
+            );
+          })}
+        </div>
 
         <Button
           variant="outline"
