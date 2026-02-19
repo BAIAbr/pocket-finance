@@ -128,6 +128,126 @@
     --sidebar-border: 222 30% 16%;
     --sidebar-ring: 250 89% 67%;
   }
+
+  /* ===== Color Scheme: Blue ===== */
+  .scheme-blue {
+    --primary: 217 91% 55%;
+    --accent: 217 91% 55%;
+    --ring: 217 91% 55%;
+    --balance-start: 217 91% 55%;
+    --balance-end: 199 89% 48%;
+    --sidebar-primary: 217 91% 55%;
+    --sidebar-ring: 217 91% 55%;
+  }
+  .scheme-blue.dark {
+    --primary: 217 91% 65%;
+    --accent: 217 91% 65%;
+    --ring: 217 91% 65%;
+    --balance-start: 217 91% 65%;
+    --balance-end: 199 89% 55%;
+    --sidebar-primary: 217 91% 65%;
+    --sidebar-ring: 217 91% 65%;
+  }
+
+  /* ===== Color Scheme: Green ===== */
+  .scheme-green {
+    --primary: 152 69% 40%;
+    --accent: 152 69% 40%;
+    --ring: 152 69% 40%;
+    --balance-start: 152 69% 40%;
+    --balance-end: 168 76% 36%;
+    --sidebar-primary: 152 69% 40%;
+    --sidebar-ring: 152 69% 40%;
+  }
+  .scheme-green.dark {
+    --primary: 152 69% 50%;
+    --accent: 152 69% 50%;
+    --ring: 152 69% 50%;
+    --balance-start: 152 69% 50%;
+    --balance-end: 168 76% 46%;
+    --sidebar-primary: 152 69% 50%;
+    --sidebar-ring: 152 69% 50%;
+  }
+
+  /* ===== Color Scheme: Pink ===== */
+  .scheme-pink {
+    --primary: 330 81% 55%;
+    --accent: 330 81% 55%;
+    --ring: 330 81% 55%;
+    --balance-start: 330 81% 55%;
+    --balance-end: 350 80% 50%;
+    --sidebar-primary: 330 81% 55%;
+    --sidebar-ring: 330 81% 55%;
+  }
+  .scheme-pink.dark {
+    --primary: 330 81% 65%;
+    --accent: 330 81% 65%;
+    --ring: 330 81% 65%;
+    --balance-start: 330 81% 65%;
+    --balance-end: 350 80% 58%;
+    --sidebar-primary: 330 81% 65%;
+    --sidebar-ring: 330 81% 65%;
+  }
+
+  /* ===== Color Scheme: Orange ===== */
+  .scheme-orange {
+    --primary: 25 95% 53%;
+    --accent: 25 95% 53%;
+    --ring: 25 95% 53%;
+    --balance-start: 25 95% 53%;
+    --balance-end: 38 92% 50%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-ring: 25 95% 53%;
+  }
+  .scheme-orange.dark {
+    --primary: 25 95% 60%;
+    --accent: 25 95% 60%;
+    --ring: 25 95% 60%;
+    --balance-start: 25 95% 60%;
+    --balance-end: 38 92% 55%;
+    --sidebar-primary: 25 95% 60%;
+    --sidebar-ring: 25 95% 60%;
+  }
+
+  /* ===== Color Scheme: Teal ===== */
+  .scheme-teal {
+    --primary: 187 72% 42%;
+    --accent: 187 72% 42%;
+    --ring: 187 72% 42%;
+    --balance-start: 187 72% 42%;
+    --balance-end: 174 72% 38%;
+    --sidebar-primary: 187 72% 42%;
+    --sidebar-ring: 187 72% 42%;
+  }
+  .scheme-teal.dark {
+    --primary: 187 72% 52%;
+    --accent: 187 72% 52%;
+    --ring: 187 72% 52%;
+    --balance-start: 187 72% 52%;
+    --balance-end: 174 72% 48%;
+    --sidebar-primary: 187 72% 52%;
+    --sidebar-ring: 187 72% 52%;
+  }
+
+  /* ===== Color Scheme: Red ===== */
+  .scheme-red {
+    --primary: 0 72% 51%;
+    --accent: 0 72% 51%;
+    --ring: 0 72% 51%;
+    --balance-start: 0 72% 51%;
+    --balance-end: 15 75% 47%;
+    --sidebar-primary: 0 72% 51%;
+    --sidebar-ring: 0 72% 51%;
+  }
+  .scheme-red.dark {
+    --primary: 0 72% 58%;
+    --accent: 0 72% 58%;
+    --ring: 0 72% 58%;
+    --balance-start: 0 72% 58%;
+    --balance-end: 15 75% 54%;
+    --sidebar-primary: 0 72% 58%;
+    --sidebar-ring: 0 72% 58%;
+  }
 }
 
 @layer base {
