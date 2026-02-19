@@ -47,11 +47,11 @@ export interface UserXP {
   level: number;
 }
 
-export const RARITY_CONFIG: Record<string, { label: string; color: string; glow: string; border: string; bg: string; emoji: string }> = {
-  common: { label: 'Comum', color: 'from-slate-500 to-slate-400', glow: 'shadow-slate-400/30', border: 'border-slate-400/30', bg: 'bg-slate-100 dark:bg-slate-800', emoji: '⭐' },
-  rare: { label: 'Raro', color: 'from-blue-500 to-cyan-400', glow: 'shadow-blue-400/40', border: 'border-blue-400/30', bg: 'bg-blue-50 dark:bg-blue-950', emoji: '🌟' },
-  epic: { label: 'Épico', color: 'from-purple-600 to-pink-400', glow: 'shadow-purple-400/50', border: 'border-purple-400/30', bg: 'bg-purple-50 dark:bg-purple-950', emoji: '💫' },
-  legendary: { label: 'Lendário', color: 'from-yellow-400 via-orange-500 to-red-500', glow: 'shadow-yellow-400/60', border: 'border-yellow-400/40', bg: 'bg-yellow-50 dark:bg-yellow-950', emoji: '✨' },
+export const RARITY_CONFIG: Record<string, { label: string; color: string; glow: string; border: string; bg: string; emoji: string; emojiColor: string }> = {
+  common: { label: 'Comum', color: 'from-slate-500 to-slate-400', glow: 'shadow-slate-400/30', border: 'border-slate-400/30', bg: 'bg-slate-100 dark:bg-slate-800', emoji: '★', emojiColor: 'text-slate-400' },
+  rare: { label: 'Raro', color: 'from-blue-500 to-cyan-400', glow: 'shadow-blue-400/40', border: 'border-blue-400/30', bg: 'bg-blue-50 dark:bg-blue-950', emoji: '★', emojiColor: 'text-blue-500' },
+  epic: { label: 'Épico', color: 'from-purple-600 to-pink-400', glow: 'shadow-purple-400/50', border: 'border-purple-400/30', bg: 'bg-purple-50 dark:bg-purple-950', emoji: '★', emojiColor: 'text-purple-500' },
+  legendary: { label: 'Lendário', color: 'from-yellow-400 via-orange-500 to-red-500', glow: 'shadow-yellow-400/60', border: 'border-yellow-400/40', bg: 'bg-yellow-50 dark:bg-yellow-950', emoji: '★', emojiColor: 'text-yellow-500' },
 };
 
 const XP_PER_LEVEL = 200;

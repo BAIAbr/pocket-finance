@@ -53,7 +53,7 @@ export function MissionCelebrationModal({ completion, onDismiss, onViewDetails }
               transition={{ delay: 0.1 }}
               className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3 ${rarity.bg} ${rarity.border} border`}
             >
-              {rarity.emoji} {rarity.label}
+              <span className={rarity.emojiColor}>{rarity.emoji}</span> {rarity.label}
             </motion.div>
 
             {/* Trophy/Medal */}

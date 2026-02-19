@@ -85,7 +85,7 @@ export function WeeklyMissionsCard({ missions, isLoading, onGenerate }: Props) {
                         {mission.title}
                       </p>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0 ${rarity.bg} ${rarity.border} border`}>
-                        {rarity.emoji}
+                        <span className={rarity.emojiColor}>{rarity.emoji}</span>
                       </span>
                     </div>
                   </div>
