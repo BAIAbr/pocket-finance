@@ -2,16 +2,16 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark';
 
-export type ColorScheme = 'purple' | 'blue' | 'green' | 'pink' | 'orange' | 'teal' | 'red';
+export type ColorScheme = 'default' | 'ocean' | 'forest' | 'sunset' | 'midnight' | 'cherry' | 'arctic';
 
-export const COLOR_SCHEMES: { id: ColorScheme; name: string; preview: string; previewDark: string }[] = [
-  { id: 'purple', name: 'Roxo', preview: 'hsl(250, 89%, 60%)', previewDark: 'hsl(250, 89%, 67%)' },
-  { id: 'blue', name: 'Azul', preview: 'hsl(217, 91%, 55%)', previewDark: 'hsl(217, 91%, 65%)' },
-  { id: 'green', name: 'Verde', preview: 'hsl(152, 69%, 40%)', previewDark: 'hsl(152, 69%, 50%)' },
-  { id: 'pink', name: 'Rosa', preview: 'hsl(330, 81%, 55%)', previewDark: 'hsl(330, 81%, 65%)' },
-  { id: 'orange', name: 'Laranja', preview: 'hsl(25, 95%, 53%)', previewDark: 'hsl(25, 95%, 60%)' },
-  { id: 'teal', name: 'Ciano', preview: 'hsl(187, 72%, 42%)', previewDark: 'hsl(187, 72%, 52%)' },
-  { id: 'red', name: 'Vermelho', preview: 'hsl(0, 72%, 51%)', previewDark: 'hsl(0, 72%, 58%)' },
+export const COLOR_SCHEMES: { id: ColorScheme; name: string; emoji: string; description: string }[] = [
+  { id: 'default', name: 'Padrão', emoji: '💜', description: 'Roxo clássico' },
+  { id: 'ocean', name: 'Oceano', emoji: '🌊', description: 'Azul profundo' },
+  { id: 'forest', name: 'Floresta', emoji: '🌲', description: 'Verde natural' },
+  { id: 'sunset', name: 'Pôr do Sol', emoji: '🌅', description: 'Laranja quente' },
+  { id: 'midnight', name: 'Midnight', emoji: '🌙', description: 'Índigo escuro' },
+  { id: 'cherry', name: 'Cereja', emoji: '🍒', description: 'Rosa intenso' },
+  { id: 'arctic', name: 'Ártico', emoji: '❄️', description: 'Ciano gelado' },
 ];
 
 interface ThemeContextType {
@@ -39,9 +39,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(COLOR_SCHEME_KEY);
-      return (stored as ColorScheme) || 'purple';
+      return (stored as ColorScheme) || 'default';
     }
-    return 'purple';
+    return 'default';
   });
 
   useEffect(() => {
@@ -58,10 +58,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    // Remove all scheme classes
     COLOR_SCHEMES.forEach(s => root.classList.remove(`scheme-${s.id}`));
-    // Add current scheme
-    if (colorScheme !== 'purple') {
+    if (colorScheme !== 'default') {
       root.classList.add(`scheme-${colorScheme}`);
     }
     localStorage.setItem(COLOR_SCHEME_KEY, colorScheme);
