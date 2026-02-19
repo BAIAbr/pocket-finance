@@ -24,13 +24,13 @@ export default function SettingsPage() {
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
 
   const currencies = [
-    { code: 'BRL', symbol: 'R$', name: 'Real Brasileiro' },
-    { code: 'USD', symbol: '$', name: 'Dólar Americano' },
-    { code: 'EUR', symbol: '€', name: 'Euro' },
-  ];
+  { code: 'BRL', symbol: 'R$', name: 'Real Brasileiro' },
+  { code: 'USD', symbol: '$', name: 'Dólar Americano' },
+  { code: 'EUR', symbol: '€', name: 'Euro' }];
+
 
   const handleClearData = async () => {
     await clearAllData();
@@ -79,31 +79,31 @@ export default function SettingsPage() {
 
       // Delete old avatar if exists
       try {
-        const { data: files } = await supabase.storage
-          .from('avatars')
-          .list(user.id);
-        
+        const { data: files } = await supabase.storage.
+        from('avatars').
+        list(user.id);
+
         if (files && files.length > 0) {
-          const filesToDelete = files.map(f => `${user.id}/${f.name}`);
+          const filesToDelete = files.map((f) => `${user.id}/${f.name}`);
           await supabase.storage.from('avatars').remove(filesToDelete);
         }
       } catch (e) {
+
         // Ignore errors when deleting old files
       }
-
       // Upload to storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage.
+      from('avatars').
+      upload(fileName, file, { upsert: true });
 
       if (uploadError) {
         throw uploadError;
       }
 
       // Get public URL with cache-busting query param
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase.storage.
+      from('avatars').
+      getPublicUrl(fileName);
 
       const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
 
@@ -133,18 +133,18 @@ export default function SettingsPage() {
       // Show instructions based on platform
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const isAndroid = /Android/.test(navigator.userAgent);
-      
+
       if (isIOS) {
         toast.info('Para instalar: toque no ícone de compartilhar e selecione "Adicionar à Tela de Início"', {
-          duration: 5000,
+          duration: 5000
         });
       } else if (isAndroid) {
         toast.info('Para instalar: toque no menu do navegador e selecione "Instalar aplicativo"', {
-          duration: 5000,
+          duration: 5000
         });
       } else {
         toast.info('Para instalar: clique no ícone de instalação na barra de endereço do navegador', {
-          duration: 5000,
+          duration: 5000
         });
       }
     }
@@ -166,8 +166,8 @@ export default function SettingsPage() {
         <section className="card-finance gradient-balance text-white">
           <button
             onClick={handleInstallApp}
-            className="w-full flex items-center justify-between touch-scale"
-          >
+            className="w-full flex items-center justify-between touch-scale">
+
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
                 <Download size={24} />
@@ -189,36 +189,36 @@ export default function SettingsPage() {
             <User size={18} />
             Conta
           </h2>
-          {isAuthenticated ? (
-            <div className="space-y-4">
+          {isAuthenticated ?
+          <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Avatar className="w-16 h-16 cursor-pointer touch-scale" onClick={handleAvatarClick}>
-                    {avatarUrl ? (
-                      <AvatarImage src={avatarUrl} alt={displayName} />
-                    ) : null}
+                    {avatarUrl ?
+                  <AvatarImage src={avatarUrl} alt={displayName} /> :
+                  null}
                     <AvatarFallback className="gradient-balance text-white font-bold text-xl">
                       {displayName.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <button
-                    onClick={handleAvatarClick}
-                    disabled={isUploadingAvatar}
-                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-accent flex items-center justify-center text-accent-foreground shadow-md touch-scale"
-                  >
-                    {isUploadingAvatar ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Camera size={14} />
-                    )}
+                  onClick={handleAvatarClick}
+                  disabled={isUploadingAvatar}
+                  className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-accent flex items-center justify-center text-accent-foreground shadow-md touch-scale">
+
+                    {isUploadingAvatar ?
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> :
+
+                  <Camera size={14} />
+                  }
                   </button>
                   <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    className="hidden"
-                  />
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden" />
+
                 </div>
                 <div>
                   <p className="font-semibold">{displayName}</p>
@@ -228,9 +228,9 @@ export default function SettingsPage() {
 
               {/* XP & Level + Conquistas */}
               <button
-                onClick={() => navigate('/achievements')}
-                className="w-full p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale"
-              >
+              onClick={() => navigate('/achievements')}
+              className="w-full p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale">
+
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-sm">
                     <Trophy size={18} className="text-primary-foreground" />
@@ -241,46 +241,46 @@ export default function SettingsPage() {
                   </div>
                   <span className="text-xs text-primary font-medium">Ver Conquistas →</span>
                 </div>
-                <Progress value={(userXP.total_xp % 200) / 200 * 100} className="h-1.5" />
-                <p className="text-[10px] text-muted-foreground mt-1 text-left">Faltam {200 - (userXP.total_xp % 200)} XP para o Nível {userXP.level + 1}</p>
+                <Progress value={userXP.total_xp % 200 / 200 * 100} className="h-1.5" />
+                <p className="text-[10px] text-muted-foreground mt-1 text-left">Faltam {200 - userXP.total_xp % 200} XP para o Nível {userXP.level + 1}</p>
               </button>
               <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 p-3 rounded-xl">
                 <Cloud size={14} className="text-primary" />
                 <span>Dados sincronizados na nuvem</span>
               </div>
               <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale text-destructive"
-              >
+              onClick={handleLogout}
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale text-destructive">
+
                 <span>Sair da conta</span>
                 <LogOut size={18} />
               </button>
-              {isAdmin && (
-                <button
-                  onClick={() => navigate('/admin')}
-                  className="w-full flex items-center justify-between p-3 rounded-xl bg-primary/10 hover:bg-primary/20 transition-all touch-scale text-primary"
-                >
+              {isAdmin &&
+            <button
+              onClick={() => navigate('/admin')}
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-primary/10 hover:bg-primary/20 transition-all touch-scale text-primary">
+
                   <div className="flex items-center gap-2">
                     <ShieldCheck size={18} />
                     <span className="font-medium">Painel Administrativo</span>
                   </div>
                   <ShieldCheck size={18} />
                 </button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-3">
+            }
+            </div> :
+
+          <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 Crie uma conta para sincronizar seus dados na nuvem.
               </p>
               <button
-                onClick={() => navigate('/auth')}
-                className="w-full py-3 rounded-xl gradient-balance text-white font-medium touch-scale"
-              >
+              onClick={() => navigate('/auth')}
+              className="w-full py-3 rounded-xl gradient-balance text-white font-medium touch-scale">
+
                 Entrar ou criar conta
               </button>
             </div>
-          )}
+          }
         </section>
 
         {/* Appearance */}
@@ -291,26 +291,26 @@ export default function SettingsPage() {
           </h2>
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center justify-between py-3"
-          >
+            className="w-full flex items-center justify-between py-3">
+
             <div>
               <p className="font-medium">Tema {theme === 'dark' ? 'Escuro' : 'Claro'}</p>
               <p className="text-sm text-muted-foreground">
                 Toque para alternar
               </p>
             </div>
-            <div 
+            <div
               className={cn(
                 'w-14 h-8 rounded-full flex items-center px-1 transition-all duration-300',
                 theme === 'dark' ? 'bg-accent justify-end' : 'bg-secondary justify-start'
-              )}
-            >
+              )}>
+
               <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-md transition-all duration-300">
-                {theme === 'dark' ? (
-                  <Moon size={14} className="text-accent" />
-                ) : (
-                  <Sun size={14} className="text-warning" />
-                )}
+                {theme === 'dark' ?
+                <Moon size={14} className="text-accent" /> :
+
+                <Sun size={14} className="text-warning" />
+                }
               </div>
             </div>
           </button>
@@ -322,27 +322,27 @@ export default function SettingsPage() {
               <p className="font-medium text-sm">Tema</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {COLOR_SCHEMES.map(scheme => (
-                <button
-                  key={scheme.id}
-                  onClick={() => setColorScheme(scheme.id)}
-                  className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl transition-all touch-scale text-left',
-                    colorScheme === scheme.id
-                      ? 'bg-primary/15 ring-2 ring-primary'
-                      : 'bg-secondary/50 hover:bg-secondary'
-                  )}
-                >
+              {COLOR_SCHEMES.map((scheme) =>
+              <button
+                key={scheme.id}
+                onClick={() => setColorScheme(scheme.id)}
+                className={cn(
+                  'flex items-center gap-3 p-3 rounded-xl transition-all touch-scale text-left',
+                  colorScheme === scheme.id ?
+                  'bg-primary/15 ring-2 ring-primary' :
+                  'bg-secondary/50 hover:bg-secondary'
+                )}>
+
                   <span className="text-xl">{scheme.emoji}</span>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{scheme.name}</p>
                     <p className="text-[10px] text-muted-foreground truncate">{scheme.description}</p>
                   </div>
-                  {colorScheme === scheme.id && (
-                    <Check size={16} className="text-primary ml-auto shrink-0" />
-                  )}
+                  {colorScheme === scheme.id &&
+                <Check size={16} className="text-primary ml-auto shrink-0" />
+                }
                 </button>
-              ))}
+              )}
             </div>
           </div>
         </section>
@@ -354,17 +354,17 @@ export default function SettingsPage() {
             Moeda
           </h2>
           <div className="space-y-2">
-            {currencies.map(currency => (
-              <button
-                key={currency.code}
-                onClick={() => handleCurrencyChange(currency.code, currency.symbol)}
-                className={cn(
-                  'w-full flex items-center justify-between p-3 rounded-xl transition-all touch-scale',
-                  settings.currency === currency.code 
-                    ? 'bg-accent/20 ring-1 ring-accent' 
-                    : 'bg-secondary/50 hover:bg-secondary'
-                )}
-              >
+            {currencies.map((currency) =>
+            <button
+              key={currency.code}
+              onClick={() => handleCurrencyChange(currency.code, currency.symbol)}
+              className={cn(
+                'w-full flex items-center justify-between p-3 rounded-xl transition-all touch-scale',
+                settings.currency === currency.code ?
+                'bg-accent/20 ring-1 ring-accent' :
+                'bg-secondary/50 hover:bg-secondary'
+              )}>
+
                 <div className="flex items-center gap-3">
                   <span className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center font-mono font-bold">
                     {currency.symbol}
@@ -374,38 +374,38 @@ export default function SettingsPage() {
                     <p className="text-xs text-muted-foreground">{currency.code}</p>
                   </div>
                 </div>
-                {settings.currency === currency.code && (
-                  <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center">
+                {settings.currency === currency.code &&
+              <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center">
                     <div className="w-2 h-2 rounded-full bg-white" />
                   </div>
-                )}
+              }
               </button>
-            ))}
+            )}
           </div>
         </section>
 
 
         {/* Push Notifications */}
-        {isAuthenticated && pushSupported && (
-          <section className="card-finance">
+        {isAuthenticated && pushSupported &&
+        <section className="card-finance">
             <h2 className="font-semibold mb-4 flex items-center gap-2">
               <Bell size={18} />
               Notificações
             </h2>
             <button
-              onClick={async () => {
-                if (pushSubscribed) {
-                  const ok = await pushUnsubscribe();
-                  if (ok) toast.success('Notificações desativadas');
-                } else {
-                  const ok = await pushSubscribe();
-                  if (ok) toast.success('Notificações ativadas! 🔔');
-                  else toast('Permissão de notificação negada', { description: 'Habilite nas configurações do navegador.' });
-                }
-              }}
-              disabled={pushLoading}
-              className="w-full flex items-center justify-between py-3"
-            >
+            onClick={async () => {
+              if (pushSubscribed) {
+                const ok = await pushUnsubscribe();
+                if (ok) toast.success('Notificações desativadas');
+              } else {
+                const ok = await pushSubscribe();
+                if (ok) toast.success('Notificações ativadas! 🔔');else
+                toast('Permissão de notificação negada', { description: 'Habilite nas configurações do navegador.' });
+              }
+            }}
+            disabled={pushLoading}
+            className="w-full flex items-center justify-between py-3">
+
               <div>
                 <p className="font-medium">{pushSubscribed ? 'Notificações ativadas' : 'Notificações desativadas'}</p>
                 <p className="text-sm text-muted-foreground">
@@ -413,61 +413,61 @@ export default function SettingsPage() {
                 </p>
               </div>
               <div
-                className={cn(
-                  'w-14 h-8 rounded-full flex items-center px-1 transition-all duration-300',
-                  pushSubscribed ? 'bg-accent justify-end' : 'bg-secondary justify-start'
-                )}
-              >
+              className={cn(
+                'w-14 h-8 rounded-full flex items-center px-1 transition-all duration-300',
+                pushSubscribed ? 'bg-accent justify-end' : 'bg-secondary justify-start'
+              )}>
+
                 <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-md transition-all duration-300">
-                  {pushSubscribed ? (
-                    <Bell size={14} className="text-accent" />
-                  ) : (
-                    <BellOff size={14} className="text-muted-foreground" />
-                  )}
+                  {pushSubscribed ?
+                <Bell size={14} className="text-accent" /> :
+
+                <BellOff size={14} className="text-muted-foreground" />
+                }
                 </div>
               </div>
             </button>
           </section>
-        )}
+        }
 
         {/* Data */}
-        {isAuthenticated && (
-          <section className="card-finance">
+        {isAuthenticated &&
+        <section className="card-finance">
             <h2 className="font-semibold mb-4 flex items-center gap-2">
               <Trash2 size={18} />
               Dados
             </h2>
-            {showConfirmClear ? (
-              <div className="space-y-3">
+            {showConfirmClear ?
+          <div className="space-y-3">
                 <p className="text-sm text-destructive">
                   ⚠️ Isso apagará todas as suas transações e metas de poupança. Esta ação não pode ser desfeita.
                 </p>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setShowConfirmClear(false)}
-                    className="flex-1 py-3 rounded-xl bg-secondary font-medium touch-scale"
-                  >
+                onClick={() => setShowConfirmClear(false)}
+                className="flex-1 py-3 rounded-xl bg-secondary font-medium touch-scale">
+
                     Cancelar
                   </button>
                   <button
-                    onClick={handleClearData}
-                    className="flex-1 py-3 rounded-xl bg-destructive text-destructive-foreground font-medium touch-scale"
-                  >
+                onClick={handleClearData}
+                className="flex-1 py-3 rounded-xl bg-destructive text-destructive-foreground font-medium touch-scale">
+
                     Confirmar
                   </button>
                 </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowConfirmClear(true)}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale text-destructive"
-              >
+              </div> :
+
+          <button
+            onClick={() => setShowConfirmClear(true)}
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale text-destructive">
+
                 <span>Limpar todos os dados</span>
                 <Trash2 size={18} />
               </button>
-            )}
+          }
           </section>
-        )}
+        }
 
         {/* About */}
         <section className="card-finance">
@@ -478,7 +478,7 @@ export default function SettingsPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between py-2">
               <span className="text-muted-foreground">Versão</span>
-              <span className="font-mono">2.0.0</span>
+              <span className="font-mono">2.1.0</span>
             </div>
             <div className="flex items-center justify-between py-2">
               <span className="text-muted-foreground">Armazenamento</span>
@@ -499,8 +499,8 @@ export default function SettingsPage() {
           </h2>
           <a
             href="mailto:suporte@finango.online"
-            className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale"
-          >
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale">
+
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full gradient-balance flex items-center justify-center">
                 <Mail size={18} className="text-white" />
@@ -513,6 +513,6 @@ export default function SettingsPage() {
           </a>
         </section>
       </main>
-    </div>
-  );
+    </div>);
+
 }
