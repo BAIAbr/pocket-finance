@@ -524,7 +524,7 @@
   }
 
   .btn-float {
-    @apply fixed bottom-24 right-4 w-16 h-16 rounded-full gradient-balance flex items-center justify-center shadow-glow-accent touch-scale z-50;
+    @apply fixed bottom-24 right-4 w-14 h-14 sm:w-16 sm:h-16 rounded-full gradient-balance flex items-center justify-center shadow-glow-accent touch-scale z-50;
     box-shadow: 
       0 10px 40px -10px hsl(var(--accent) / 0.5),
       0 4px 20px -5px hsl(var(--accent) / 0.3);
