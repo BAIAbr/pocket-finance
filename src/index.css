@@ -583,4 +583,36 @@
     background: hsl(var(--secondary) / 0.8);
     transform: translateX(4px);
   }
+
+  /* Legendary trophy animation */
+  .legendary-trophy {
+    animation: legendary-glow 3s ease-in-out infinite;
+  }
+
+  @keyframes legendary-glow {
+    0%, 100% {
+      box-shadow: 0 0 8px hsl(45 100% 50% / 0.2), 0 0 20px hsl(30 100% 50% / 0.1);
+    }
+    50% {
+      box-shadow: 0 0 16px hsl(45 100% 50% / 0.4), 0 0 40px hsl(30 100% 50% / 0.2);
+    }
+  }
+
+  .legendary-shimmer {
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      hsl(45 100% 70% / 0.15) 45%,
+      hsl(45 100% 80% / 0.25) 50%,
+      hsl(45 100% 70% / 0.15) 55%,
+      transparent 60%
+    );
+    background-size: 200% 100%;
+    animation: legendary-sweep 4s ease-in-out infinite;
+  }
+
+  @keyframes legendary-sweep {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
 }
