@@ -63,8 +63,22 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+const defaultMissionContext: MissionContextType = {
+  missions: [],
+  completedMissions: [],
+  weeklyMissions: [],
+  userXP: { total_xp: 0, level: 1 },
+  recentCompletions: [],
+  isLoading: false,
+  isLoadingWeekly: false,
+  checkMissions: async () => {},
+  markHomeShown: async () => {},
+  viewDetails: () => {},
+  isMissionCompleted: () => false,
+  generateWeeklyMissions: async () => {},
+};
+
 export function useMissionContext() {
   const context = useContext(MissionContext);
-  if (!context) throw new Error('useMissionContext must be used within a MissionProvider');
-  return context;
+  return context ?? defaultMissionContext;
 }
