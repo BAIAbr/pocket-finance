@@ -15,8 +15,8 @@ interface Props {
 
 export function WeeklyMissionsCard({ missions, isLoading, onGenerate }: Props) {
   const navigate = useNavigate();
-  const activeMissions = missions.filter(m => !m.is_completed);
   const completedCount = missions.filter(m => m.is_completed).length;
+  const allCompleted = completedCount === missions.length && missions.length > 0;
 
   if (missions.length === 0) {
     return (
@@ -53,10 +53,17 @@ export function WeeklyMissionsCard({ missions, isLoading, onGenerate }: Props) {
             <Sparkles className="w-4 h-4 text-primary" />
             Missões Semanais
           </CardTitle>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="w-3 h-3" />
-            {daysLeft}d restantes
-          </div>
+          {allCompleted ? (
+            <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+              <Trophy className="w-3 h-3" />
+              Todas completas!
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="w-3 h-3" />
+              {daysLeft}d restantes
+            </div>
+          )}
         </div>
         <p className="text-xs text-muted-foreground">{completedCount}/{missions.length} completas</p>
       </CardHeader>

@@ -81,12 +81,19 @@ export function useMissions() {
         supabase.from('missions').select('*'),
         supabase.from('user_mission_history').select('*').eq('user_id', userId),
         supabase.from('user_xp').select('*').eq('user_id', userId).maybeSingle(),
-        supabase.from('weekly_missions').select('*').eq('user_id', userId).gte('expires_at', new Date().toISOString()),
+        supabase.from('weekly_missions').select('*').eq('user_id', userId)
+          .order('week_start', { ascending: false })
+          .limit(20),
       ]);
 
       if (missionsRes.data) setMissions(missionsRes.data as unknown as Mission[]);
       if (historyRes.data) setCompletedMissions(historyRes.data as unknown as CompletedMission[]);
-      if (weeklyRes.data) setWeeklyMissions(weeklyRes.data as unknown as WeeklyMission[]);
+      if (weeklyRes.data && weeklyRes.data.length > 0) {
+        // Show the latest week's missions (even if expired/completed)
+        const latestWeekStart = (weeklyRes.data as any[])[0].week_start;
+        const latestWeekMissions = (weeklyRes.data as any[]).filter(m => m.week_start === latestWeekStart);
+        setWeeklyMissions(latestWeekMissions as unknown as WeeklyMission[]);
+      }
       if (xpRes.data) {
         setUserXP(xpRes.data as unknown as UserXP);
       } else {
