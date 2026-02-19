@@ -40,7 +40,8 @@ serve(async (req) => {
       .from('transactions')
       .select('*')
       .eq('user_id', user.id)
-      .order('date', { ascending: false });
+      .order('date', { ascending: false })
+      .limit(500);
 
     if (txError) throw txError;
 
