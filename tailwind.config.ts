@@ -121,6 +121,10 @@ export default {
           "0%": { transform: "translateY(-100%)", opacity: "0" },
           "100%": { transform: "translateY(0)", opacity: "1" },
         },
+        "fab-pulse": {
+          "0%, 100%": { boxShadow: "0 4px 14px -3px hsl(var(--primary) / 0.4)" },
+          "50%": { boxShadow: "0 6px 24px -3px hsl(var(--primary) / 0.55)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
