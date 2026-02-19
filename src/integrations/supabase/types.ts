@@ -75,6 +75,7 @@ export type Database = {
           key: string
           medal_type: string
           name: string
+          rarity: string
           xp_reward: number
         }
         Insert: {
@@ -86,6 +87,7 @@ export type Database = {
           key: string
           medal_type?: string
           name: string
+          rarity?: string
           xp_reward?: number
         }
         Update: {
@@ -97,6 +99,7 @@ export type Database = {
           key?: string
           medal_type?: string
           name?: string
+          rarity?: string
           xp_reward?: number
         }
         Relationships: []
@@ -604,6 +607,57 @@ export type Database = {
           total_xp?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_missions: {
+        Row: {
+          created_at: string
+          current_value: number
+          description: string
+          expires_at: string
+          icon: string
+          id: string
+          is_completed: boolean
+          rarity: string
+          target_type: string
+          target_value: number
+          title: string
+          user_id: string
+          week_start: string
+          xp_reward: number
+        }
+        Insert: {
+          created_at?: string
+          current_value?: number
+          description: string
+          expires_at: string
+          icon?: string
+          id?: string
+          is_completed?: boolean
+          rarity?: string
+          target_type: string
+          target_value?: number
+          title: string
+          user_id: string
+          week_start?: string
+          xp_reward?: number
+        }
+        Update: {
+          created_at?: string
+          current_value?: number
+          description?: string
+          expires_at?: string
+          icon?: string
+          id?: string
+          is_completed?: boolean
+          rarity?: string
+          target_type?: string
+          target_value?: number
+          title?: string
+          user_id?: string
+          week_start?: string
+          xp_reward?: number
         }
         Relationships: []
       }

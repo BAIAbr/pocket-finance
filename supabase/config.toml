@@ -1,1 +1,4 @@
 project_id = "kcdzrphiizudwkzmcldk"
+
+[functions.generate-weekly-missions]
+verify_jwt = false
