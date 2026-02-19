@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Trophy, Lock, CheckCircle2, Sparkles, Star, Flame, Target } from 'lucide-react';
 import { getIconByName } from '@/lib/icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useMissionContext } from '@/contexts/MissionContext';
 import { RARITY_CONFIG, type Mission } from '@/hooks/useMissions';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -20,7 +21,7 @@ const RARITY_SECTION_STYLE: Record<string, { icon: React.ElementType; headerGrad
   common: { icon: Target, headerGradient: 'from-slate-500/20 via-slate-400/10 to-transparent' },
 };
 
-function MissionCard({ mission, isCompleted, completedAt }: { mission: Mission; isCompleted: boolean; completedAt?: string }) {
+function MissionCard({ mission, isCompleted, completedAt, rarityLabel }: { mission: Mission; isCompleted: boolean; completedAt?: string; rarityLabel?: string }) {
   const rarity = RARITY_CONFIG[mission.rarity] ?? RARITY_CONFIG.common;
   const isLegendary = mission.rarity === 'legendary';
   const IconComponent = getIconByName(mission.icon);
@@ -86,7 +87,7 @@ function MissionCard({ mission, isCompleted, completedAt }: { mission: Mission; 
 
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-              {rarity.emoji} {rarity.label}
+              {rarity.emoji} {rarityLabel || rarity.label}
             </Badge>
             <span className="text-[10px] text-muted-foreground font-medium">
               +{mission.xp_reward} XP
@@ -105,6 +106,17 @@ function MissionCard({ mission, isCompleted, completedAt }: { mission: Mission; 
 
 export default function Achievements() {
   const { missions, completedMissions, weeklyMissions, userXP } = useMissionContext();
+  const [customRarityLabels, setCustomRarityLabels] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    supabase.from('app_config').select('key, value').like('key', 'rarity_label_%').then(({ data }) => {
+      if (data && data.length > 0) {
+        const labels: Record<string, string> = {};
+        for (const row of data) labels[row.key.replace('rarity_label_', '')] = row.value;
+        setCustomRarityLabels(labels);
+      }
+    });
+  }, []);
 
   const completedMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -238,7 +250,7 @@ export default function Achievements() {
                 <div className="flex items-center gap-2">
                   <SectionIcon size={18} className="text-foreground/70" />
                   <h2 className="font-bold text-base">
-                    {config.emoji} {config.label}
+                    {config.emoji} {customRarityLabels[rarity] || config.label}
                   </h2>
                   <span className="text-xs text-muted-foreground ml-auto">
                     {completedInGroup}/{group.length}
@@ -253,6 +265,7 @@ export default function Achievements() {
                     mission={mission}
                     isCompleted={completedMap.has(mission.id)}
                     completedAt={completedMap.get(mission.id)}
+                    rarityLabel={customRarityLabels[mission.rarity]}
                   />
                 ))}
               </div>

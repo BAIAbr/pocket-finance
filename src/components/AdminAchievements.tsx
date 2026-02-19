@@ -45,6 +45,13 @@ const ICON_OPTIONS = [
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
+const DEFAULT_RARITY_LABELS: Record<string, string> = {
+  common: 'Comum',
+  rare: 'Raro',
+  epic: 'Épico',
+  legendary: 'Lendário',
+};
+
 export default function AdminAchievements() {
   const [missions, setMissions] = useState<MissionRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +64,9 @@ export default function AdminAchievements() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [removeExistingImage, setRemoveExistingImage] = useState(false);
+  const [rarityLabels, setRarityLabels] = useState<Record<string, string>>(DEFAULT_RARITY_LABELS);
+  const [editingRarity, setEditingRarity] = useState<string | null>(null);
+  const [rarityInput, setRarityInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -77,7 +87,32 @@ export default function AdminAchievements() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchMissions(); }, []);
+  const fetchRarityLabels = async () => {
+    const { data } = await supabase.from('app_config').select('key, value').like('key', 'rarity_label_%');
+    if (data && data.length > 0) {
+      const labels = { ...DEFAULT_RARITY_LABELS };
+      for (const row of data) {
+        const rarityKey = row.key.replace('rarity_label_', '');
+        labels[rarityKey] = row.value;
+      }
+      setRarityLabels(labels);
+    }
+  };
+
+  const saveRarityLabel = async (rarityKey: string, label: string) => {
+    const dbKey = `rarity_label_${rarityKey}`;
+    const { data: existing } = await supabase.from('app_config').select('key').eq('key', dbKey).maybeSingle();
+    if (existing) {
+      await supabase.from('app_config').update({ value: label } as any).eq('key', dbKey);
+    } else {
+      await supabase.from('app_config').insert({ key: dbKey, value: label } as any);
+    }
+    setRarityLabels(prev => ({ ...prev, [rarityKey]: label }));
+    setEditingRarity(null);
+    toast.success('Nome da raridade atualizado!');
+  };
+
+  useEffect(() => { fetchMissions(); fetchRarityLabels(); }, []);
 
   const openCreate = () => {
     setEditingMission(null);
@@ -266,7 +301,30 @@ export default function AdminAchievements() {
                 <div className={cn('rounded-lg p-2.5 bg-gradient-to-r', sectionStyle.headerGradient)}>
                   <div className="flex items-center gap-2">
                     <SectionIcon size={16} className="text-foreground/70" />
-                    <h3 className="font-bold text-sm">{config.emoji} {config.label}</h3>
+                    {editingRarity === rarityKey ? (
+                      <form
+                        className="flex items-center gap-1.5 flex-1"
+                        onSubmit={(e) => { e.preventDefault(); if (rarityInput.trim()) saveRarityLabel(rarityKey, rarityInput.trim()); }}
+                      >
+                        <Input
+                          value={rarityInput}
+                          onChange={(e) => setRarityInput(e.target.value.slice(0, 20))}
+                          className="h-7 text-sm font-bold w-28"
+                          autoFocus
+                          maxLength={20}
+                        />
+                        <Button type="submit" size="sm" variant="ghost" className="h-7 px-2 text-xs">✓</Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setEditingRarity(null)}>✕</Button>
+                      </form>
+                    ) : (
+                      <h3
+                        className="font-bold text-sm cursor-pointer hover:underline"
+                        onClick={() => { setEditingRarity(rarityKey); setRarityInput(rarityLabels[rarityKey] || config.label); }}
+                        title="Clique para renomear"
+                      >
+                        {config.emoji} {rarityLabels[rarityKey] || config.label}
+                      </h3>
+                    )}
                     <span className="text-[10px] text-muted-foreground ml-auto">{group.length}</span>
                   </div>
                 </div>
