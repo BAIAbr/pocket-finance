@@ -1,19 +1,19 @@
 import { useState, useRef } from 'react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme, COLOR_SCHEMES } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff } from 'lucide-react';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export default function SettingsPage() {
   const { settings, setSettings, clearAllData, profile, updateProfile } = useFinanceContext();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, colorScheme, setColorScheme } = useTheme();
   const { isAuthenticated, signOut, profile: authProfile, user } = useAuth();
   const { isAdmin } = useAdminCheck(user?.id);
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, isLoading: pushLoading, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } = usePushNotifications(user?.id);
@@ -292,6 +292,38 @@ export default function SettingsPage() {
               </div>
             </div>
           </button>
+
+          {/* Color Scheme Presets */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Palette size={16} className="text-muted-foreground" />
+              <p className="font-medium text-sm">Cor principal</p>
+            </div>
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+              {COLOR_SCHEMES.map(scheme => (
+                <button
+                  key={scheme.id}
+                  onClick={() => setColorScheme(scheme.id)}
+                  className={cn(
+                    'flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all touch-scale',
+                    colorScheme === scheme.id
+                      ? 'bg-secondary ring-2 ring-primary'
+                      : 'hover:bg-secondary/50'
+                  )}
+                >
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-transform"
+                    style={{ background: theme === 'dark' ? scheme.previewDark : scheme.preview }}
+                  >
+                    {colorScheme === scheme.id && (
+                      <Check size={16} className="text-white" />
+                    )}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-medium">{scheme.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* Currency */}
