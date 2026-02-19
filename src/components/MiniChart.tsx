@@ -61,7 +61,7 @@ export function MiniChart() {
         </div>
       </div>
       <ResponsiveContainer width="100%" height={120}>
-        <BarChart data={stats} barGap={4}>
+        <BarChart data={stats} barGap={2} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
           <XAxis 
             dataKey="month" 
             axisLine={false}
