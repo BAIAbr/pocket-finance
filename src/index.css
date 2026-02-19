@@ -524,17 +524,24 @@
   }
 
   .btn-float {
-    @apply fixed bottom-24 right-4 w-14 h-14 sm:w-16 sm:h-16 rounded-full gradient-balance flex items-center justify-center shadow-glow-accent touch-scale z-50;
+    @apply fixed bottom-[6.5rem] right-5 w-14 h-14 rounded-full bg-primary flex items-center justify-center z-50;
     box-shadow: 
-      0 10px 40px -10px hsl(var(--accent) / 0.5),
-      0 4px 20px -5px hsl(var(--accent) / 0.3);
+      0 4px 14px -3px hsl(var(--primary) / 0.4),
+      0 2px 6px -2px hsl(var(--primary) / 0.2);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
   }
 
   .btn-float:hover {
-    transform: scale(1.05);
+    transform: scale(1.06);
     box-shadow: 
-      0 15px 50px -10px hsl(var(--accent) / 0.6),
-      0 8px 25px -5px hsl(var(--accent) / 0.4);
+      0 6px 20px -4px hsl(var(--primary) / 0.45),
+      0 3px 10px -3px hsl(var(--primary) / 0.25);
+  }
+
+  .btn-float:active {
+    transform: scale(0.95);
+    box-shadow: 
+      0 2px 8px -2px hsl(var(--primary) / 0.3);
   }
 
   .nav-item {
