@@ -11,8 +11,9 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { getIconByName } from '@/lib/icons';
 import { RARITY_CONFIG } from '@/hooks/useMissions';
-import { Plus, Pencil, Trash2, Upload, ImageIcon, Loader2, Trophy, X, Flame, Star, Sparkles, Target } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, ImageIcon, Loader2, Trophy, X, Flame, Star, Sparkles, Target, ZoomIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ImageCropEditor from '@/components/ImageCropEditor';
 
 const RARITY_ORDER = ['legendary', 'epic', 'rare', 'common'] as const;
 
@@ -63,6 +64,8 @@ export default function AdminAchievements() {
   const [deletingMission, setDeletingMission] = useState<MissionRow | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
   const [removeExistingImage, setRemoveExistingImage] = useState(false);
   const [rarityLabels, setRarityLabels] = useState<Record<string, string>>(DEFAULT_RARITY_LABELS);
   const [editingRarity, setEditingRarity] = useState<string | null>(null);
@@ -119,6 +122,8 @@ export default function AdminAchievements() {
     setForm({ name: '', description: '', key: '', icon: 'Trophy', xp_reward: 10, category: 'general', medal_type: 'bronze', rarity: 'common' });
     setImagePreview(null);
     setImageFile(null);
+    setCroppedBlob(null);
+    setShowEditor(false);
     setRemoveExistingImage(false);
     setDialogOpen(true);
   };
@@ -128,6 +133,8 @@ export default function AdminAchievements() {
     setForm({ name: m.name, description: m.description, key: m.key, icon: m.icon, xp_reward: m.xp_reward, category: m.category, medal_type: m.medal_type, rarity: m.rarity });
     setImagePreview(m.image_url);
     setImageFile(null);
+    setCroppedBlob(null);
+    setShowEditor(false);
     setRemoveExistingImage(false);
     setDialogOpen(true);
   };
@@ -146,8 +153,13 @@ export default function AdminAchievements() {
     }
 
     setImageFile(file);
+    setCroppedBlob(null);
+    setRemoveExistingImage(false);
     const reader = new FileReader();
-    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+    reader.onload = (ev) => {
+      setImagePreview(ev.target?.result as string);
+      setShowEditor(true);
+    };
     reader.readAsDataURL(file);
   };
 
@@ -160,11 +172,12 @@ export default function AdminAchievements() {
       }
       return null;
     }
-    if (!imageFile) return editingMission?.image_url ?? null;
+    if (!imageFile && !croppedBlob) return editingMission?.image_url ?? null;
 
+    const uploadBlob = croppedBlob || imageFile!;
     setUploading(true);
     try {
-      const ext = imageFile.name.split('.').pop()?.toLowerCase() || 'png';
+      const ext = croppedBlob ? 'png' : (imageFile!.name.split('.').pop()?.toLowerCase() || 'png');
       const path = `${missionId}.${ext}`;
 
       // Delete old image if exists
@@ -173,10 +186,10 @@ export default function AdminAchievements() {
         if (oldPath) await supabase.storage.from('achievements').remove([oldPath]);
       }
 
-      const { error } = await supabase.storage.from('achievements').upload(path, imageFile, {
+      const { error } = await supabase.storage.from('achievements').upload(path, uploadBlob, {
         cacheControl: '3600',
         upsert: true,
-        contentType: imageFile.type,
+        contentType: croppedBlob ? 'image/png' : imageFile!.type,
       });
 
       if (error) throw error;
@@ -393,31 +406,55 @@ export default function AdminAchievements() {
             {/* Image Upload */}
             <div className="space-y-2">
               <Label>Imagem</Label>
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-20 h-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary transition-colors overflow-hidden bg-muted/30"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-contain" />
-                  ) : (
-                    <ImageIcon size={24} className="text-muted-foreground" />
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-1.5">
-                    <Upload size={14} />
-                    {imagePreview ? 'Alterar' : 'Enviar'}
-                  </Button>
-                  {imagePreview && (
-                    <Button variant="ghost" size="sm" className="gap-1 text-destructive" onClick={() => { setImagePreview(null); setImageFile(null); setRemoveExistingImage(true); }}>
-                      <X size={14} />
-                      Remover
+              {showEditor && imagePreview ? (
+                <div className="space-y-2">
+                  <ImageCropEditor
+                    imageSrc={imagePreview}
+                    onCropComplete={(blob) => setCroppedBlob(blob)}
+                  />
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-1.5 flex-1">
+                      <Upload size={14} /> Trocar imagem
                     </Button>
-                  )}
-                  <p className="text-[10px] text-muted-foreground">PNG, JPG, WEBP • Máx 2MB</p>
+                    <Button variant="ghost" size="sm" className="gap-1 text-destructive" onClick={() => { setImagePreview(null); setImageFile(null); setCroppedBlob(null); setShowEditor(false); setRemoveExistingImage(true); }}>
+                      <X size={14} /> Remover
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-20 h-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary transition-colors overflow-hidden bg-muted/30"
+                    onClick={() => imagePreview ? setShowEditor(true) : fileInputRef.current?.click()}
+                  >
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-contain" />
+                    ) : (
+                      <ImageIcon size={24} className="text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    {imagePreview ? (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => setShowEditor(true)} className="gap-1.5">
+                          <ZoomIn size={14} /> Editar tamanho
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-1.5">
+                          <Upload size={14} /> Alterar
+                        </Button>
+                        <Button variant="ghost" size="sm" className="gap-1 text-destructive" onClick={() => { setImagePreview(null); setImageFile(null); setCroppedBlob(null); setRemoveExistingImage(true); }}>
+                          <X size={14} /> Remover
+                        </Button>
+                      </>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-1.5">
+                        <Upload size={14} /> Enviar
+                      </Button>
+                    )}
+                    <p className="text-[10px] text-muted-foreground">PNG, JPG, WEBP • Máx 2MB • Transparência OK</p>
+                  </div>
+                </div>
+              )}
               <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleImageSelect} />
             </div>
 
