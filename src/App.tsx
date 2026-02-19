@@ -17,6 +17,7 @@ import SettingsPage from "./pages/Settings";
 import AuthPage from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
 import FinancialHistory from "./pages/FinancialHistory";
+import Achievements from "./pages/Achievements";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
                   <Route path="/savings" element={<Savings />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/history" element={<FinancialHistory />} />
+                  <Route path="/achievements" element={<Achievements />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                 </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
