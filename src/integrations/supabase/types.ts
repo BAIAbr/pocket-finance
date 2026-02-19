@@ -72,6 +72,7 @@ export type Database = {
           description: string
           icon: string
           id: string
+          image_url: string | null
           key: string
           medal_type: string
           name: string
@@ -84,6 +85,7 @@ export type Database = {
           description: string
           icon?: string
           id?: string
+          image_url?: string | null
           key: string
           medal_type?: string
           name: string
@@ -96,6 +98,7 @@ export type Database = {
           description?: string
           icon?: string
           id?: string
+          image_url?: string | null
           key?: string
           medal_type?: string
           name?: string

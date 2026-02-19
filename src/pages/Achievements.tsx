@@ -45,9 +45,11 @@ function MissionCard({ mission, isCompleted, completedAt }: { mission: Mission; 
       <div className="relative flex items-start gap-3">
         <motion.div
           className={cn(
-            'w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0',
+            'w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden',
             isCompleted
-              ? `bg-gradient-to-br ${rarity.color} shadow-md`
+              ? mission.image_url
+                ? 'bg-transparent'
+                : `bg-gradient-to-br ${rarity.color} shadow-md`
               : 'bg-muted'
           )}
           animate={isLegendary && isCompleted ? {
@@ -57,7 +59,11 @@ function MissionCard({ mission, isCompleted, completedAt }: { mission: Mission; 
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
         >
           {isCompleted ? (
-            <IconComponent size={22} className="text-white drop-shadow-md" />
+            mission.image_url ? (
+              <img src={mission.image_url} alt={mission.name} className="w-full h-full object-contain" loading="lazy" />
+            ) : (
+              <IconComponent size={22} className="text-white drop-shadow-md" />
+            )
           ) : (
             <Lock size={20} className="text-muted-foreground" />
           )}

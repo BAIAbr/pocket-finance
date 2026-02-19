@@ -12,6 +12,7 @@ export interface Mission {
   category: string;
   medal_type: string;
   rarity: string;
+  image_url?: string | null;
 }
 
 export interface CompletedMission {
