@@ -1,4 +1,4 @@
-import { useFinanceContext } from '@/contexts/FinanceContext';
+import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { parseISO, format, isAfter, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,7 @@ interface TransactionItemProps {
 }
 
 export function TransactionItem({ transaction, showDelete = false }: TransactionItemProps) {
-  const { getCategoryById, formatCurrency, deleteTransaction } = useFinanceContext();
+  const { getCategoryById, formatCurrency, deleteTransaction } = useEffectiveFinance();
   const category = getCategoryById(transaction.category_id);
   
   const IconComponent = getIconByName(category?.icon || 'Circle');
@@ -85,7 +85,7 @@ interface TransactionListProps {
 }
 
 export function TransactionList({ compact = false }: TransactionListProps) {
-  const { recentTransactions, isLoading } = useFinanceContext();
+  const { recentTransactions, isLoading, isFamily } = useEffectiveFinance();
   const navigate = useNavigate();
 
   const displayTransactions = useMemo(() => {
@@ -118,9 +118,11 @@ export function TransactionList({ compact = false }: TransactionListProps) {
   if (displayTransactions.length === 0) {
     return (
       <div className="card-finance text-center py-8">
-        <p className="text-muted-foreground">Nenhuma transação ainda</p>
+        <p className="text-muted-foreground">
+          {isFamily ? 'Nenhuma transação compartilhada' : 'Nenhuma transação ainda'}
+        </p>
         <p className="text-sm text-muted-foreground mt-1">
-          Toque no botão + para adicionar
+          {isFamily ? 'Compartilhe transações para ver aqui' : 'Toque no botão + para adicionar'}
         </p>
       </div>
     );
@@ -132,7 +134,7 @@ export function TransactionList({ compact = false }: TransactionListProps) {
         <TransactionItem 
           key={transaction.id} 
           transaction={transaction}
-          showDelete={!compact}
+          showDelete={!compact && !isFamily}
         />
       ))}
 

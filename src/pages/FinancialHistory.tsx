@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { useFinanceContext } from '@/contexts/FinanceContext';
+import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { Transaction } from '@/hooks/useSupabaseFinance';
 import { useFireSystem, getTransactionFireInfo } from '@/hooks/useFireSystem';
 import { FireBadge } from '@/components/FireBadge';
@@ -141,7 +141,7 @@ function CategoryGroup({
 }
 
 export default function FinancialHistory() {
-  const { transactions, categories, formatCurrency, getCategoryById } = useFinanceContext();
+  const { transactions, categories, formatCurrency, getCategoryById, isFamily } = useEffectiveFinance();
   const { categoryAverages } = useFireSystem(transactions as Transaction[]);
 
   const [activeFilter, setActiveFilter] = useState<QuickFilter>(() => {
@@ -284,7 +284,8 @@ export default function FinancialHistory() {
         <div className="relative flex items-center justify-between">
           <div>
             <p className="text-muted-foreground text-sm font-medium">Análise detalhada</p>
-            <h1 className="text-2xl lg:text-3xl font-bold">Histórico Financeiro</h1>
+            <h1 className="text-2xl lg:text-3xl font-bold">
+              {isFamily ? 'Histórico Familiar' : 'Histórico Financeiro'}</h1>
           </div>
           <Button variant="outline" size="icon" onClick={exportCSV} title="Exportar CSV">
             <Download size={18} />
