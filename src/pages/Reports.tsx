@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useFinanceContext } from '@/contexts/FinanceContext';
+import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { format, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -8,7 +8,7 @@ import { getIconByName } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 
 export default function Reports() {
-  const { getCategoryStats, getMonthlyStats, formatCurrency, getTransactionsForMonth } = useFinanceContext();
+  const { getCategoryStats, getMonthlyStats, formatCurrency, getTransactionsForMonth, isFamily } = useEffectiveFinance();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense');
 
@@ -26,14 +26,14 @@ export default function Reports() {
     setSelectedDate(prev => direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1));
   };
 
-  // Custom colors for pie chart
   const COLORS = categoryStats.map(c => c.color);
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
-      {/* Header */}
       <header className="px-4 pt-6 pb-4">
-        <h1 className="text-2xl font-bold">Relatórios</h1>
+        <h1 className="text-2xl font-bold">
+          {isFamily ? 'Relatórios Familiares' : 'Relatórios'}
+        </h1>
       </header>
 
       <main className="px-4 space-y-6">
@@ -124,7 +124,6 @@ export default function Reports() {
 
         {/* Category Breakdown */}
         <div className="card-finance">
-          {/* Tabs */}
           <div className="flex gap-2 p-1 bg-secondary rounded-xl mb-4">
             <button
               onClick={() => setActiveTab('expense')}
@@ -152,7 +151,6 @@ export default function Reports() {
 
           {categoryStats.length > 0 ? (
             <>
-              {/* Pie Chart */}
               <div className="flex justify-center mb-4">
                 <ResponsiveContainer width={180} height={180}>
                   <PieChart>
@@ -173,7 +171,6 @@ export default function Reports() {
                 </ResponsiveContainer>
               </div>
 
-              {/* Category List */}
               <div className="space-y-2">
                 {categoryStats.map(stat => {
                   const IconComponent = getIconByName(stat.icon);
@@ -201,7 +198,7 @@ export default function Reports() {
             </>
           ) : (
             <div className="py-8 text-center text-muted-foreground text-sm">
-              Nenhuma transação neste mês
+              {isFamily ? 'Nenhuma transação compartilhada neste mês' : 'Nenhuma transação neste mês'}
             </div>
           )}
         </div>

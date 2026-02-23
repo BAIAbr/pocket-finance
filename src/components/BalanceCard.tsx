@@ -1,18 +1,17 @@
-import { useFinanceContext } from '@/contexts/FinanceContext';
+import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import { TrendingUp, TrendingDown, Wallet, PiggyBank, Sparkles } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, PiggyBank, Sparkles, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export function BalanceCard() {
-  const { totalBalance, currentMonthStats, formatCurrency, piggyBanks, isLoading } = useFinanceContext();
+  const { totalBalance, currentMonthStats, formatCurrency, piggyBanks, isLoading, isFamily } = useEffectiveFinance();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
-  // Total saved across all piggy banks
-  const totalSaved = piggyBanks.reduce((sum, p) => sum + Number(p.balance || 0), 0);
+  // Total saved across all piggy banks (only in personal mode)
+  const totalSaved = isFamily ? 0 : piggyBanks.reduce((sum, p) => sum + Number(p.balance || 0), 0);
   
-  // Não descontar mais o cofrinho do saldo - mostrar saldo total diretamente
   const availableBalance = totalBalance;
 
   if (isLoading) {
@@ -42,9 +41,11 @@ export function BalanceCard() {
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
-              <Wallet size={16} className="text-white" />
+              {isFamily ? <Users size={16} className="text-white" /> : <Wallet size={16} className="text-white" />}
             </div>
-            <span className="text-white/90 text-sm font-medium tracking-wide">Saldo Disponível</span>
+            <span className="text-white/90 text-sm font-medium tracking-wide">
+              {isFamily ? 'Saldo Familiar' : 'Saldo Disponível'}
+            </span>
           </div>
           
           <p className={cn(
@@ -82,8 +83,8 @@ export function BalanceCard() {
         </div>
       </div>
 
-      {/* Saved Money Card */}
-      {isAuthenticated && (
+      {/* Saved Money Card - only in personal mode */}
+      {isAuthenticated && !isFamily && (
         <button
           onClick={() => navigate('/savings')}
           className="w-full rounded-2xl gradient-savings p-4 relative overflow-hidden touch-scale hover-lift group border border-border transition-all duration-200" style={{ boxShadow: 'var(--shadow-sm)' }}

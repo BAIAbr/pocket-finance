@@ -1,4 +1,4 @@
-import { useFinanceContext } from '@/contexts/FinanceContext';
+import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 
 const formatBRL = (value: number) =>
@@ -31,7 +31,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function MiniChart() {
-  const { getMonthlyStats } = useFinanceContext();
+  const { getMonthlyStats, isFamily } = useEffectiveFinance();
   const allStats = getMonthlyStats(6);
   const stats = allStats.filter(s => s.income > 0 || s.expense > 0);
 
@@ -39,7 +39,7 @@ export function MiniChart() {
     return (
       <div className="card-finance h-40 flex items-center justify-center">
         <p className="text-muted-foreground text-sm">
-          Adicione transações para ver o gráfico
+          {isFamily ? 'Sem dados familiares para exibir' : 'Adicione transações para ver o gráfico'}
         </p>
       </div>
     );
