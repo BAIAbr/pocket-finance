@@ -7,7 +7,8 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useMissionContext } from '@/contexts/MissionContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check, Trophy } from 'lucide-react';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check, Trophy, Users } from 'lucide-react';
+import { FamilySettings } from '@/components/FamilySettings';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -468,6 +469,9 @@ export default function SettingsPage() {
           }
           </section>
         }
+
+        {/* Family Mode */}
+        {isAuthenticated && <FamilySettings />}
 
         {/* About */}
         <section className="card-finance">

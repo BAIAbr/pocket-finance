@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { X, Check, ArrowDownLeft, ArrowUpRight, Plus, Settings } from 'lucide-react';
+import { X, Check, ArrowDownLeft, ArrowUpRight, Plus, Settings, Users } from 'lucide-react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
+import { useFamilyContext } from '@/contexts/FamilyContext';
 import { cn } from '@/lib/utils';
 import { getIconByName } from '@/lib/icons';
 import { format } from 'date-fns';
@@ -14,6 +15,7 @@ interface AddTransactionModalProps {
 
 export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProps) {
   const { categories, addTransaction, addCategory } = useFinanceContext();
+  const { family, shareTransaction } = useFamilyContext();
   const navigate = useNavigate();
   
   const [type, setType] = useState<'income' | 'expense'>('expense');
@@ -24,6 +26,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showQuickCategoryModal, setShowQuickCategoryModal] = useState(false);
+  const [shareWithFamily, setShareWithFamily] = useState(false);
 
   const filteredCategories = categories.filter(c => c.type === type);
 
@@ -41,6 +44,10 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
     });
 
     if (result) {
+      // Share with family if checkbox is checked
+      if (shareWithFamily && family && result.id) {
+        await shareTransaction(result.id);
+      }
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
@@ -57,6 +64,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
     setCategoryId('');
     setDescription('');
     setDate(format(new Date(), 'yyyy-MM-dd'));
+    setShareWithFamily(false);
   };
 
   const handleQuickCategorySave = async (categoryData: { name: string; icon: string; color: string; type: 'income' | 'expense' }) => {
@@ -233,6 +241,31 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                     className="input-finance"
                   />
                 </div>
+
+                {/* Share with Family */}
+                {family && (
+                  <button
+                    type="button"
+                    onClick={() => setShareWithFamily(!shareWithFamily)}
+                    className={cn(
+                      'w-full flex items-center gap-3 p-3 rounded-xl transition-all touch-scale',
+                      shareWithFamily ? 'bg-primary/15 ring-1 ring-primary' : 'bg-secondary/50'
+                    )}
+                  >
+                    <div className={cn(
+                      'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
+                      shareWithFamily ? 'bg-primary border-primary' : 'border-muted-foreground/40'
+                    )}>
+                      {shareWithFamily && <Check size={12} className="text-primary-foreground" />}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users size={16} className={shareWithFamily ? 'text-primary' : 'text-muted-foreground'} />
+                      <span className={cn('text-sm', shareWithFamily ? 'text-primary font-medium' : 'text-muted-foreground')}>
+                        Compartilhar com a Família
+                      </span>
+                    </div>
+                  </button>
+                )}
 
                 {/* Submit */}
                 <button

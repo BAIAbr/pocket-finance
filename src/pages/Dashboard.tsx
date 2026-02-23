@@ -7,8 +7,10 @@ import { AddTransactionModal } from '@/components/AddTransactionModal';
 import { MissionHomeCard } from '@/components/MissionHomeCard';
 import { WeeklyMissionsCard } from '@/components/WeeklyMissionsCard';
 import { WeeklySummaryCard } from '@/components/WeeklySummaryCard';
+import { FamilyDashboard } from '@/components/FamilyDashboard';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useMissionContext } from '@/contexts/MissionContext';
+import { useFamilyContext } from '@/contexts/FamilyContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStreak } from '@/hooks/useStreak';
 import { useWeeklySummary } from '@/hooks/useWeeklySummary';
@@ -18,6 +20,7 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { currentMonthStats, transactions, categories } = useFinanceContext();
   const { recentCompletions, markHomeShown, viewDetails, checkMissions, weeklyMissions, isLoadingWeekly, generateWeeklyMissions } = useMissionContext();
+  const { viewContext } = useFamilyContext();
   const { user } = useAuth();
   const { currentStreak } = useStreak(user?.id ?? null);
   const weeklySummary = useWeeklySummary(transactions as any, categories as any, 0);
@@ -62,44 +65,50 @@ export default function Dashboard() {
       </header>
 
       <main className="px-4 lg:px-8 space-y-5">
-        <MissionHomeCard
-          completions={recentCompletions}
-          onViewDetails={viewDetails}
-          onDismiss={markHomeShown}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div className="animate-fade-in"><BalanceCard /></div>
-          <div className="animate-fade-in stagger-1"><MiniChart /></div>
-        </div>
-
-        {/* Weekly AI Missions */}
-        <div className="animate-fade-in stagger-1">
-          <WeeklyMissionsCard
-            missions={weeklyMissions}
-            isLoading={isLoadingWeekly}
-            onGenerate={generateWeeklyMissions}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div className="animate-fade-in stagger-2">
-            <WeeklySummaryCard
-              totalSpent={weeklySummary.totalSpent}
-              variationPercent={weeklySummary.variationPercent}
-              topCategory={weeklySummary.topCategory}
-              currentStreak={0}
-              isVisible={weeklySummary.isVisible}
+        {viewContext === 'family' ? (
+          <FamilyDashboard />
+        ) : (
+          <>
+            <MissionHomeCard
+              completions={recentCompletions}
+              onViewDetails={viewDetails}
+              onDismiss={markHomeShown}
             />
-          </div>
-          <div className="animate-fade-in stagger-2">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-lg">Últimas Transações</h2>
-              <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">Últimos 7 dias</span>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="animate-fade-in"><BalanceCard /></div>
+              <div className="animate-fade-in stagger-1"><MiniChart /></div>
             </div>
-            <TransactionList compact />
-          </div>
-        </div>
+
+            {/* Weekly AI Missions */}
+            <div className="animate-fade-in stagger-1">
+              <WeeklyMissionsCard
+                missions={weeklyMissions}
+                isLoading={isLoadingWeekly}
+                onGenerate={generateWeeklyMissions}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="animate-fade-in stagger-2">
+                <WeeklySummaryCard
+                  totalSpent={weeklySummary.totalSpent}
+                  variationPercent={weeklySummary.variationPercent}
+                  topCategory={weeklySummary.topCategory}
+                  currentStreak={0}
+                  isVisible={weeklySummary.isVisible}
+                />
+              </div>
+              <div className="animate-fade-in stagger-2">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-semibold text-lg">Últimas Transações</h2>
+                  <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">Últimos 7 dias</span>
+                </div>
+                <TransactionList compact />
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
       <FloatingActionButton onClick={() => setIsModalOpen(true)} />
