@@ -59,6 +59,7 @@ export interface PiggyBank {
   color: string;
   is_completed: boolean;
   currency: string;
+  family_id?: string | null;
 }
 
 export interface PiggyBankTransaction {
@@ -374,6 +375,7 @@ export function useSupabaseFinance(userId: string | null) {
     color?: string;
     cdi_rate_annual?: number;
     currency?: string;
+    family_id?: string | null;
   }) => {
     if (!userId) return null;
 
@@ -390,6 +392,7 @@ export function useSupabaseFinance(userId: string | null) {
         balance: 0,
         principal_amount: 0,
         total_yield: 0,
+        family_id: data.family_id || null,
       })
       .select()
       .single();

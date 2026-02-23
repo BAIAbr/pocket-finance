@@ -300,6 +300,7 @@ export type Database = {
           color: string
           created_at: string
           currency: string
+          family_id: string | null
           icon: string
           id: string
           is_completed: boolean
@@ -318,6 +319,7 @@ export type Database = {
           color?: string
           created_at?: string
           currency?: string
+          family_id?: string | null
           icon?: string
           id?: string
           is_completed?: boolean
@@ -336,6 +338,7 @@ export type Database = {
           color?: string
           created_at?: string
           currency?: string
+          family_id?: string | null
           icon?: string
           id?: string
           is_completed?: boolean

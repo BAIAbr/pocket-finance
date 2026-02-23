@@ -205,10 +205,10 @@ export function useEffectiveFinance() {
 
   // Effective piggy banks based on context
   const piggyBanks = useMemo(() => {
-    if (!isFamily) return finance.piggyBanks;
-    // Exclude current user's piggy banks — they already see them in personal mode
-    return familyPiggyBanks.filter(p => p.user_id !== user?.id);
-  }, [isFamily, finance.piggyBanks, familyPiggyBanks, user?.id]);
+    if (!isFamily) return finance.piggyBanks.filter((p: any) => !p.family_id);
+    // In family mode, only show piggy banks created for THIS family
+    return familyPiggyBanks.filter((p: any) => p.family_id === family?.id);
+  }, [isFamily, finance.piggyBanks, familyPiggyBanks, family?.id]);
 
   const piggyBankTransactions = useMemo(() => {
     if (!isFamily) return finance.piggyBankTransactions;
@@ -230,6 +230,7 @@ export function useEffectiveFinance() {
     piggyBankTransactions,
     isLoading: finance.isLoading || isLoadingFamily,
     isFamily,
+    familyId: family?.id || null,
     memberProfiles,
     // Keep original finance for write operations
     _personalFinance: finance,
