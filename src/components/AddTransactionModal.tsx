@@ -15,9 +15,10 @@ interface AddTransactionModalProps {
 
 export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProps) {
   const { categories, addTransaction, addCategory } = useFinanceContext();
-  const { family, shareTransaction } = useFamilyContext();
+  const { family, shareTransaction, viewContext } = useFamilyContext();
   const navigate = useNavigate();
   
+  const isInFamilyMode = viewContext === 'family';
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -26,7 +27,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showQuickCategoryModal, setShowQuickCategoryModal] = useState(false);
-  const [shareWithFamily, setShareWithFamily] = useState(false);
+  const [shareWithFamily, setShareWithFamily] = useState(isInFamilyMode);
 
   const filteredCategories = categories.filter(c => c.type === type);
 
@@ -64,7 +65,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
     setCategoryId('');
     setDescription('');
     setDate(format(new Date(), 'yyyy-MM-dd'));
-    setShareWithFamily(false);
+    setShareWithFamily(isInFamilyMode);
   };
 
   const handleQuickCategorySave = async (categoryData: { name: string; icon: string; color: string; type: 'income' | 'expense' }) => {

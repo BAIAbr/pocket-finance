@@ -63,6 +63,7 @@ export default function SavingsPage() {
     deletePiggyBankTransaction,
     isLoading,
     isFamily,
+    memberProfiles,
     _personalFinance,
   } = useEffectiveFinance();
 
@@ -311,6 +312,7 @@ interface PiggyBankCardProps {
   }>;
   onDeleteTransaction: (id: string) => void;
   readOnly?: boolean;
+  ownerName?: string;
 }
 
 // Currency formatter helper
@@ -332,6 +334,7 @@ function PiggyBankCard({
   transactions,
   onDeleteTransaction,
   readOnly = false,
+  ownerName,
 }: PiggyBankCardProps) {
   const principal = Number(piggy.principal_amount) || 0;
   const startDate = piggy.yield_start_date || piggy.created_at;
@@ -377,6 +380,9 @@ function PiggyBankCard({
           </div>
           <div>
             <p className="font-semibold">{piggy.name}</p>
+            {ownerName && (
+              <p className="text-xs text-muted-foreground">de {ownerName}</p>
+            )}
             <p className="font-mono text-lg font-bold text-foreground">
               {formatPiggy(yieldCalc.updatedBalance)}
             </p>

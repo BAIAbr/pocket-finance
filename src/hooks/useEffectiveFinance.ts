@@ -14,6 +14,13 @@ import { ptBR } from 'date-fns/locale';
 export function useEffectiveFinance() {
   const finance = useFinanceContext();
   const { viewContext, family, sharedTransactions, members } = useFamilyContext();
+  const memberProfiles = useMemo(() => {
+    const map = new Map<string, string>();
+    members.forEach(m => {
+      if (m.profile?.name) map.set(m.user_id, m.profile.name);
+    });
+    return map;
+  }, [members]);
 
   const [familyTransactions, setFamilyTransactions] = useState<Transaction[]>([]);
   const [familyPiggyBanks, setFamilyPiggyBanks] = useState<PiggyBank[]>([]);
@@ -219,6 +226,7 @@ export function useEffectiveFinance() {
     piggyBankTransactions,
     isLoading: finance.isLoading || isLoadingFamily,
     isFamily,
+    memberProfiles,
     // Keep original finance for write operations
     _personalFinance: finance,
   };
