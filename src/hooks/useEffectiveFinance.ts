@@ -1,6 +1,7 @@
 import { useMemo, useCallback, useState, useEffect } from 'react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useFamilyContext } from '@/contexts/FamilyContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Transaction, Category, PiggyBank, PiggyBankTransaction } from '@/hooks/useSupabaseFinance';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
@@ -12,6 +13,7 @@ import { ptBR } from 'date-fns/locale';
  * When viewContext is 'family', returns shared family transactions from all members.
  */
 export function useEffectiveFinance() {
+  const { user } = useAuth();
   const finance = useFinanceContext();
   const { viewContext, family, sharedTransactions, members } = useFamilyContext();
   const memberProfiles = useMemo(() => {
@@ -204,13 +206,15 @@ export function useEffectiveFinance() {
   // Effective piggy banks based on context
   const piggyBanks = useMemo(() => {
     if (!isFamily) return finance.piggyBanks;
-    return familyPiggyBanks;
-  }, [isFamily, finance.piggyBanks, familyPiggyBanks]);
+    // Exclude current user's piggy banks — they already see them in personal mode
+    return familyPiggyBanks.filter(p => p.user_id !== user?.id);
+  }, [isFamily, finance.piggyBanks, familyPiggyBanks, user?.id]);
 
   const piggyBankTransactions = useMemo(() => {
     if (!isFamily) return finance.piggyBankTransactions;
-    return familyPiggyBankTransactions;
-  }, [isFamily, finance.piggyBankTransactions, familyPiggyBankTransactions]);
+    const familyPiggyIds = new Set(piggyBanks.map(p => p.id));
+    return familyPiggyBankTransactions.filter(t => t.piggy_bank_id && familyPiggyIds.has(t.piggy_bank_id));
+  }, [isFamily, finance.piggyBankTransactions, familyPiggyBankTransactions, piggyBanks]);
 
   return {
     // Override with effective data
