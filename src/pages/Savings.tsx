@@ -63,6 +63,7 @@ export default function SavingsPage() {
     deletePiggyBankTransaction,
     isLoading,
     isFamily,
+    familyId,
     memberProfiles,
     _personalFinance,
   } = useEffectiveFinance();
@@ -150,7 +151,7 @@ export default function SavingsPage() {
       <header className="px-4 pt-6 pb-4">
         <h1 className="text-2xl font-bold">{isFamily ? 'Cofrinhos da Família' : 'Cofrinhos'}</h1>
         <p className="text-muted-foreground text-sm">
-          {isFamily ? 'Cofrinhos de todos os membros' : 'Seus objetivos financeiros com rendimento CDI'}
+          {isFamily ? 'Cofrinhos compartilhados da família' : 'Seus objetivos financeiros com rendimento CDI'}
         </p>
       </header>
 
@@ -170,16 +171,14 @@ export default function SavingsPage() {
           formatCurrency={formatCurrency}
         />
 
-        {/* Add Piggy Bank Button - only in personal mode */}
-        {!isFamily && (
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="w-full card-finance flex items-center justify-center gap-2 py-4 border-2 border-dashed border-muted-foreground/30 hover:border-accent transition-all touch-scale"
-          >
-            <Plus size={20} className="text-accent" />
-            <span className="font-medium">Novo Cofrinho</span>
-          </button>
-        )}
+        {/* Add Piggy Bank Button */}
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="w-full card-finance flex items-center justify-center gap-2 py-4 border-2 border-dashed border-muted-foreground/30 hover:border-accent transition-all touch-scale"
+        >
+          <Plus size={20} className="text-accent" />
+          <span className="font-medium">{isFamily ? 'Novo Cofrinho Familiar' : 'Novo Cofrinho'}</span>
+        </button>
 
         {/* Active Piggy Banks */}
         {activePiggyBanks.length > 0 && (
@@ -251,6 +250,7 @@ export default function SavingsPage() {
         isOpen={showCreateModal} 
         onClose={() => setShowCreateModal(false)}
         onSubmit={createPiggyBank}
+        familyId={isFamily ? familyId : undefined}
       />
 
       {/* Edit Modal */}
@@ -574,11 +574,13 @@ function PiggyBankCard({
 function CreatePiggyBankModal({ 
   isOpen, 
   onClose, 
-  onSubmit 
+  onSubmit,
+  familyId,
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
-  onSubmit: (data: { name: string; target_amount?: number | null; cdi_rate_annual?: number; color?: string; currency?: string }) => Promise<any>;
+  onSubmit: (data: { name: string; target_amount?: number | null; cdi_rate_annual?: number; color?: string; currency?: string; family_id?: string | null }) => Promise<any>;
+  familyId?: string | null;
 }) {
   const [name, setName] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
@@ -606,6 +608,7 @@ function CreatePiggyBankModal({
         cdi_rate_annual: cdiPercentageToAnnualRate(cdiPercentage),
         color: selectedColor,
         currency: selectedCurrency,
+        family_id: familyId || null,
       });
       
       resetForm();
