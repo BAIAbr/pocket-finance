@@ -65,6 +65,165 @@ export type Database = {
         }
         Relationships: []
       }
+      families: {
+        Row: {
+          ai_enabled: boolean
+          auto_share: boolean
+          created_at: string
+          created_by: string
+          id: string
+          invite_code: string
+          nome: string
+          plano: string
+          updated_at: string
+        }
+        Insert: {
+          ai_enabled?: boolean
+          auto_share?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          invite_code?: string
+          nome: string
+          plano?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_enabled?: boolean
+          auto_share?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          invite_code?: string
+          nome?: string
+          plano?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      family_goals: {
+        Row: {
+          created_at: string
+          created_by: string
+          descricao: string | null
+          family_id: string
+          id: string
+          nome: string
+          prazo: string | null
+          status: string
+          updated_at: string
+          valor_atual: number
+          valor_objetivo: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          descricao?: string | null
+          family_id: string
+          id?: string
+          nome: string
+          prazo?: string | null
+          status?: string
+          updated_at?: string
+          valor_atual?: number
+          valor_objetivo?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          descricao?: string | null
+          family_id?: string
+          id?: string
+          nome?: string
+          prazo?: string | null
+          status?: string
+          updated_at?: string
+          valor_atual?: number
+          valor_objetivo?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_goals_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_insights: {
+        Row: {
+          conteudo: string
+          created_at: string
+          family_id: string
+          id: string
+          impacto_estimado: string | null
+          tipo: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          family_id: string
+          id?: string
+          impacto_estimado?: string | null
+          tipo?: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          family_id?: string
+          id?: string
+          impacto_estimado?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_insights_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_members: {
+        Row: {
+          family_id: string
+          id: string
+          joined_at: string
+          permissions: Json
+          privacy_settings: Json
+          role: string
+          user_id: string
+        }
+        Insert: {
+          family_id: string
+          id?: string
+          joined_at?: string
+          permissions?: Json
+          privacy_settings?: Json
+          role?: string
+          user_id: string
+        }
+        Update: {
+          family_id?: string
+          id?: string
+          joined_at?: string
+          permissions?: Json
+          privacy_settings?: Json
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       missions: {
         Row: {
           category: string
@@ -377,6 +536,45 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      shared_transactions: {
+        Row: {
+          created_at: string
+          family_id: string
+          id: string
+          shared_by: string
+          transaction_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          id?: string
+          shared_by: string
+          transaction_id: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          id?: string
+          shared_by?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_transactions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shared_transactions_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {

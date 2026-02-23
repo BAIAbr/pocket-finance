@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { FinanceProvider } from "@/contexts/FinanceContext";
 import { MissionProvider } from "@/contexts/MissionContext";
+import { FamilyProvider } from "@/contexts/FamilyContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
@@ -29,6 +30,7 @@ const App = () => (
         <AuthProvider>
           <FinanceProvider>
             <MissionProvider>
+            <FamilyProvider>
             <Toaster />
             <Sonner />
             <HashRouter>
@@ -49,6 +51,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </HashRouter>
+            </FamilyProvider>
             </MissionProvider>
           </FinanceProvider>
         </AuthProvider>
