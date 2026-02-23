@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useFinanceContext } from '@/contexts/FinanceContext';
+import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useConfetti } from '@/hooks/useConfetti';
@@ -62,7 +62,20 @@ export default function SavingsPage() {
     deletePiggyBank,
     deletePiggyBankTransaction,
     isLoading,
-  } = useFinanceContext();
+    isFamily,
+    _personalFinance,
+  } = useEffectiveFinance();
+
+  // In family mode, write operations should use personal finance
+  const writeOps = isFamily ? _personalFinance : {
+    createPiggyBank,
+    updatePiggyBank,
+    updatePiggyBankCdiRate,
+    depositToPiggyBank,
+    withdrawFromPiggyBank,
+    deletePiggyBank,
+    deletePiggyBankTransaction,
+  };
 
   const { fireSuccess, fireGoalComplete } = useConfetti();
 
@@ -134,8 +147,10 @@ export default function SavingsPage() {
     <div className="min-h-screen bg-background pb-24 safe-top">
       {/* Header */}
       <header className="px-4 pt-6 pb-4">
-        <h1 className="text-2xl font-bold">Cofrinhos</h1>
-        <p className="text-muted-foreground text-sm">Seus objetivos financeiros com rendimento CDI</p>
+        <h1 className="text-2xl font-bold">{isFamily ? 'Cofrinhos da Família' : 'Cofrinhos'}</h1>
+        <p className="text-muted-foreground text-sm">
+          {isFamily ? 'Cofrinhos de todos os membros' : 'Seus objetivos financeiros com rendimento CDI'}
+        </p>
       </header>
 
       <main className="px-4 space-y-4">
@@ -154,14 +169,16 @@ export default function SavingsPage() {
           formatCurrency={formatCurrency}
         />
 
-        {/* Add Piggy Bank Button */}
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="w-full card-finance flex items-center justify-center gap-2 py-4 border-2 border-dashed border-muted-foreground/30 hover:border-accent transition-all touch-scale"
-        >
-          <Plus size={20} className="text-accent" />
-          <span className="font-medium">Novo Cofrinho</span>
-        </button>
+        {/* Add Piggy Bank Button - only in personal mode */}
+        {!isFamily && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="w-full card-finance flex items-center justify-center gap-2 py-4 border-2 border-dashed border-muted-foreground/30 hover:border-accent transition-all touch-scale"
+          >
+            <Plus size={20} className="text-accent" />
+            <span className="font-medium">Novo Cofrinho</span>
+          </button>
+        )}
 
         {/* Active Piggy Banks */}
         {activePiggyBanks.length > 0 && (
@@ -180,6 +197,7 @@ export default function SavingsPage() {
                 onDelete={() => deletePiggyBank(piggy.id)}
                 transactions={piggyBankTransactions.filter(t => t.piggy_bank_id === piggy.id)}
                 onDeleteTransaction={deletePiggyBankTransaction}
+                readOnly={isFamily}
               />
             ))}
           </div>
@@ -276,6 +294,7 @@ interface PiggyBankCardProps {
     yield_start_date: string | null;
     created_at: string;
     currency: string;
+    user_id?: string;
   };
   formatCurrency: (amount: number) => string;
   isExpanded: boolean;
@@ -291,6 +310,7 @@ interface PiggyBankCardProps {
     created_at: string;
   }>;
   onDeleteTransaction: (id: string) => void;
+  readOnly?: boolean;
 }
 
 // Currency formatter helper
@@ -310,7 +330,8 @@ function PiggyBankCard({
   onEdit,
   onDelete,
   transactions,
-  onDeleteTransaction
+  onDeleteTransaction,
+  readOnly = false,
 }: PiggyBankCardProps) {
   const principal = Number(piggy.principal_amount) || 0;
   const startDate = piggy.yield_start_date || piggy.created_at;
@@ -362,18 +383,22 @@ function PiggyBankCard({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="p-2 text-muted-foreground hover:text-accent transition-colors"
-          >
-            <Edit3 size={16} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-          >
-            <Trash2 size={16} />
-          </button>
+          {!readOnly && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                className="p-2 text-muted-foreground hover:text-accent transition-colors"
+              >
+                <Edit3 size={16} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <Trash2 size={16} />
+              </button>
+            </>
+          )}
           {isExpanded ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
         </div>
       </div>
@@ -464,28 +489,30 @@ function PiggyBankCard({
           )}
           
           {/* Actions */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={onDeposit}
-              className="flex items-center justify-center gap-2 py-3 rounded-xl bg-success/10 hover:bg-success/20 transition-all touch-scale"
-            >
-              <ArrowDownLeft size={18} className="text-success" />
-              <span className="font-medium text-success text-sm">Depositar</span>
-            </button>
-            <button
-              onClick={onWithdraw}
-              disabled={yieldCalc.updatedBalance === 0}
-              className={cn(
-                "flex items-center justify-center gap-2 py-3 rounded-xl transition-all touch-scale",
-                yieldCalc.updatedBalance > 0
-                  ? "bg-destructive/10 hover:bg-destructive/20"
-                  : "opacity-50 cursor-not-allowed bg-secondary"
-              )}
-            >
-              <ArrowUpRight size={18} className="text-destructive" />
-              <span className="font-medium text-destructive text-sm">Retirar</span>
-            </button>
-          </div>
+          {!readOnly && (
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={onDeposit}
+                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-success/10 hover:bg-success/20 transition-all touch-scale"
+              >
+                <ArrowDownLeft size={18} className="text-success" />
+                <span className="font-medium text-success text-sm">Depositar</span>
+              </button>
+              <button
+                onClick={onWithdraw}
+                disabled={yieldCalc.updatedBalance === 0}
+                className={cn(
+                  "flex items-center justify-center gap-2 py-3 rounded-xl transition-all touch-scale",
+                  yieldCalc.updatedBalance > 0
+                    ? "bg-destructive/10 hover:bg-destructive/20"
+                    : "opacity-50 cursor-not-allowed bg-secondary"
+                )}
+              >
+                <ArrowUpRight size={18} className="text-destructive" />
+                <span className="font-medium text-destructive text-sm">Retirar</span>
+              </button>
+            </div>
+          )}
           
           {/* Yield Chart */}
           {principal > 0 && (
