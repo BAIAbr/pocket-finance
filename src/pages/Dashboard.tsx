@@ -119,7 +119,7 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {!isFamily && <FloatingActionButton onClick={() => setIsModalOpen(true)} />}
+      <FloatingActionButton onClick={() => setIsModalOpen(true)} />
       <AddTransactionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
