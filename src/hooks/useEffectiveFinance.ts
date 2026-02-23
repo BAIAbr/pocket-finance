@@ -2,7 +2,7 @@ import { useMemo, useCallback, useState, useEffect } from 'react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useFamilyContext } from '@/contexts/FamilyContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Transaction, Category } from '@/hooks/useSupabaseFinance';
+import { Transaction, Category, PiggyBank, PiggyBankTransaction } from '@/hooks/useSupabaseFinance';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -13,9 +13,11 @@ import { ptBR } from 'date-fns/locale';
  */
 export function useEffectiveFinance() {
   const finance = useFinanceContext();
-  const { viewContext, family, sharedTransactions } = useFamilyContext();
+  const { viewContext, family, sharedTransactions, members } = useFamilyContext();
 
   const [familyTransactions, setFamilyTransactions] = useState<Transaction[]>([]);
+  const [familyPiggyBanks, setFamilyPiggyBanks] = useState<PiggyBank[]>([]);
+  const [familyPiggyBankTransactions, setFamilyPiggyBankTransactions] = useState<PiggyBankTransaction[]>([]);
   const [isLoadingFamily, setIsLoadingFamily] = useState(false);
 
   // Fetch all shared family transactions (including from other members)
@@ -55,6 +57,41 @@ export function useEffectiveFinance() {
 
     fetchFamilyTransactions();
   }, [viewContext, family, sharedTransactions]);
+
+  // Fetch all family members' piggy banks
+  useEffect(() => {
+    if (viewContext !== 'family' || !family || members.length === 0) {
+      setFamilyPiggyBanks([]);
+      setFamilyPiggyBankTransactions([]);
+      return;
+    }
+
+    const fetchFamilyPiggyBanks = async () => {
+      try {
+        const memberUserIds = members.map(m => m.user_id);
+        
+        const [piggyRes, piggyTxRes] = await Promise.all([
+          supabase
+            .from('piggy_bank')
+            .select('*')
+            .in('user_id', memberUserIds)
+            .order('created_at', { ascending: true }),
+          supabase
+            .from('piggy_bank_transactions')
+            .select('*')
+            .in('user_id', memberUserIds)
+            .order('created_at', { ascending: false }),
+        ]);
+
+        if (piggyRes.data) setFamilyPiggyBanks(piggyRes.data as PiggyBank[]);
+        if (piggyTxRes.data) setFamilyPiggyBankTransactions(piggyTxRes.data as PiggyBankTransaction[]);
+      } catch (err) {
+        console.error('Error fetching family piggy banks:', err);
+      }
+    };
+
+    fetchFamilyPiggyBanks();
+  }, [viewContext, family, members]);
 
   const isFamily = viewContext === 'family';
 
@@ -157,6 +194,17 @@ export function useEffectiveFinance() {
     return stats;
   }, [getTransactionsForMonth]);
 
+  // Effective piggy banks based on context
+  const piggyBanks = useMemo(() => {
+    if (!isFamily) return finance.piggyBanks;
+    return familyPiggyBanks;
+  }, [isFamily, finance.piggyBanks, familyPiggyBanks]);
+
+  const piggyBankTransactions = useMemo(() => {
+    if (!isFamily) return finance.piggyBankTransactions;
+    return familyPiggyBankTransactions;
+  }, [isFamily, finance.piggyBankTransactions, familyPiggyBankTransactions]);
+
   return {
     // Override with effective data
     ...finance,
@@ -167,6 +215,8 @@ export function useEffectiveFinance() {
     getTransactionsForMonth,
     getCategoryStats,
     getMonthlyStats,
+    piggyBanks,
+    piggyBankTransactions,
     isLoading: finance.isLoading || isLoadingFamily,
     isFamily,
     // Keep original finance for write operations
