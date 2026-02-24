@@ -3,6 +3,7 @@ import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { Transaction } from '@/hooks/useSupabaseFinance';
 import { useFireSystem, getTransactionFireInfo } from '@/hooks/useFireSystem';
 import { FireBadge } from '@/components/FireBadge';
+import { EditTransactionModal } from '@/components/EditTransactionModal';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import {
 import { ptBR } from 'date-fns/locale';
 import {
   CalendarIcon, TrendingUp, TrendingDown, Wallet, Activity,
-  Download, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronRight
+  Download, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronRight, Pencil, Trash2
 } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -77,11 +78,12 @@ interface CategoryGroupProps {
   categoryAverages: Map<string, number>;
   allTransactions: Transaction[];
   getCategoryById: (id: string | null) => any;
+  onEditTransaction?: (t: Transaction) => void;
 }
 
 function CategoryGroup({
   categoryName, categoryIcon, categoryColor, transactions, totalAmount,
-  formatCurrency, categoryAverages, allTransactions, getCategoryById
+  formatCurrency, categoryAverages, allTransactions, getCategoryById, onEditTransaction
 }: CategoryGroupProps) {
   const [isOpen, setIsOpen] = useState(false);
   const IconComponent = getIconByName(categoryIcon);
@@ -116,7 +118,7 @@ function CategoryGroup({
             const isIncome = transaction.type === 'income';
 
             return (
-              <div key={transaction.id} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 pl-4 sm:pl-6">
+              <div key={transaction.id} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 pl-4 sm:pl-6 group cursor-pointer hover:bg-secondary/30 transition-colors" onClick={() => onEditTransaction?.(transaction)}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1">
                     <p className="font-medium text-sm text-foreground truncate">
@@ -131,6 +133,13 @@ function CategoryGroup({
                 <span className={cn('font-mono font-semibold text-xs sm:text-sm shrink-0', isIncome ? 'text-income' : 'text-expense')}>
                   {isIncome ? '+' : '-'}{formatCurrency(Number(transaction.amount))}
                 </span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEditTransaction?.(transaction); }}
+                  className="p-1.5 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
+                  aria-label="Editar"
+                >
+                  <Pencil size={14} />
+                </button>
               </div>
             );
           })}
@@ -141,8 +150,9 @@ function CategoryGroup({
 }
 
 export default function FinancialHistory() {
-  const { transactions, categories, formatCurrency, getCategoryById, isFamily } = useEffectiveFinance();
+  const { transactions, categories, formatCurrency, getCategoryById, isFamily, deleteTransaction } = useEffectiveFinance();
   const { categoryAverages } = useFireSystem(transactions as Transaction[]);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const [activeFilter, setActiveFilter] = useState<QuickFilter>(() => {
     const saved = localStorage.getItem('finHistory_filter');
@@ -485,6 +495,7 @@ export default function FinancialHistory() {
                     categoryAverages={categoryAverages}
                     allTransactions={transactions as Transaction[]}
                     getCategoryById={getCategoryById}
+                    onEditTransaction={setEditingTransaction}
                   />
                 ))}
               </div>
@@ -506,7 +517,7 @@ export default function FinancialHistory() {
                   const isIncome = transaction.type === 'income';
 
                   return (
-                    <div key={transaction.id} className="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl bg-secondary/50 touch-scale transaction-item group">
+                    <div key={transaction.id} className="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl bg-secondary/50 touch-scale transaction-item group cursor-pointer" onClick={() => setEditingTransaction(transaction)}>
                       <div
                         className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0"
                         style={{ backgroundColor: `${cat?.color}15` }}
@@ -533,6 +544,22 @@ export default function FinancialHistory() {
                       )}>
                         {isIncome ? '+' : '-'}{formatCurrency(Number(transaction.amount))}
                       </span>
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingTransaction(transaction); }}
+                          className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                          aria-label="Editar"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteTransaction(transaction.id); }}
+                          className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                          aria-label="Excluir"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -541,6 +568,12 @@ export default function FinancialHistory() {
           )}
         </div>
       </main>
+
+      <EditTransactionModal
+        transaction={editingTransaction}
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+      />
     </div>
   );
 }

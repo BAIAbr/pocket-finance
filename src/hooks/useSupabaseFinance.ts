@@ -228,6 +228,37 @@ export function useSupabaseFinance(userId: string | null) {
     }
   }, []);
 
+  const updateTransaction = useCallback(async (id: string, updates: {
+    type?: 'income' | 'expense';
+    amount?: number;
+    category_id?: string;
+    description?: string;
+    date?: string;
+  }) => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Update transaction error:', error);
+        toast.error('Erro ao atualizar transação');
+        return null;
+      }
+
+      setTransactions(prev => prev.map(t => t.id === id ? (data as Transaction) : t));
+      toast.success('Transação atualizada!');
+      return data as Transaction;
+    } catch (err) {
+      console.error('Update transaction exception:', err);
+      toast.error('Erro ao atualizar transação');
+      return null;
+    }
+  }, []);
+
   // === CATEGORIES ===
   const addCategory = useCallback(async (category: {
     name: string;
@@ -806,6 +837,7 @@ export function useSupabaseFinance(userId: string | null) {
     // Transaction actions
     addTransaction,
     deleteTransaction,
+    updateTransaction,
 
     // Category actions
     addCategory,
