@@ -1,19 +1,22 @@
+import { useState } from 'react';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { parseISO, format, isAfter, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getIconByName } from '@/lib/icons';
-import { Trash2, ChevronRight } from 'lucide-react';
+import { Trash2, ChevronRight, Pencil } from 'lucide-react';
 import { Transaction } from '@/hooks/useSupabaseFinance';
 import { useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
+import { EditTransactionModal } from './EditTransactionModal';
 
 interface TransactionItemProps {
   transaction: Transaction;
-  showDelete?: boolean;
+  showActions?: boolean;
+  onEdit?: (transaction: Transaction) => void;
 }
 
-export function TransactionItem({ transaction, showDelete = false }: TransactionItemProps) {
+export function TransactionItem({ transaction, showActions = false, onEdit }: TransactionItemProps) {
   const { getCategoryById, formatCurrency, deleteTransaction } = useEffectiveFinance();
   const category = getCategoryById(transaction.category_id);
   
@@ -25,7 +28,13 @@ export function TransactionItem({ transaction, showDelete = false }: Transaction
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 touch-scale transaction-item group">
+    <div
+      className={cn(
+        "flex items-center gap-3 p-3 rounded-xl bg-secondary/50 touch-scale transaction-item group",
+        onEdit && "cursor-pointer"
+      )}
+      onClick={() => onEdit?.(transaction)}
+    >
       <div 
         className={cn(
           'w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110',
@@ -66,14 +75,23 @@ export function TransactionItem({ transaction, showDelete = false }: Transaction
           {isIncome ? '+' : '-'}{formatCurrency(Number(transaction.amount))}
         </span>
         
-        {showDelete && (
-          <button
-            onClick={handleDelete}
-            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 touch-scale"
-            aria-label="Excluir transação"
-          >
-            <Trash2 size={16} />
-          </button>
+        {showActions && (
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit?.(transaction); }}
+              className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200 touch-scale"
+              aria-label="Editar transação"
+            >
+              <Pencil size={15} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 touch-scale"
+              aria-label="Excluir transação"
+            >
+              <Trash2 size={15} />
+            </button>
+          </div>
         )}
       </div>
     </div>
@@ -87,6 +105,7 @@ interface TransactionListProps {
 export function TransactionList({ compact = false }: TransactionListProps) {
   const { recentTransactions, isLoading, isFamily } = useEffectiveFinance();
   const navigate = useNavigate();
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const displayTransactions = useMemo(() => {
     if (!compact) return recentTransactions;
@@ -129,24 +148,33 @@ export function TransactionList({ compact = false }: TransactionListProps) {
   }
 
   return (
-    <div className="space-y-2">
-      {displayTransactions.map(transaction => (
-        <TransactionItem 
-          key={transaction.id} 
-          transaction={transaction}
-          showDelete={!compact && !isFamily}
-        />
-      ))}
+    <>
+      <div className="space-y-2">
+        {displayTransactions.map(transaction => (
+          <TransactionItem 
+            key={transaction.id} 
+            transaction={transaction}
+            showActions={!compact}
+            onEdit={setEditingTransaction}
+          />
+        ))}
 
-      {compact && recentTransactions.length > displayTransactions.length && (
-        <button
-          onClick={() => navigate('/history')}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary/10 text-primary text-sm font-medium hover:bg-primary/15 transition-colors"
-        >
-          Ver mês completo
-          <ChevronRight size={16} />
-        </button>
-      )}
-    </div>
+        {compact && recentTransactions.length > displayTransactions.length && (
+          <button
+            onClick={() => navigate('/history')}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary/10 text-primary text-sm font-medium hover:bg-primary/15 transition-colors"
+          >
+            Ver mês completo
+            <ChevronRight size={16} />
+          </button>
+        )}
+      </div>
+
+      <EditTransactionModal
+        transaction={editingTransaction}
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+      />
+    </>
   );
 }
