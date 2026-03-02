@@ -197,7 +197,7 @@ export default function SavingsPage() {
                 onDelete={() => deletePiggyBank(piggy.id)}
                 transactions={piggyBankTransactions.filter(t => t.piggy_bank_id === piggy.id)}
                 onDeleteTransaction={deletePiggyBankTransaction}
-                readOnly={isFamily}
+                readOnly={false}
               />
             ))}
           </div>
