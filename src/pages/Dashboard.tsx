@@ -8,6 +8,7 @@ import { MissionHomeCard } from '@/components/MissionHomeCard';
 import { WeeklyMissionsCard } from '@/components/WeeklyMissionsCard';
 import { WeeklySummaryCard } from '@/components/WeeklySummaryCard';
 import { FamilyDashboard } from '@/components/FamilyDashboard';
+import { QuickPiggyDeposit } from '@/components/QuickPiggyDeposit';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useMissionContext } from '@/contexts/MissionContext';
@@ -20,7 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const personalFinance = useFinanceContext();
-  const { transactions, currentMonthStats, categories, isFamily } = useEffectiveFinance();
+  const { transactions, currentMonthStats, categories, isFamily, piggyBanks, formatCurrency, _personalFinance } = useEffectiveFinance();
   const { recentCompletions, markHomeShown, viewDetails, checkMissions, weeklyMissions, isLoadingWeekly, generateWeeklyMissions } = useMissionContext();
   const { viewContext, goals: familyGoals } = useFamilyContext();
   const { user } = useAuth();
@@ -96,6 +97,17 @@ export default function Dashboard() {
 
         {/* Family goals in family mode */}
         {isFamily && <FamilyDashboard />}
+
+        {/* Quick Piggy Deposit */}
+        {(piggyBanks as any[]).filter((p: any) => !p.is_completed).length > 0 && (
+          <div className="animate-fade-in stagger-2">
+            <QuickPiggyDeposit
+              piggyBanks={(piggyBanks as any[]).filter((p: any) => !p.is_completed)}
+              formatCurrency={formatCurrency}
+              onDeposit={_personalFinance.depositToPiggyBank}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className="animate-fade-in stagger-2">
