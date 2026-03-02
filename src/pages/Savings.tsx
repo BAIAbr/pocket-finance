@@ -86,6 +86,10 @@ export default function SavingsPage() {
   const [showTransactionModal, setShowTransactionModal] = useState<{ piggyId: string; type: 'deposit' | 'withdraw' } | null>(null);
   const [showEditModal, setShowEditModal] = useState<string | null>(null);
 
+  // Use _personalFinance for write ops since the user always writes with their own userId
+  const personalDeposit = _personalFinance.depositToPiggyBank;
+  const personalWithdraw = _personalFinance.withdrawFromPiggyBank;
+
   const handleDeposit = async (piggyId: string, amount: number, description?: string) => {
     const piggy = piggyBanks.find(p => p.id === piggyId);
     if (!piggy) return;
@@ -94,7 +98,7 @@ export default function SavingsPage() {
     const currentBalance = Number(piggy.balance) || 0;
     const willComplete = targetAmount > 0 && (currentBalance + amount) >= targetAmount;
     
-    await depositToPiggyBank(piggyId, amount, description);
+    await personalDeposit(piggyId, amount, description);
     
     if (willComplete) {
       fireGoalComplete();
@@ -274,7 +278,7 @@ export default function SavingsPage() {
         piggy={piggyBanks.find(p => p.id === showTransactionModal?.piggyId) || null}
         onClose={() => setShowTransactionModal(null)}
         onDeposit={handleDeposit}
-        onWithdraw={withdrawFromPiggyBank}
+        onWithdraw={personalWithdraw}
         formatCurrency={formatCurrency}
       />
     </div>
