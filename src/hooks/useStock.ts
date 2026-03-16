@@ -43,14 +43,14 @@ export interface StockOutputItem {
 
 export function useStock() {
   const { user } = useAuth();
-  const { currentFamily, isFamily } = useFamilyContext();
+  const { family, viewContext } = useFamilyContext();
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [outputs, setOutputs] = useState<StockOutput[]>([]);
   const [outputItems, setOutputItems] = useState<StockOutputItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const familyId = isFamily && currentFamily ? currentFamily.id : null;
+  const familyId = viewContext === 'family' && family ? family.id : null;
 
   const fetchProducts = useCallback(async () => {
     if (!user) return;
