@@ -1,4 +1,4 @@
-import { Home, History, Brain, PiggyBank, Settings, Trophy } from 'lucide-react';
+import { Home, History, Brain, PiggyBank, Settings, Package, PackageOpen, ChefHat, BarChart3 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useMissionContext } from '@/contexts/MissionContext';
@@ -14,11 +14,47 @@ const navItems = [
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
 
+const stockNavItems = [
+  { path: '/products', icon: Package, label: 'Produtos' },
+  { path: '/stock-outputs', icon: PackageOpen, label: 'Saídas' },
+  { path: '/production', icon: ChefHat, label: 'Produção' },
+  { path: '/stock-reports', icon: BarChart3, label: 'Relatórios' },
+];
+
 export function DesktopSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { userXP } = useMissionContext();
   const currentLevelXP = userXP.total_xp % XP_PER_LEVEL;
+
+  const renderNavItem = (item: typeof navItems[0]) => {
+    const isActive = location.pathname === item.path;
+    return (
+      <button
+        key={item.path}
+        onClick={() => navigate(item.path)}
+        className={cn(
+          'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
+          isActive
+            ? 'bg-primary/15 text-primary shadow-sm'
+            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+        )}
+      >
+        <item.icon
+          size={20}
+          strokeWidth={isActive ? 2.5 : 2}
+          className={cn(
+            'transition-all duration-200 shrink-0',
+            isActive && 'drop-shadow-[0_0_8px_hsl(var(--primary))]'
+          )}
+        />
+        <span>{item.label}</span>
+        {isActive && (
+          <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+        )}
+      </button>
+    );
+  };
 
   return (
     <aside className="hidden lg:flex flex-col w-64 min-h-screen border-r border-border/50 bg-card/50 backdrop-blur-sm">
@@ -48,35 +84,14 @@ export function DesktopSidebar() {
       </div>
 
       {/* Nav Items */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={cn(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
-                isActive
-                  ? 'bg-primary/15 text-primary shadow-sm'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-              )}
-            >
-              <item.icon
-                size={20}
-                strokeWidth={isActive ? 2.5 : 2}
-                className={cn(
-                  'transition-all duration-200 shrink-0',
-                  isActive && 'drop-shadow-[0_0_8px_hsl(var(--primary))]'
-                )}
-              />
-              <span>{item.label}</span>
-              {isActive && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
-              )}
-            </button>
-          );
-        })}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {navItems.map(renderNavItem)}
+
+        {/* Stock section */}
+        <div className="pt-3 mt-3 border-t border-border/30">
+          <p className="px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Estoque</p>
+          {stockNavItems.map(renderNavItem)}
+        </div>
       </nav>
 
       {/* Footer */}
