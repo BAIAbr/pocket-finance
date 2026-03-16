@@ -435,6 +435,48 @@ export type Database = {
           },
         ]
       }
+      products: {
+        Row: {
+          color: string
+          created_at: string
+          family_id: string | null
+          icon: string
+          id: string
+          name: string
+          product_type: string
+          stock_quantity: number
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          family_id?: string | null
+          icon?: string
+          id?: string
+          name: string
+          product_type?: string
+          stock_quantity?: number
+          unit?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          family_id?: string | null
+          icon?: string
+          id?: string
+          name?: string
+          product_type?: string
+          stock_quantity?: number
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -578,6 +620,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stock_output_items: {
+        Row: {
+          created_at: string
+          id: string
+          output_id: string
+          produced_at: string | null
+          product_id: string
+          product_name: string
+          product_type: string
+          production_status: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          output_id: string
+          produced_at?: string | null
+          product_id: string
+          product_name: string
+          product_type?: string
+          production_status?: string
+          quantity?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          output_id?: string
+          produced_at?: string | null
+          product_id?: string
+          product_name?: string
+          product_type?: string
+          production_status?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_output_items_output_id_fkey"
+            columns: ["output_id"]
+            isOneToOne: false
+            referencedRelation: "stock_outputs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_output_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_outputs: {
+        Row: {
+          created_at: string
+          description: string | null
+          family_id: string | null
+          id: string
+          output_date: string
+          output_type: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          family_id?: string | null
+          id?: string
+          output_date?: string
+          output_type: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          family_id?: string | null
+          id?: string
+          output_date?: string
+          output_type?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       transactions: {
         Row: {
