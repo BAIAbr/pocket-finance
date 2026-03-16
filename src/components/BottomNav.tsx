@@ -1,8 +1,8 @@
-import { Home, Brain, PiggyBank, Settings, History } from 'lucide-react';
+import { Home, Brain, PiggyBank, Settings, History, Package, PackageOpen, ChefHat, BarChart3 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
-const navItems = [
+const mainNavItems = [
   { path: '/', icon: Home, label: 'Início' },
   { path: '/history', icon: History, label: 'Histórico' },
   { path: '/ai-insights', icon: Brain, label: 'IA' },
@@ -10,9 +10,19 @@ const navItems = [
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
 
+const stockNavItems = [
+  { path: '/products', icon: Package, label: 'Produtos' },
+  { path: '/stock-outputs', icon: PackageOpen, label: 'Saídas' },
+  { path: '/production', icon: ChefHat, label: 'Produção' },
+  { path: '/stock-reports', icon: BarChart3, label: 'Relatórios' },
+];
+
 export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const isStockRoute = ['/products', '/stock-outputs', '/production', '/stock-reports'].includes(location.pathname);
+  const navItems = isStockRoute ? stockNavItems : mainNavItems;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-border/50 safe-bottom">
@@ -28,7 +38,6 @@ export function BottomNav() {
                 isActive && 'nav-item-active'
               )}
             >
-              {/* Active indicator */}
               {isActive && (
                 <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-primary animate-fade-in" />
               )}
