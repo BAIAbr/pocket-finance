@@ -247,7 +247,7 @@
   }
 
   /* ===== Theme: Midnight 🌙 ===== */
-  .scheme-midnight {
+  :root.scheme-midnight {
     --primary: 235 75% 55%;
     --accent: 235 75% 55%;
     --ring: 235 75% 55%;
