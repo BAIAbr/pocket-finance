@@ -286,7 +286,7 @@
   }
 
   /* ===== Theme: Cereja 🍒 ===== */
-  .scheme-cherry {
+  :root.scheme-cherry {
     --primary: 340 82% 52%;
     --accent: 340 82% 52%;
     --ring: 340 82% 52%;
