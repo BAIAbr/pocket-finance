@@ -208,7 +208,7 @@
   }
 
   /* ===== Theme: Pôr do Sol 🌅 ===== */
-  .scheme-sunset {
+  :root.scheme-sunset {
     --primary: 25 95% 53%;
     --accent: 25 95% 53%;
     --ring: 25 95% 53%;
