@@ -169,7 +169,7 @@
   }
 
   /* ===== Theme: Floresta 🌲 ===== */
-  .scheme-forest {
+  :root.scheme-forest {
     --primary: 152 69% 36%;
     --accent: 152 69% 36%;
     --ring: 152 69% 36%;
