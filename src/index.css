@@ -325,7 +325,7 @@
   }
 
   /* ===== Theme: Ártico ❄️ ===== */
-  .scheme-arctic {
+  :root.scheme-arctic {
     --primary: 187 72% 42%;
     --accent: 187 72% 42%;
     --ring: 187 72% 42%;
