@@ -130,7 +130,7 @@
   }
 
   /* ===== Theme: Oceano 🌊 ===== */
-  .scheme-ocean {
+  :root.scheme-ocean {
     --primary: 210 100% 50%;
     --accent: 210 100% 50%;
     --ring: 210 100% 50%;
