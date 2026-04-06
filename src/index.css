@@ -130,7 +130,7 @@
   }
 
   /* ===== Theme: Oceano 🌊 ===== */
-  .scheme-ocean {
+  :root.scheme-ocean {
     --primary: 210 100% 50%;
     --accent: 210 100% 50%;
     --ring: 210 100% 50%;
@@ -169,7 +169,7 @@
   }
 
   /* ===== Theme: Floresta 🌲 ===== */
-  .scheme-forest {
+  :root.scheme-forest {
     --primary: 152 69% 36%;
     --accent: 152 69% 36%;
     --ring: 152 69% 36%;
@@ -208,7 +208,7 @@
   }
 
   /* ===== Theme: Pôr do Sol 🌅 ===== */
-  .scheme-sunset {
+  :root.scheme-sunset {
     --primary: 25 95% 53%;
     --accent: 25 95% 53%;
     --ring: 25 95% 53%;
@@ -247,7 +247,7 @@
   }
 
   /* ===== Theme: Midnight 🌙 ===== */
-  .scheme-midnight {
+  :root.scheme-midnight {
     --primary: 235 75% 55%;
     --accent: 235 75% 55%;
     --ring: 235 75% 55%;
@@ -286,7 +286,7 @@
   }
 
   /* ===== Theme: Cereja 🍒 ===== */
-  .scheme-cherry {
+  :root.scheme-cherry {
     --primary: 340 82% 52%;
     --accent: 340 82% 52%;
     --ring: 340 82% 52%;
@@ -325,7 +325,7 @@
   }
 
   /* ===== Theme: Ártico ❄️ ===== */
-  .scheme-arctic {
+  :root.scheme-arctic {
     --primary: 187 72% 42%;
     --accent: 187 72% 42%;
     --ring: 187 72% 42%;
