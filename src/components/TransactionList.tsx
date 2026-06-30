@@ -24,6 +24,7 @@ export function TransactionItem({ transaction, showActions = false, onEdit }: Tr
   const isIncome = transaction.type === 'income';
 
   const handleDelete = async () => {
+    if (typeof window !== 'undefined' && !window.confirm('Excluir esta transação?')) return;
     await deleteTransaction(transaction.id);
   };
 
