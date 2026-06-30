@@ -19,19 +19,56 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Supabase JS auto-detects recovery tokens in the URL and emits PASSWORD_RECOVERY
+    let cancelled = false;
+
+    const init = async () => {
+      // 1) PKCE flow: ?code=xxx appended to the hash route by Supabase redirect
+      //    HashRouter hides the query inside location.hash, so parse it manually.
+      const hash = window.location.hash; // e.g. "#/reset-password?code=abc"
+      const queryIndex = hash.indexOf('?');
+      const search = queryIndex >= 0 ? hash.slice(queryIndex) : window.location.search;
+      const params = new URLSearchParams(search);
+      const code = params.get('code');
+
+      // 2) Implicit flow fallback: tokens may arrive in a secondary hash
+      //    (#/reset-password#access_token=...). Browsers only expose the first
+      //    hash, but some providers fold tokens into the query instead.
+      const errorDescription = params.get('error_description');
+      if (errorDescription) {
+        if (!cancelled) setError(errorDescription);
+        return;
+      }
+
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          if (!cancelled) setError(exchangeError.message);
+          return;
+        }
+        // Clean code out of the URL so refresh doesn't retry the exchange.
+        window.history.replaceState(null, '', `${window.location.pathname}#/reset-password`);
+        if (!cancelled) setReady(true);
+        return;
+      }
+
+      // 3) No code in URL: maybe the session was already established (e.g. legacy
+      //    implicit-flow recovery event). Honor PASSWORD_RECOVERY events too.
+      const { data } = await supabase.auth.getSession();
+      if (data.session && !cancelled) setReady(true);
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
         setReady(true);
       }
     });
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
-    return () => subscription.unsubscribe();
+
+    init();
+    return () => { cancelled = true; subscription.unsubscribe(); };
   }, []);
 
   const validation = useMemo(() => requirements.map(r => ({ ...r, valid: r.test(password) })), [password]);
