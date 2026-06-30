@@ -264,24 +264,12 @@ export default function AuthPage() {
           </button>
         </div>
 
-        {/* Forgot password */}
+        {/* Forgot password: e-mail recovery is disabled. Reset is handled by an admin. */}
         {isLogin && (
           <div className="text-center">
-            <button
-              type="button"
-              onClick={async () => {
-                if (!email) { toast.error('Digite seu e-mail acima primeiro'); return; }
-                const { supabase } = await import('@/integrations/supabase/client');
-                const { getAppUrl } = await import('@/lib/appUrl');
-                const redirectTo = getAppUrl('/reset-password');
-                const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-                if (error) toast.error(error.message);
-                else toast.success('Enviamos um link de recuperação para seu e-mail');
-              }}
-              className="text-muted-foreground text-xs hover:underline"
-            >
-              Esqueci minha senha
-            </button>
+            <p className="text-muted-foreground text-xs">
+              Esqueceu a senha? Solicite ao administrador um link de redefinição.
+            </p>
           </div>
         )}
       </motion.div>

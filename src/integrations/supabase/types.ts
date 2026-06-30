@@ -293,6 +293,48 @@ export type Database = {
         }
         Relationships: []
       }
+      password_reset_tokens: {
+        Row: {
+          consumed_ip: string | null
+          consumed_user_agent: string | null
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          ip: string | null
+          token_hash: string
+          used_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          consumed_ip?: string | null
+          consumed_user_agent?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          ip?: string | null
+          token_hash: string
+          used_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          consumed_ip?: string | null
+          consumed_user_agent?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          ip?: string | null
+          token_hash?: string
+          used_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       piggy_bank: {
         Row: {
           balance: number

@@ -1,4 +1,4 @@
 project_id = "kcdzrphiizudwkzmcldk"
 
-[functions.generate-weekly-missions]
+[functions.admin-generate-recovery-link]
 verify_jwt = false
