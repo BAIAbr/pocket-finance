@@ -44,14 +44,17 @@ export default function ResetPasswordPage() {
       }
 
       if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) {
-          if (!cancelled) setError(exchangeError.message);
-          return;
+        try {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            if (!cancelled) setError(exchangeError.message);
+            return;
+          }
+          window.history.replaceState(null, '', `${window.location.pathname}#/reset-password`);
+          if (!cancelled) setReady(true);
+        } catch (e: any) {
+          if (!cancelled) setError(e?.message || 'Falha ao validar o link de recuperação');
         }
-        // Clean code out of the URL so refresh doesn't retry the exchange.
-        window.history.replaceState(null, '', `${window.location.pathname}#/reset-password`);
-        if (!cancelled) setReady(true);
         return;
       }
 
