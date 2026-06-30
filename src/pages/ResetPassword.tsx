@@ -99,8 +99,11 @@ export default function ResetPasswordPage() {
           <h2 className="text-2xl font-black tracking-tight text-primary">FINANGO</h2>
           <h1 className="text-xl font-bold text-foreground mt-3">Redefinir senha</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {ready ? 'Crie uma nova senha para sua conta' : 'Validando link de recuperação...'}
+            {error ? 'Link inválido ou expirado' : ready ? 'Crie uma nova senha para sua conta' : 'Validando link de recuperação...'}
           </p>
+          {error && (
+            <p className="text-destructive text-xs mt-2">{error}</p>
+          )}
         </div>
 
         {ready && (
