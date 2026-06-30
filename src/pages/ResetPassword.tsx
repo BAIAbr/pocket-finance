@@ -26,17 +26,12 @@ export default function ResetPasswordPage() {
     let cancelled = false;
 
     const init = async () => {
-      // 1) PKCE flow: ?code=xxx appended to the hash route by Supabase redirect
-      //    HashRouter hides the query inside location.hash, so parse it manually.
-      const hash = window.location.hash; // e.g. "#/reset-password?code=abc"
+      const hash = window.location.hash;
       const queryIndex = hash.indexOf('?');
       const search = queryIndex >= 0 ? hash.slice(queryIndex) : window.location.search;
       const params = new URLSearchParams(search);
       const code = params.get('code');
 
-      // 2) Implicit flow fallback: tokens may arrive in a secondary hash
-      //    (#/reset-password#access_token=...). Browsers only expose the first
-      //    hash, but some providers fold tokens into the query instead.
       const errorDescription = params.get('error_description');
       if (errorDescription) {
         if (!cancelled) setError(errorDescription);
@@ -45,6 +40,12 @@ export default function ResetPasswordPage() {
 
       if (code) {
         try {
+          // CRITICAL: If anyone (e.g. an admin) is already logged in in this
+          // browser, sign them out FIRST. Otherwise exchangeCodeForSession
+          // would replace their session, and a subsequent updateUser() would
+          // overwrite the wrong account's password.
+          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) {
             if (!cancelled) setError(exchangeError.message);
@@ -58,14 +59,18 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      // 3) No code in URL: maybe the session was already established (e.g. legacy
-      //    implicit-flow recovery event). Honor PASSWORD_RECOVERY events too.
-      const { data } = await supabase.auth.getSession();
-      if (data.session && !cancelled) setReady(true);
+      // No recovery code in URL: refuse to operate on a pre-existing session.
+      // Without a fresh recovery exchange, updateUser() would target whoever
+      // is currently logged in — which would silently change an admin's
+      // password if they happen to land on this page.
+      if (!cancelled) setError('Link de recuperação ausente ou inválido. Solicite um novo link.');
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+      // Only honor PASSWORD_RECOVERY (issued by exchangeCodeForSession during
+      // recovery). Plain SIGNED_IN events from an admin session must NOT
+      // unlock the form.
+      if (event === 'PASSWORD_RECOVERY') {
         setReady(true);
       }
     });
