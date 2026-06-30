@@ -269,7 +269,14 @@ export default function AuthPage() {
           <div className="text-center">
             <button
               type="button"
-              onClick={() => toast.info('Recurso em desenvolvimento')}
+              onClick={async () => {
+                if (!email) { toast.error('Digite seu e-mail acima primeiro'); return; }
+                const { supabase } = await import('@/integrations/supabase/client');
+                const redirectTo = `${window.location.origin}/#/reset-password`;
+                const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+                if (error) toast.error(error.message);
+                else toast.success('Enviamos um link de recuperação para seu e-mail');
+              }}
               className="text-muted-foreground text-xs hover:underline"
             >
               Esqueci minha senha
