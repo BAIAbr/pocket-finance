@@ -16,6 +16,7 @@ import Categories from "./pages/Categories";
 import Savings from "./pages/Savings";
 import SettingsPage from "./pages/Settings";
 import AuthPage from "./pages/Auth";
+import ResetPasswordPage from "./pages/ResetPassword";
 import AdminDashboard from "./pages/AdminDashboard";
 import FinancialHistory from "./pages/FinancialHistory";
 import Achievements from "./pages/Achievements";
