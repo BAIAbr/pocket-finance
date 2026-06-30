@@ -423,6 +423,9 @@ export default function AdminDashboard() {
                       <TableCell className="text-xs text-muted-foreground">
                         {format(parseISO(profile.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                       </TableCell>
+                      <TableCell className="text-right">
+                        <PasswordResetLinkButton email={profile.email} name={profile.name} />
+                      </TableCell>
                     </TableRow>
                   );
                 })}
