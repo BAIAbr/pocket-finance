@@ -233,6 +233,15 @@ export function useEffectiveFinance() {
     return result;
   }, [finance, isFamily]);
 
+  const deletePiggyBank = useCallback(async (id: string) => {
+    const ok = await finance.deletePiggyBank(id);
+    if (ok && isFamily) {
+      setFamilyPiggyBanks(prev => prev.filter(p => p.id !== id));
+      setFamilyPiggyBankTransactions(prev => prev.filter(t => t.piggy_bank_id !== id));
+    }
+    return ok;
+  }, [finance, isFamily]);
+
   return {
     // Override with effective data
     ...finance,
@@ -247,6 +256,7 @@ export function useEffectiveFinance() {
     piggyBankTransactions,
     deleteTransaction,
     updateTransaction,
+    deletePiggyBank,
     isLoading: finance.isLoading || isLoadingFamily,
     isFamily,
     familyId: family?.id || null,
