@@ -341,11 +341,16 @@ export default function AdminDashboard() {
 
       {/* Users Table */}
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 flex-row items-center justify-between gap-2 space-y-0">
           <CardTitle className="text-sm flex items-center gap-2">
             <Users size={16} />
             Lista de Usuários
           </CardTitle>
+          <PasswordResetLinkButton
+            triggerLabel="Redefinir senha de qualquer e-mail"
+            triggerVariant="outline"
+            triggerClassName="h-8 gap-1.5 text-xs"
+          />
         </CardHeader>
         <CardContent className="space-y-3">
           {/* Search & Filter */}
@@ -424,7 +429,7 @@ export default function AdminDashboard() {
                         {format(parseISO(profile.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                       </TableCell>
                       <TableCell className="text-right">
-                        <PasswordResetLinkButton email={profile.email} name={profile.name} />
+                        <PasswordResetLinkButton email={profile.email} name={profile.name} lockEmail />
                       </TableCell>
                     </TableRow>
                   );

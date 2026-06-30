@@ -11,12 +11,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { getAppUrl } from '@/lib/appUrl';
 
 interface Props {
-  email: string;
+  email?: string;
   name?: string | null;
+  triggerLabel?: string;
+  triggerVariant?: 'ghost' | 'outline' | 'default' | 'secondary';
+  triggerClassName?: string;
+  /** Lock the email field to the provided value. Defaults to false (editable). */
+  lockEmail?: boolean;
 }
 
-export function PasswordResetLinkButton({ email, name }: Props) {
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function PasswordResetLinkButton({
+  email: initialEmail,
+  name,
+  triggerLabel = 'Redefinir senha',
+  triggerVariant = 'ghost',
+  triggerClassName = 'h-8 gap-1.5 text-xs',
+  lockEmail = false,
+}: Props) {
   const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState(initialEmail ?? '');
   const [loading, setLoading] = useState(false);
   const [link, setLink] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
@@ -29,13 +44,24 @@ export function PasswordResetLinkButton({ email, name }: Props) {
     return () => clearInterval(id);
   }, [expiresAt]);
 
+  const reset = () => {
+    setLink(null);
+    setExpiresAt(null);
+    setEmail(initialEmail ?? '');
+  };
+
   const generate = async () => {
+    const target = email.trim().toLowerCase();
+    if (!EMAIL_RE.test(target)) {
+      toast.error('Informe um e-mail válido');
+      return;
+    }
     setLoading(true);
     setLink(null);
     setExpiresAt(null);
     try {
       const { data, error } = await supabase.functions.invoke('admin-generate-recovery-link', {
-        body: { email, redirectTo: getAppUrl('reset-password') },
+        body: { email: target, redirectTo: getAppUrl('reset-password') },
       });
       if (error) throw error;
       if (!data?.action_link) throw new Error('Resposta vazia');
@@ -74,17 +100,16 @@ export function PasswordResetLinkButton({ email, name }: Props) {
     <>
       <Button
         size="sm"
-        variant="ghost"
-        className="h-8 gap-1.5 text-xs"
+        variant={triggerVariant}
+        className={triggerClassName}
         onClick={(e) => {
           e.stopPropagation();
           setOpen(true);
-          setLink(null);
-          setExpiresAt(null);
+          reset();
         }}
       >
         <KeyRound className="h-3.5 w-3.5" />
-        Redefinir senha
+        {triggerLabel}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -92,15 +117,25 @@ export function PasswordResetLinkButton({ email, name }: Props) {
           <DialogHeader>
             <DialogTitle>Gerar link de redefinição</DialogTitle>
             <DialogDescription>
-              Gere um link único para {name || email} redefinir a senha. Copie e envie
-              pelo canal de sua preferência — não é necessário esperar pelo e-mail.
+              {lockEmail && initialEmail
+                ? `Gere um link único para ${name || initialEmail} redefinir a senha. Copie e envie pelo canal de sua preferência — não é necessário esperar pelo e-mail.`
+                : 'Informe o e-mail da pessoa que precisa redefinir a senha. O link é gerado na hora — copie e envie pelo canal de sua preferência.'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">E-mail</Label>
-              <Input value={email} disabled className="text-xs" />
+              <Label className="text-xs" htmlFor="reset-email">E-mail</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                value={email}
+                disabled={lockEmail || loading}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="usuario@exemplo.com"
+                className="text-xs"
+                autoComplete="off"
+              />
             </div>
 
             {link && (
@@ -131,10 +166,9 @@ export function PasswordResetLinkButton({ email, name }: Props) {
             )}
           </div>
 
-
           <DialogFooter className="flex-col sm:flex-row gap-2">
             {!link ? (
-              <Button onClick={generate} disabled={loading} className="w-full sm:w-auto">
+              <Button onClick={generate} disabled={loading || !EMAIL_RE.test(email.trim())} className="w-full sm:w-auto">
                 {loading ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando...</>
                 ) : (
@@ -143,6 +177,9 @@ export function PasswordResetLinkButton({ email, name }: Props) {
               </Button>
             ) : (
               <>
+                <Button variant="outline" onClick={reset} className="w-full sm:w-auto">
+                  Gerar outro
+                </Button>
                 <Button variant="outline" onClick={copy} className="w-full sm:w-auto">
                   {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
                   {copied ? 'Copiado' : 'Copiar link'}
