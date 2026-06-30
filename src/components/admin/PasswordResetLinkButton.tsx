@@ -80,6 +80,7 @@ export function PasswordResetLinkButton({ email, name }: Props) {
           e.stopPropagation();
           setOpen(true);
           setLink(null);
+          setExpiresAt(null);
         }}
       >
         <KeyRound className="h-3.5 w-3.5" />
@@ -108,12 +109,28 @@ export function PasswordResetLinkButton({ email, name }: Props) {
                 <div className="rounded-md border bg-muted/40 p-2 text-[11px] break-all max-h-32 overflow-y-auto">
                   {link}
                 </div>
+                {expiresAt && (
+                  <div
+                    className={`flex items-center justify-between gap-2 rounded-md border px-2 py-1.5 text-[11px] ${
+                      expired
+                        ? 'border-destructive/40 bg-destructive/10 text-destructive'
+                        : 'border-border bg-muted/40 text-muted-foreground'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
+                      {expired ? 'Link expirado' : `Expira em ${remainingLabel}`}
+                    </span>
+                    <span className="font-mono">{expiresLabel}</span>
+                  </div>
+                )}
                 <p className="text-[10px] text-muted-foreground">
-                  Válido por tempo limitado. Compartilhe apenas com a pessoa correta.
+                  Compartilhe apenas com a pessoa correta. Após expirar, gere um novo link.
                 </p>
               </div>
             )}
           </div>
+
 
           <DialogFooter className="flex-col sm:flex-row gap-2">
             {!link ? (
