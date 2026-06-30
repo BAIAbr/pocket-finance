@@ -42,13 +42,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify the caller is an admin via the has_role security-definer function.
+    // Verify the caller is an admin by reading user_roles directly with the service role.
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { data: isAdmin, error: roleErr } = await admin.rpc('has_role', {
-      _user_id: userData.user.id,
-      _role: 'admin',
-    });
-    if (roleErr || !isAdmin) {
+    const { data: roleRow, error: roleErr } = await admin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userData.user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+    if (roleErr || !roleRow) {
       return new Response(JSON.stringify({ error: 'Forbidden' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
