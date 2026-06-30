@@ -2,12 +2,3 @@ project_id = "kcdzrphiizudwkzmcldk"
 
 [functions.admin-generate-recovery-link]
 verify_jwt = false
-
-[functions.admin-set-password]
-verify_jwt = false
-
-[functions.admin-create-reset-token]
-verify_jwt = false
-
-[functions.consume-reset-token]
-verify_jwt = false
