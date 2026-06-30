@@ -210,11 +210,20 @@ export function useSupabaseFinance(userId: string | null) {
 
   const deleteTransaction = useCallback(async (id: string) => {
     try {
-      const { error } = await supabase.from('transactions').delete().eq('id', id);
-      
+      const { data, error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id)
+        .select('id');
+
       if (error) {
         console.error('Delete transaction error:', error);
         toast.error('Erro ao excluir transação');
+        return false;
+      }
+
+      if (!data || data.length === 0) {
+        toast.error('Você não tem permissão para excluir este lançamento');
         return false;
       }
 
