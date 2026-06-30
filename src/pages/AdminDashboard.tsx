@@ -15,6 +15,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGri
 import { format, subDays, isAfter, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AdminAchievements from '@/components/AdminAchievements';
+import { PasswordResetLinkButton } from '@/components/admin/PasswordResetLinkButton';
 
 interface AnalyticsRow {
   user_id: string;
@@ -381,6 +382,7 @@ export default function AdminDashboard() {
                 <TableHead>Status</TableHead>
                 <TableHead>Última atividade</TableHead>
                 <TableHead>Cadastro</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -420,6 +422,9 @@ export default function AdminDashboard() {
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {format(parseISO(profile.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <PasswordResetLinkButton email={profile.email} name={profile.name} />
                       </TableCell>
                     </TableRow>
                   );

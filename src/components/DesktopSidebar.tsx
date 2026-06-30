@@ -1,4 +1,4 @@
-import { Home, History, Brain, PiggyBank, Settings, Package, PackageOpen, ChefHat, BarChart3 } from 'lucide-react';
+import { Home, History, Brain, PiggyBank, Settings } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useMissionContext } from '@/contexts/MissionContext';
@@ -12,13 +12,6 @@ const navItems = [
   { path: '/ai-insights', icon: Brain, label: 'IA Insights' },
   { path: '/savings', icon: PiggyBank, label: 'Cofrinho' },
   { path: '/settings', icon: Settings, label: 'Ajustes' },
-];
-
-const stockNavItems = [
-  { path: '/products', icon: Package, label: 'Produtos' },
-  { path: '/stock-outputs', icon: PackageOpen, label: 'Saídas' },
-  { path: '/production', icon: ChefHat, label: 'Produção' },
-  { path: '/stock-reports', icon: BarChart3, label: 'Relatórios' },
 ];
 
 export function DesktopSidebar() {
@@ -86,12 +79,6 @@ export function DesktopSidebar() {
       {/* Nav Items */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map(renderNavItem)}
-
-        {/* Stock section */}
-        <div className="pt-3 mt-3 border-t border-border/30">
-          <p className="px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Estoque</p>
-          {stockNavItems.map(renderNavItem)}
-        </div>
       </nav>
 
       {/* Footer */}
