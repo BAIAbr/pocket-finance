@@ -480,15 +480,26 @@ export function useSupabaseFinance(userId: string | null) {
   }, [userId]);
 
   const deletePiggyBank = useCallback(async (id: string) => {
-    const { error } = await supabase.from('piggy_bank').delete().eq('id', id);
-    
+    const { data, error } = await supabase
+      .from('piggy_bank')
+      .delete()
+      .eq('id', id)
+      .select('id');
+
     if (error) {
+      console.error('Delete piggy bank error:', error);
       toast.error('Erro ao excluir cofrinho');
-      return;
+      return false;
+    }
+
+    if (!data || data.length === 0) {
+      toast.error('Você não tem permissão para excluir este cofrinho');
+      return false;
     }
 
     setPiggyBanks(prev => prev.filter(p => p.id !== id));
     toast.success('Cofrinho excluído');
+    return true;
   }, []);
 
   const depositToPiggyBank = useCallback(async (piggyBankId: string, amount: number, description?: string) => {
