@@ -272,7 +272,8 @@ export default function AuthPage() {
               onClick={async () => {
                 if (!email) { toast.error('Digite seu e-mail acima primeiro'); return; }
                 const { supabase } = await import('@/integrations/supabase/client');
-                const redirectTo = `${window.location.origin}/#/reset-password`;
+                const { getAppUrl } = await import('@/lib/appUrl');
+                const redirectTo = getAppUrl('/reset-password');
                 const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
                 if (error) toast.error(error.message);
                 else toast.success('Enviamos um link de recuperação para seu e-mail');
