@@ -82,9 +82,47 @@ serve(async (req) => {
     if (action === 'subscribe' && req.method === 'POST') {
       const { subscription } = await req.json();
 
+      // SSRF guard: only accept HTTPS endpoints on known browser push services.
+      // Prevents attackers from registering internal/metadata URLs that the
+      // send-push-notifications function would otherwise dispatch to.
+      const ALLOWED_HOSTS = [
+        'fcm.googleapis.com',
+        'updates.push.services.mozilla.com',
+        'push.services.mozilla.com',
+        'notify.windows.com',
+        'wns2-by3p.notify.windows.com',
+        'web.push.apple.com',
+        'api.push.apple.com',
+      ];
+
+      let endpointUrl: URL;
+      try {
+        endpointUrl = new URL(subscription?.endpoint ?? '');
+      } catch {
+        return new Response(JSON.stringify({ error: 'Invalid endpoint URL' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const hostnameOk =
+        endpointUrl.protocol === 'https:' &&
+        ALLOWED_HOSTS.some(h => endpointUrl.hostname === h || endpointUrl.hostname.endsWith(`.${h}`));
+
+      if (!hostnameOk) {
+        return new Response(JSON.stringify({ error: 'Endpoint host not allowed' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (typeof subscription?.keys?.p256dh !== 'string' || typeof subscription?.keys?.auth !== 'string') {
+        return new Response(JSON.stringify({ error: 'Missing subscription keys' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       await supabaseAdmin.from('push_subscriptions').upsert({
         user_id: user.id,
-        endpoint: subscription.endpoint,
+        endpoint: endpointUrl.toString(),
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,
       }, { onConflict: 'endpoint' });

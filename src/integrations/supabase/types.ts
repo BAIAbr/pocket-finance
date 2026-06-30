@@ -996,6 +996,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_family_by_invite_code: { Args: { p_code: string }; Returns: string }
       get_my_family_ids: { Args: never; Returns: string[] }
       has_role: {
         Args: {

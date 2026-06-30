@@ -217,20 +217,21 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const joinFamily = useCallback(async (inviteCode: string) => {
     if (!userId) return false;
 
-    const { data: fam } = await supabase
-      .from('families')
-      .select('id')
-      .eq('invite_code', inviteCode.toUpperCase())
-      .maybeSingle();
+    // Use the SECURITY DEFINER RPC so non-members can resolve an invite code
+    // without being able to read other families' data via direct SELECT.
+    const { data: familyId, error: lookupError } = await supabase.rpc(
+      'find_family_by_invite_code',
+      { p_code: inviteCode.toUpperCase() }
+    );
 
-    if (!fam) {
+    if (lookupError || !familyId) {
       toast.error('Código de convite inválido');
       return false;
     }
 
     const { error } = await supabase
       .from('family_members')
-      .insert({ family_id: fam.id, user_id: userId, role: 'member' });
+      .insert({ family_id: familyId as string, user_id: userId, role: 'member' });
 
     if (error) {
       if (error.code === '23505') {
