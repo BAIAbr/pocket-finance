@@ -15,6 +15,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGri
 import { format, subDays, isAfter, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AdminAchievements from '@/components/AdminAchievements';
+import { PasswordResetLinkButton } from '@/components/admin/PasswordResetLinkButton';
 
 interface AnalyticsRow {
   user_id: string;
