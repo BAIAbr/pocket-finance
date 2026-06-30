@@ -382,6 +382,7 @@ export default function AdminDashboard() {
                 <TableHead>Status</TableHead>
                 <TableHead>Última atividade</TableHead>
                 <TableHead>Cadastro</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
