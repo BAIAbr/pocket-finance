@@ -37,6 +37,7 @@ const App = () => (
             <HashRouter>
               <Routes>
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/reports" element={<Reports />} />
