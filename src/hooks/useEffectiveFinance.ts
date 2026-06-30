@@ -256,6 +256,7 @@ export function useEffectiveFinance() {
     piggyBankTransactions,
     deleteTransaction,
     updateTransaction,
+    deletePiggyBank,
     isLoading: finance.isLoading || isLoadingFamily,
     isFamily,
     familyId: family?.id || null,
