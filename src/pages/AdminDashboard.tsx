@@ -429,7 +429,7 @@ export default function AdminDashboard() {
                         {format(parseISO(profile.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                       </TableCell>
                       <TableCell className="text-right">
-                        <PasswordResetLinkButton email={profile.email} name={profile.name} />
+                        <PasswordResetLinkButton email={profile.email} name={profile.name} lockEmail />
                       </TableCell>
                     </TableRow>
                   );
