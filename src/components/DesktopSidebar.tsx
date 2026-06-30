@@ -79,12 +79,6 @@ export function DesktopSidebar() {
       {/* Nav Items */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map(renderNavItem)}
-
-        {/* Stock section */}
-        <div className="pt-3 mt-3 border-t border-border/30">
-          <p className="px-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Estoque</p>
-          {stockNavItems.map(renderNavItem)}
-        </div>
       </nav>
 
       {/* Footer */}
