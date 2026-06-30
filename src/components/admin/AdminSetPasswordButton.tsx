@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyRound, Loader2, Check, X } from 'lucide-react';
+import { KeyRound, Loader2, Check, X, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -24,24 +24,38 @@ const requirements = [
   { label: '!@#', test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
 ];
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function AdminSetPasswordButton({ userId, userEmail, userName }: Props) {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
 
   const checks = requirements.map((r) => ({ ...r, ok: r.test(password) }));
   const strong = checks.every((c) => c.ok);
   const match = password.length > 0 && password === confirm;
+  const validTarget = UUID_RE.test(userId);
 
-  const reset = () => { setPassword(''); setConfirm(''); };
+  const reset = () => { setPassword(''); setConfirm(''); setAcknowledged(false); };
 
   const submit = async () => {
-    if (!strong || !match) return;
+    if (!strong || !match || !validTarget || !acknowledged) return;
+
+    // Hard guard: never allow the admin to silently reset their own password here.
+    const { data: sessionData } = await supabase.auth.getUser();
+    if (sessionData?.user?.id === userId) {
+      toast.error('Este é o seu próprio usuário. Use "Trocar minha senha" no perfil.');
+      return;
+    }
+
     setLoading(true);
     try {
+      // CRITICAL: We send ONLY the selected row's user_id. Never the session user.
+      const payload = { user_id: userId, password };
       const { data, error } = await supabase.functions.invoke('admin-set-password', {
-        body: { user_id: userId, password },
+        body: payload,
       });
       if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Falha ao redefinir');
       toast.success(`Senha de ${userName || userEmail} redefinida. Sessões antigas encerradas.`);
@@ -69,12 +83,34 @@ export function AdminSetPasswordButton({ userId, userEmail, userName }: Props) {
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Redefinir senha</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-amber-500" />
+              Redefinir senha
+            </DialogTitle>
             <DialogDescription>
-              Defina uma nova senha para <span className="font-medium">{userName || userEmail}</span>.
-              As sessões ativas serão encerradas.
+              Esta ação substitui a senha do usuário alvo e encerra todas as sessões dele.
+              Sua sessão de administrador não é afetada.
             </DialogDescription>
           </DialogHeader>
+
+          {/* Target identification — explicit and unmistakable */}
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-1">
+            <p className="text-[10px] uppercase tracking-wider text-amber-600 font-semibold">
+              Alterando senha de
+            </p>
+            <p className="text-sm font-semibold text-foreground">
+              {userName || '(sem nome)'}
+            </p>
+            <p className="text-xs text-muted-foreground break-all">{userEmail}</p>
+            <p className="text-[10px] font-mono text-muted-foreground break-all">
+              ID: {userId}
+            </p>
+            {!validTarget && (
+              <p className="text-[11px] text-destructive flex items-center gap-1 mt-1">
+                <AlertTriangle className="h-3 w-3" /> ID de usuário inválido.
+              </p>
+            )}
+          </div>
 
           <div className="space-y-3">
             <div className="space-y-1.5">
@@ -113,12 +149,27 @@ export function AdminSetPasswordButton({ userId, userEmail, userName }: Props) {
                 )}
               </div>
             )}
+
+            <label className="flex items-start gap-2 text-[11px] text-muted-foreground cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(e) => setAcknowledged(e.target.checked)}
+                disabled={loading}
+                className="mt-0.5"
+              />
+              <span>
+                Confirmo que quero redefinir a senha de{' '}
+                <strong className="text-foreground">{userName || userEmail}</strong>{' '}
+                (ID <span className="font-mono">{userId.slice(0, 8)}…</span>).
+              </span>
+            </label>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>Cancelar</Button>
-            <Button onClick={submit} disabled={loading || !strong || !match}>
-              {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Salvando...</> : 'Salvar'}
+            <Button onClick={submit} disabled={loading || !strong || !match || !validTarget || !acknowledged}>
+              {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Salvando...</> : 'Confirmar redefinição'}
             </Button>
           </DialogFooter>
         </DialogContent>
