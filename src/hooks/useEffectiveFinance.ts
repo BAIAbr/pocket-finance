@@ -216,6 +216,23 @@ export function useEffectiveFinance() {
     return familyPiggyBankTransactions.filter(t => t.piggy_bank_id && familyPiggyIds.has(t.piggy_bank_id));
   }, [isFamily, finance.piggyBankTransactions, familyPiggyBankTransactions, piggyBanks]);
 
+  // Wrap mutations so the family view updates immediately
+  const deleteTransaction = useCallback(async (id: string) => {
+    const ok = await finance.deleteTransaction(id);
+    if (ok && isFamily) {
+      setFamilyTransactions(prev => prev.filter(t => t.id !== id));
+    }
+    return ok;
+  }, [finance, isFamily]);
+
+  const updateTransaction = useCallback(async (id: string, updates: any) => {
+    const result = await finance.updateTransaction(id, updates);
+    if (result && isFamily) {
+      setFamilyTransactions(prev => prev.map(t => t.id === id ? (result as Transaction) : t));
+    }
+    return result;
+  }, [finance, isFamily]);
+
   return {
     // Override with effective data
     ...finance,
@@ -228,6 +245,8 @@ export function useEffectiveFinance() {
     getMonthlyStats,
     piggyBanks,
     piggyBankTransactions,
+    deleteTransaction,
+    updateTransaction,
     isLoading: finance.isLoading || isLoadingFamily,
     isFamily,
     familyId: family?.id || null,

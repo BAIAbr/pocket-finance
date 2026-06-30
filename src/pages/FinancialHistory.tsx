@@ -544,7 +544,7 @@ export default function FinancialHistory() {
                       )}>
                         {isIncome ? '+' : '-'}{formatCurrency(Number(transaction.amount))}
                       </span>
-                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => { e.stopPropagation(); setEditingTransaction(transaction); }}
                           className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
@@ -553,7 +553,12 @@ export default function FinancialHistory() {
                           <Pencil size={14} />
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); deleteTransaction(transaction.id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm('Excluir esta transação?')) {
+                              deleteTransaction(transaction.id);
+                            }
+                          }}
                           className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
                           aria-label="Excluir"
                         >

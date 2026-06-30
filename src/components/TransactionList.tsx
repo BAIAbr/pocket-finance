@@ -24,6 +24,7 @@ export function TransactionItem({ transaction, showActions = false, onEdit }: Tr
   const isIncome = transaction.type === 'income';
 
   const handleDelete = async () => {
+    if (typeof window !== 'undefined' && !window.confirm('Excluir esta transação?')) return;
     await deleteTransaction(transaction.id);
   };
 
@@ -76,7 +77,7 @@ export function TransactionItem({ transaction, showActions = false, onEdit }: Tr
         </span>
         
         {showActions && (
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => { e.stopPropagation(); onEdit?.(transaction); }}
               className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200 touch-scale"
