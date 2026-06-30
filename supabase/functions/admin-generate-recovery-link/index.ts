@@ -81,11 +81,18 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Supabase recovery links inherit the project's OTP expiry (default: 3600s = 1h).
+    const ttlSeconds = 3600;
+    const generatedAt = new Date();
+    const expiresAt = new Date(generatedAt.getTime() + ttlSeconds * 1000);
+
     return new Response(
       JSON.stringify({
         action_link: data.properties.action_link,
         email_otp: data.properties.email_otp,
-        expires_at: data.properties.verification_type ? null : null,
+        generated_at: generatedAt.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        ttl_seconds: ttlSeconds,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
