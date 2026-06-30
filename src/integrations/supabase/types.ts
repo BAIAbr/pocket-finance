@@ -997,15 +997,6 @@ export type Database = {
     }
     Functions: {
       find_family_by_invite_code: { Args: { p_code: string }; Returns: string }
-      get_my_family_ids: { Args: never; Returns: string[] }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_family_admin: { Args: { p_family_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
