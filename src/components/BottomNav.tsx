@@ -1,4 +1,4 @@
-import { Home, Brain, PiggyBank, Settings, History, Package, PackageOpen, ChefHat, BarChart3 } from 'lucide-react';
+import { Home, Brain, PiggyBank, Settings, History } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -10,19 +10,11 @@ const mainNavItems = [
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
 
-const stockNavItems = [
-  { path: '/products', icon: Package, label: 'Produtos' },
-  { path: '/stock-outputs', icon: PackageOpen, label: 'Saídas' },
-  { path: '/production', icon: ChefHat, label: 'Produção' },
-  { path: '/stock-reports', icon: BarChart3, label: 'Relatórios' },
-];
-
 export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isStockRoute = ['/products', '/stock-outputs', '/production', '/stock-reports'].includes(location.pathname);
-  const navItems = isStockRoute ? stockNavItems : mainNavItems;
+  const navItems = mainNavItems;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-border/50 safe-bottom">
