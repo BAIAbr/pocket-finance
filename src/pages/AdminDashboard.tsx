@@ -15,7 +15,8 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGri
 import { format, subDays, isAfter, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AdminAchievements from '@/components/AdminAchievements';
-import { PasswordResetLinkButton } from '@/components/admin/PasswordResetLinkButton';
+import { AdminSetPasswordButton } from '@/components/admin/AdminSetPasswordButton';
+import { GenerateResetLinkButton } from '@/components/admin/GenerateResetLinkButton';
 
 interface AnalyticsRow {
   user_id: string;
@@ -346,11 +347,7 @@ export default function AdminDashboard() {
             <Users size={16} />
             Lista de Usuários
           </CardTitle>
-          <PasswordResetLinkButton
-            triggerLabel="Redefinir senha de qualquer e-mail"
-            triggerVariant="outline"
-            triggerClassName="h-8 gap-1.5 text-xs"
-          />
+          <GenerateResetLinkButton freeEmail />
         </CardHeader>
         <CardContent className="space-y-3">
           {/* Search & Filter */}
@@ -429,7 +426,18 @@ export default function AdminDashboard() {
                         {format(parseISO(profile.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                       </TableCell>
                       <TableCell className="text-right">
-                        <PasswordResetLinkButton email={profile.email} name={profile.name} lockEmail />
+                        <div className="flex items-center justify-end gap-1">
+                          <AdminSetPasswordButton
+                            userId={profile.user_id}
+                            userEmail={profile.email}
+                            userName={profile.name}
+                          />
+                          <GenerateResetLinkButton
+                            userId={profile.user_id}
+                            userEmail={profile.email}
+                            userName={profile.name}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
