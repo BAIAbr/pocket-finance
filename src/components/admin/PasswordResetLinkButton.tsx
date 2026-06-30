@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { KeyRound, Loader2, Copy, Check, ExternalLink } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { KeyRound, Loader2, Copy, Check, ExternalLink, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -19,11 +19,20 @@ export function PasswordResetLinkButton({ email, name }: Props) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [link, setLink] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
+  const [now, setNow] = useState<Date>(new Date());
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!expiresAt) return;
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
 
   const generate = async () => {
     setLoading(true);
     setLink(null);
+    setExpiresAt(null);
     try {
       const { data, error } = await supabase.functions.invoke('admin-generate-recovery-link', {
         body: { email, redirectTo: getAppUrl('reset-password') },
@@ -31,6 +40,7 @@ export function PasswordResetLinkButton({ email, name }: Props) {
       if (error) throw error;
       if (!data?.action_link) throw new Error('Resposta vazia');
       setLink(data.action_link as string);
+      if (data.expires_at) setExpiresAt(new Date(data.expires_at as string));
     } catch (e) {
       toast.error((e as Error).message || 'Falha ao gerar link');
     } finally {
@@ -46,6 +56,20 @@ export function PasswordResetLinkButton({ email, name }: Props) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const remainingMs = expiresAt ? expiresAt.getTime() - now.getTime() : 0;
+  const expired = expiresAt ? remainingMs <= 0 : false;
+  const remainingLabel = (() => {
+    if (!expiresAt) return '';
+    if (expired) return 'Expirado';
+    const totalSec = Math.floor(remainingMs / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}m ${String(s).padStart(2, '0')}s`;
+  })();
+  const expiresLabel = expiresAt
+    ? expiresAt.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'medium' })
+    : '';
+
   return (
     <>
       <Button
@@ -56,6 +80,7 @@ export function PasswordResetLinkButton({ email, name }: Props) {
           e.stopPropagation();
           setOpen(true);
           setLink(null);
+          setExpiresAt(null);
         }}
       >
         <KeyRound className="h-3.5 w-3.5" />
@@ -84,12 +109,28 @@ export function PasswordResetLinkButton({ email, name }: Props) {
                 <div className="rounded-md border bg-muted/40 p-2 text-[11px] break-all max-h-32 overflow-y-auto">
                   {link}
                 </div>
+                {expiresAt && (
+                  <div
+                    className={`flex items-center justify-between gap-2 rounded-md border px-2 py-1.5 text-[11px] ${
+                      expired
+                        ? 'border-destructive/40 bg-destructive/10 text-destructive'
+                        : 'border-border bg-muted/40 text-muted-foreground'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
+                      {expired ? 'Link expirado' : `Expira em ${remainingLabel}`}
+                    </span>
+                    <span className="font-mono">{expiresLabel}</span>
+                  </div>
+                )}
                 <p className="text-[10px] text-muted-foreground">
-                  Válido por tempo limitado. Compartilhe apenas com a pessoa correta.
+                  Compartilhe apenas com a pessoa correta. Após expirar, gere um novo link.
                 </p>
               </div>
             )}
           </div>
+
 
           <DialogFooter className="flex-col sm:flex-row gap-2">
             {!link ? (
