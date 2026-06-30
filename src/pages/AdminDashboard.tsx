@@ -150,6 +150,14 @@ export default function AdminDashboard() {
   };
 
   const exportCSV = () => {
+    // CSV formula-injection guard: prefix any cell starting with =, +, -, @, tab, or CR
+    // with a single quote so spreadsheet apps treat it as text instead of a formula.
+    const safeCsv = (v: unknown) => {
+      const s = String(v ?? '');
+      const escaped = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+      return `"${escaped.replace(/"/g, '""')}"`;
+    };
+
     const header = 'Nome,Email,Último Login (Data),Último Login (Horário),Tempo Total no Site,Total de Sessões,Tempo Médio por Sessão,Status,Data de Cadastro\n';
     const rows = analytics.map(a => {
       const profile = profiles.find(p => p.user_id === a.user_id);
@@ -161,7 +169,9 @@ export default function AdminDashboard() {
       const statusMap: Record<string, string> = { ativo: 'Ativo', em_risco: 'Em risco', inativo: 'Inativo' };
       const status = statusMap[a.status_usuario] || a.status_usuario;
       const { data: cadastroData } = formatDateBR(a.created_at);
-      return `"${nome}","${email}",${loginData},${loginHorario},"${tempoTotal}",${a.total_sessions},"${tempoMedio}",${status},${cadastroData}`;
+      return [nome, email, loginData, loginHorario, tempoTotal, a.total_sessions, tempoMedio, status, cadastroData]
+        .map(safeCsv)
+        .join(',');
     }).join('\n');
     const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
