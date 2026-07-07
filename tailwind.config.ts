@@ -141,6 +141,7 @@ export default {
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "success-pop": "success-pop 0.4s ease-out",
         "number-tick": "number-tick 0.3s ease-out",
+        "vip-sheen": "vip-sheen 4s ease-in-out infinite",
       },
     },
   },
