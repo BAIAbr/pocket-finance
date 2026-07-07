@@ -109,7 +109,7 @@ export default function AIInsights() {
               <Brain size={22} className="text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">🧠 Finango IA</h1>
+              <h1 className="text-2xl font-bold tracking-tight">&nbsp;Finango IA</h1>
               <p className="text-xs text-muted-foreground">Seu copiloto financeiro inteligente</p>
             </div>
           </div>
