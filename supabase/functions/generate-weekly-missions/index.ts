@@ -168,7 +168,7 @@ Responda APENAS com o JSON, sem explicação.`;
       expires_at: weekEnd.toISOString(),
     }));
 
-    const { data: inserted, error: insertError } = await supabase
+    const { data: inserted, error: insertError } = await admin
       .from("weekly_missions")
       .insert(toInsert)
       .select();
