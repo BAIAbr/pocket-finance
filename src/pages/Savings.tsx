@@ -114,7 +114,7 @@ export default function SavingsPage() {
           <PiggyBank size={64} className="mx-auto text-muted-foreground" />
           <h2 className="text-xl font-semibold">Faça login para acessar</h2>
           <p className="text-muted-foreground">
-            Crie uma conta para gerenciar seus cofrinhos.
+            Crie uma conta para gerenciar suas metas.
           </p>
           <button
             onClick={() => navigate('/auth')}
@@ -131,7 +131,7 @@ export default function SavingsPage() {
     return (
       <div className="min-h-screen bg-background pb-24 safe-top">
         <header className="px-4 pt-6 pb-4">
-          <h1 className="text-2xl font-bold">Cofrinhos</h1>
+          <h1 className="text-2xl font-bold">Metas</h1>
         </header>
         <main className="px-4">
           <div className="space-y-4">
@@ -153,9 +153,9 @@ export default function SavingsPage() {
     <div className="min-h-screen bg-background pb-24 safe-top">
       {/* Header */}
       <header className="px-4 pt-6 pb-4">
-        <h1 className="text-2xl font-bold">{isFamily ? 'Cofrinhos da Família' : 'Cofrinhos'}</h1>
+        <h1 className="text-2xl font-bold">{isFamily ? 'Metas da Família' : 'Metas'}</h1>
         <p className="text-muted-foreground text-sm">
-          {isFamily ? 'Cofrinhos compartilhados da família' : 'Seus objetivos financeiros com rendimento CDI'}
+          {isFamily ? 'Metas compartilhadas da família' : 'Seus objetivos financeiros com rendimento CDI'}
         </p>
       </header>
 
@@ -181,7 +181,7 @@ export default function SavingsPage() {
           className="w-full card-finance flex items-center justify-center gap-2 py-4 border-2 border-dashed border-muted-foreground/30 hover:border-accent transition-all touch-scale"
         >
           <Plus size={20} className="text-accent" />
-          <span className="font-medium">{isFamily ? 'Novo Cofrinho Familiar' : 'Novo Cofrinho'}</span>
+          <span className="font-medium">{isFamily ? 'Nova Meta Familiar' : 'Nova Meta'}</span>
         </button>
 
         {/* Active Piggy Banks */}
@@ -243,8 +243,8 @@ export default function SavingsPage() {
         {activePiggyBanks.length === 0 && completedPiggyBanks.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             <PiggyBank size={48} className="mx-auto mb-3 opacity-50" />
-            <p>Nenhum cofrinho criado ainda</p>
-            <p className="text-sm">Crie seu primeiro cofrinho!</p>
+            <p>Nenhuma meta criada ainda</p>
+            <p className="text-sm">Crie sua primeira meta!</p>
           </div>
         )}
       </main>
@@ -636,7 +636,7 @@ function CreatePiggyBankModal({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose} />
       <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl animate-slide-up max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
-          <h2 className="text-lg font-semibold">Novo Cofrinho</h2>
+          <h2 className="text-lg font-semibold">Nova Meta</h2>
           <button onClick={handleClose} className="p-2 rounded-full hover:bg-secondary">
             <X size={20} />
           </button>
@@ -644,7 +644,7 @@ function CreatePiggyBankModal({
         
         <div className="p-4 space-y-4">
           <div>
-            <label className="block text-sm text-muted-foreground mb-2">Nome do cofrinho</label>
+            <label className="block text-sm text-muted-foreground mb-2">Nome da meta</label>
             <input
               type="text"
               placeholder="Ex: Viagem, Reserva de emergência"
@@ -713,7 +713,7 @@ function CreatePiggyBankModal({
                 min="0"
               />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Deixe vazio para um cofrinho sem meta</p>
+            <p className="text-xs text-muted-foreground mt-1">Deixe vazio para um meta sem valor alvo</p>
           </div>
 
           <div>
@@ -751,7 +751,7 @@ function CreatePiggyBankModal({
             {isSubmitting ? (
               <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mx-auto" />
             ) : (
-              'Criar Cofrinho'
+              'Criar Meta'
             )}
           </button>
         </div>
@@ -805,7 +805,7 @@ function EditPiggyBankModal({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl animate-slide-up max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
-          <h2 className="text-lg font-semibold">Editar Cofrinho</h2>
+          <h2 className="text-lg font-semibold">Editar Meta</h2>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary">
             <X size={20} />
           </button>
@@ -813,7 +813,7 @@ function EditPiggyBankModal({
         
         <div className="p-4 space-y-4">
           <div>
-            <label className="block text-sm text-muted-foreground mb-2">Nome do cofrinho</label>
+            <label className="block text-sm text-muted-foreground mb-2">Nome da meta</label>
             <input
               type="text"
               placeholder="Ex: Viagem, Reserva de emergência"

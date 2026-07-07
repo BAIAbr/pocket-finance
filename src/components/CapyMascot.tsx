@@ -31,7 +31,7 @@ export function useCapyMood() {
         tips: [
           'Registrar gastos diariamente ajuda a ter controle total do seu dinheiro.',
           'Mesmo pequenas despesas fazem diferença no final do mês!',
-          'Cofrinhos são ótimos para guardar dinheiro de forma automática.',
+          'Metas são ótimos para guardar dinheiro de forma automática.',
         ],
       };
     }
@@ -56,7 +56,7 @@ export function useCapyMood() {
         message: 'Hmm… percebi que os gastos subiram 🤔\nTalvez seja hora de revisar.',
         tips: [
           'Tente reduzir gastos não essenciais este mês.',
-          'Que tal criar um cofrinho para emergências?',
+          'Que tal criar um meta para emergências?',
           'Compare preços antes de fazer compras grandes.',
         ],
       };
@@ -72,7 +72,7 @@ export function useCapyMood() {
         message: 'Seu dinheiro tá bem cuidado 😌\nContinue assim que você chega longe!',
         tips: [
           'Você está no caminho certo! Continue economizando.',
-          'Que tal aumentar um pouquinho seus depósitos nos cofrinhos?',
+          'Que tal aumentar um pouquinho seus depósitos nos metas?',
           'Revisar metas periodicamente ajuda a manter o foco.',
         ],
       };
@@ -84,7 +84,7 @@ export function useCapyMood() {
       message: 'Tudo sob controle por enquanto.\nOrganização é o segredo 🔑',
       tips: [
         'Metas são sonhos com prazo! Crie uma meta para algo que você quer.',
-        'Cofrinhos rendem automaticamente com base no CDI.',
+        'Metas rendem automaticamente com base no CDI.',
         'Categorizar gastos ajuda a entender para onde vai seu dinheiro.',
       ],
     };

@@ -30,7 +30,7 @@ export function QuickPiggyDeposit({ piggyBanks, formatCurrency, onDeposit }: Qui
 
   const handleSubmit = async () => {
     if (!selectedId || !amount || Number(amount) <= 0) {
-      toast.error('Selecione um cofrinho e informe o valor');
+      toast.error('Selecione um meta e informe o valor');
       return;
     }
 
@@ -59,7 +59,7 @@ export function QuickPiggyDeposit({ piggyBanks, formatCurrency, onDeposit }: Qui
         </div>
         <div>
           <h3 className="font-semibold text-sm">Depósito Rápido</h3>
-          <p className="text-xs text-muted-foreground">Adicione dinheiro ao cofrinho</p>
+          <p className="text-xs text-muted-foreground">Adicione dinheiro ao meta</p>
         </div>
       </div>
 
@@ -81,7 +81,7 @@ export function QuickPiggyDeposit({ piggyBanks, formatCurrency, onDeposit }: Qui
               </span>
             </div>
           ) : (
-            <span className="text-muted-foreground">Selecione um cofrinho</span>
+            <span className="text-muted-foreground">Selecione um meta</span>
           )}
           <ChevronDown size={16} className={cn("text-muted-foreground transition-transform", isOpen && "rotate-180")} />
         </button>
