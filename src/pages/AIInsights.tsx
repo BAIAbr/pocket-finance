@@ -701,7 +701,7 @@ function ChatDrawer({ onClose }: { onClose: () => void }) {
             disabled={sending}
           />
           <button
-            onClick={send}
+            onClick={() => send()}
             disabled={sending || !input.trim()}
             className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 touch-scale shrink-0 shadow-md shadow-primary/30 hover:shadow-lg transition-shadow"
             aria-label="Enviar mensagem"
