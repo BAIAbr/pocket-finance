@@ -7,7 +7,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useMissionContext } from '@/contexts/MissionContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check, Trophy, Users, CalendarClock, CalendarDays } from 'lucide-react';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check, Trophy, Users, CalendarClock, CalendarDays, CreditCard } from 'lucide-react';
 import { FamilySettings } from '@/components/FamilySettings';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -260,6 +260,15 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-2">
                   <CalendarDays size={18} className="text-primary" />
                   <span className="font-medium">Calendário Financeiro</span>
+                </div>
+                <span className="text-xs text-muted-foreground">Ver →</span>
+              </button>
+              <button
+                onClick={() => navigate('/installments')}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale">
+                <div className="flex items-center gap-2">
+                  <CreditCard size={18} className="text-primary" />
+                  <span className="font-medium">Compras Parceladas</span>
                 </div>
                 <span className="text-xs text-muted-foreground">Ver →</span>
               </button>

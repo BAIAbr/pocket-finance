@@ -224,6 +224,123 @@ export type Database = {
           },
         ]
       }
+      installment_items: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          installment_number: number
+          is_paid: boolean
+          paid_at: string | null
+          purchase_id: string
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          installment_number: number
+          is_paid?: boolean
+          paid_at?: string | null
+          purchase_id: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          installment_number?: number
+          is_paid?: boolean
+          paid_at?: string | null
+          purchase_id?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installment_items_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "installment_purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "installment_items_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      installment_purchases: {
+        Row: {
+          card_name: string | null
+          category_id: string | null
+          created_at: string
+          family_id: string | null
+          first_due_date: string
+          id: string
+          installments_count: number
+          name: string
+          notes: string | null
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_name?: string | null
+          category_id?: string | null
+          created_at?: string
+          family_id?: string | null
+          first_due_date: string
+          id?: string
+          installments_count: number
+          name: string
+          notes?: string | null
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_name?: string | null
+          category_id?: string | null
+          created_at?: string
+          family_id?: string | null
+          first_due_date?: string
+          id?: string
+          installments_count?: number
+          name?: string
+          notes?: string | null
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installment_purchases_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "installment_purchases_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       missions: {
         Row: {
           category: string
