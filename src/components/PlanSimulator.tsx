@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useSimulatedPlan } from '@/hooks/useSimulatedPlan';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { FlaskConical, X, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,8 +19,9 @@ export function PlanSimulator() {
   const { realPlanCode, planCode, isSimulating } = usePlanAccess();
   const { setSimulatedPlan } = useSimulatedPlan();
   const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
 
-  if (!isAdmin) return null;
+  if (!isAdmin || isMobile) return null;
 
   return (
     <div className="fixed bottom-24 lg:bottom-4 left-4 z-[60] pointer-events-none">
