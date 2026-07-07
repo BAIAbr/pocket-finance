@@ -97,7 +97,7 @@ export function ConsolidatedYieldChart({ piggyBanks, formatCurrency }: Consolida
         </div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <PiggyBank size={12} />
-          <span>{activePiggyBanks.length} {activePiggyBanks.length === 1 ? 'cofrinho' : 'cofrinhos'}</span>
+          <span>{activePiggyBanks.length} {activePiggyBanks.length === 1 ? 'meta' : 'metas'}</span>
         </div>
       </div>
       
@@ -169,7 +169,7 @@ export function ConsolidatedYieldChart({ piggyBanks, formatCurrency }: Consolida
       </ResponsiveContainer>
       
       <p className="text-[10px] text-muted-foreground text-center mt-3 opacity-70">
-        * Evolução dos últimos 30 dias de todos os cofrinhos
+        * Evolução dos últimos 30 dias de todos os metas
       </p>
     </div>
   );
