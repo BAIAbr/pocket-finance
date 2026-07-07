@@ -458,79 +458,139 @@ function MiniStat({ label, value, icon, tone }: { label: string; value: string; 
 
 // -------- Chat drawer --------
 function ChatDrawer({ onClose }: { onClose: () => void }) {
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string; error?: boolean }[]>([
     { role: 'assistant', content: 'Oi! Sou a Finango IA. Pergunte sobre seus gastos, metas, categorias ou economia. 💬' },
   ]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [status, setStatus] = useState<'online' | 'offline' | 'degraded'>(
+    typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'online'
+  );
+  const [lastUserMsg, setLastUserMsg] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  const send = async () => {
-    const text = input.trim();
+  useEffect(() => {
+    const on = () => setStatus('online');
+    const off = () => setStatus('offline');
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
+
+  const runRequest = async (history: { role: 'user' | 'assistant'; content: string }[], useStream = true) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Faça login primeiro');
+
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/finango-ai-chat${useStream ? '' : '?stream=false'}`;
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ messages: history }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ error: 'Erro' }));
+      throw new Error(err.error || `Erro ${resp.status}`);
+    }
+
+    if (!useStream) {
+      const json = await resp.json();
+      setMessages((m) => [...m, { role: 'assistant', content: json.content || '(sem resposta)' }]);
+      return;
+    }
+
+    const reader = resp.body?.getReader();
+    if (!reader) throw new Error('Sem resposta');
+    const decoder = new TextDecoder();
+    let assistantMsg = '';
+    let receivedAny = false;
+    setMessages((m) => [...m, { role: 'assistant', content: '' }]);
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(data);
+          const delta = parsed.choices?.[0]?.delta?.content || '';
+          if (delta) {
+            receivedAny = true;
+            assistantMsg += delta;
+            setMessages((m) => {
+              const copy = [...m];
+              copy[copy.length - 1] = { role: 'assistant', content: assistantMsg };
+              return copy;
+            });
+          }
+        } catch {}
+      }
+    }
+
+    if (!receivedAny) {
+      // Streaming ended without any tokens — remove empty bubble and throw
+      setMessages((m) => m.slice(0, -1));
+      throw new Error('stream-empty');
+    }
+  };
+
+  const send = async (overrideText?: string) => {
+    const text = (overrideText ?? input).trim();
     if (!text || sending) return;
-    const next = [...messages, { role: 'user' as const, content: text }];
-    setMessages(next);
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setStatus('offline');
+      setMessages((m) => [...m, { role: 'user', content: text }, {
+        role: 'assistant',
+        content: '📡 Você está offline. Verifique sua conexão e tente novamente.',
+        error: true,
+      }]);
+      setInput('');
+      return;
+    }
+
+    const next = [...messages.filter(m => !m.error).map(({ role, content }) => ({ role, content })), { role: 'user' as const, content: text }];
+    setMessages((m) => [...m, { role: 'user', content: text }]);
+    setLastUserMsg(text);
     setInput('');
     setSending(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Faça login primeiro');
-
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/finango-ai-chat`;
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ messages: next }),
-      });
-
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: 'Erro' }));
-        throw new Error(err.error || 'Erro na resposta');
-      }
-
-      const reader = resp.body?.getReader();
-      if (!reader) throw new Error('Sem resposta');
-      const decoder = new TextDecoder();
-      let assistantMsg = '';
-      setMessages((m) => [...m, { role: 'assistant', content: '' }]);
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const data = line.slice(6).trim();
-          if (data === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(data);
-            const delta = parsed.choices?.[0]?.delta?.content || '';
-            if (delta) {
-              assistantMsg += delta;
-              setMessages((m) => {
-                const copy = [...m];
-                copy[copy.length - 1] = { role: 'assistant', content: assistantMsg };
-                return copy;
-              });
-            }
-          } catch {}
-        }
-      }
+      await runRequest(next, true);
+      setStatus('online');
     } catch (err: any) {
-      setMessages((m) => [...m, { role: 'assistant', content: `❌ ${err.message || 'Erro ao consultar a IA'}` }]);
+      // Fallback: try non-streaming once
+      try {
+        setStatus('degraded');
+        await runRequest(next, false);
+      } catch (err2: any) {
+        setStatus('offline');
+        setMessages((m) => [...m, {
+          role: 'assistant',
+          error: true,
+          content: `⚠️ Não consegui responder agora (${err2?.message || err?.message || 'erro de conexão'}). Toque em **Tentar novamente** abaixo.`,
+        }]);
+      }
     } finally {
       setSending(false);
     }
   };
+
+  const retry = () => { if (lastUserMsg) send(lastUserMsg); };
+
 
   const quickPrompts = [
     'Quanto economizei este mês?',
@@ -570,11 +630,32 @@ function ChatDrawer({ onClose }: { onClose: () => void }) {
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md shadow-primary/30">
                 <Brain size={18} className="text-primary-foreground" />
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-income border-2 border-card" />
+              <span className={cn(
+                'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card',
+                status === 'online' && 'bg-income',
+                status === 'degraded' && 'bg-warning',
+                status === 'offline' && 'bg-expense'
+              )} />
             </div>
             <div>
               <p className="font-bold text-sm leading-tight">Finango IA</p>
-              <p className="text-[10px] text-muted-foreground">Online · usa seus dados reais</p>
+              <div className="flex items-center gap-1 text-[10px]">
+                <span className={cn(
+                  'inline-block w-1.5 h-1.5 rounded-full',
+                  status === 'online' && 'bg-income animate-pulse',
+                  status === 'degraded' && 'bg-warning',
+                  status === 'offline' && 'bg-expense'
+                )} />
+                <span className={cn(
+                  'font-medium',
+                  status === 'online' && 'text-income',
+                  status === 'degraded' && 'text-warning',
+                  status === 'offline' && 'text-expense'
+                )}>
+                  {status === 'online' ? 'Online' : status === 'degraded' ? 'Conexão instável' : 'Offline'}
+                </span>
+                <span className="text-muted-foreground">· usa seus dados reais</span>
+              </div>
             </div>
           </div>
           <button
@@ -611,6 +692,16 @@ function ChatDrawer({ onClose }: { onClose: () => void }) {
               </div>
             </motion.div>
           ))}
+          {messages[messages.length - 1]?.error && lastUserMsg && !sending && (
+            <div className="flex justify-center pt-1">
+              <button
+                onClick={retry}
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              >
+                <RefreshCw size={12} /> Tentar novamente
+              </button>
+            </div>
+          )}
           <div ref={endRef} />
         </div>
 
@@ -641,7 +732,7 @@ function ChatDrawer({ onClose }: { onClose: () => void }) {
             disabled={sending}
           />
           <button
-            onClick={send}
+            onClick={() => send()}
             disabled={sending || !input.trim()}
             className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 touch-scale shrink-0 shadow-md shadow-primary/30 hover:shadow-lg transition-shadow"
             aria-label="Enviar mensagem"
