@@ -477,24 +477,17 @@ export default function SettingsPage() {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-pink-500/10 via-fuchsia-500/10 to-orange-500/10 hover:from-pink-500/15 hover:via-fuchsia-500/15 hover:to-orange-500/15 transition-all touch-scale"
+              className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white flex items-center justify-center shadow-md">
+              <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
                 <Instagram size={18} />
               </div>
               <div className="flex-1 min-w-0 text-left">
                 <p className="font-medium">Instagram Oficial</p>
                 <p className="text-xs text-muted-foreground truncate">{INSTAGRAM_HANDLE}</p>
               </div>
-              <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">Seguir</span>
+              <ChevronRight size={18} className="text-muted-foreground" />
             </a>
-
-            <Row
-              icon={<HelpCircle size={18} />}
-              label="Perguntas Frequentes"
-              description="Central de ajuda e dúvidas"
-              onClick={() => window.open(`mailto:${SUPPORT_EMAIL}?subject=Ajuda%20Finango`, '_blank')}
-            />
           </div>
         </section>
 
