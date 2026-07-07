@@ -24,6 +24,7 @@ import FinancialHistory from "./pages/FinancialHistory";
 import Achievements from "./pages/Achievements";
 import Recurring from "./pages/Recurring";
 import CalendarPage from "./pages/Calendar";
+import Installments from "./pages/Installments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
