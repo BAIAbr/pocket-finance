@@ -109,7 +109,7 @@ export default function AIInsights() {
               <Brain size={22} className="text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">{"\u00a0"}Finango IA</h1>
+              <h1 className="text-2xl font-bold tracking-tight">Finango IA</h1>
               <p className="text-xs text-muted-foreground">Seu copiloto financeiro inteligente</p>
             </div>
           </div>
@@ -391,11 +391,20 @@ function DiagnosisSection({ title, icon, tone, items }: {
       <div className="space-y-2">
         {items.map((it, i) => (
           <div key={i} className="p-2.5 rounded-lg bg-background/60">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-medium text-foreground">{it.titulo}</p>
-              {it.valor && <span className="text-xs font-mono font-semibold shrink-0">{it.valor}</span>}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-start justify-between gap-2 flex-wrap">
+                <p className="text-sm font-medium text-foreground break-words min-w-0 flex-1">{it.titulo}</p>
+                {it.valor && (
+                  <span className={cn(
+                    'text-[11px] font-mono font-semibold shrink-0 px-2 py-0.5 rounded-md whitespace-nowrap',
+                    tone === 'income' ? 'bg-income/10 text-income' : 'bg-warning/10 text-warning'
+                  )}>
+                    {it.valor}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground break-words">{it.descricao}</p>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">{it.descricao}</p>
           </div>
         ))}
       </div>
