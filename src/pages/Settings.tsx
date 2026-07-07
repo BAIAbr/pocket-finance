@@ -302,6 +302,9 @@ export default function SettingsPage() {
           }
         </section>
 
+        {/* Resgate de código VIP */}
+        {isAuthenticated && <VipRedeemInput />}
+
         {/* Appearance */}
         <section className="card-finance">
           <h2 className="font-semibold mb-4 flex items-center gap-2">
