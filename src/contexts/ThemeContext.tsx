@@ -5,7 +5,7 @@ type Theme = 'light' | 'dark';
 export type ColorScheme = 'default' | 'ocean' | 'forest' | 'sunset' | 'midnight' | 'cherry' | 'arctic';
 
 export const COLOR_SCHEMES: { id: ColorScheme; name: string; emoji: string; description: string }[] = [
-  { id: 'default', name: 'Padrão', emoji: '💜', description: 'Roxo clássico' },
+  { id: 'default', name: 'Laranja', emoji: '💜', description: 'Padrão' },
   { id: 'ocean', name: 'Oceano', emoji: '🌊', description: 'Azul profundo' },
   { id: 'forest', name: 'Floresta', emoji: '🌲', description: 'Verde natural' },
   { id: 'sunset', name: 'Pôr do Sol', emoji: '🌅', description: 'Laranja quente' },
