@@ -1,60 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { BalanceCard } from '@/components/BalanceCard';
 import { TransactionList } from '@/components/TransactionList';
 import { MiniChart } from '@/components/MiniChart';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { AddTransactionModal } from '@/components/AddTransactionModal';
-import { MissionHomeCard } from '@/components/MissionHomeCard';
-import { WeeklyMissionsCard } from '@/components/WeeklyMissionsCard';
 import { WeeklySummaryCard } from '@/components/WeeklySummaryCard';
 import { FamilyDashboard } from '@/components/FamilyDashboard';
 import { QuickPiggyDeposit } from '@/components/QuickPiggyDeposit';
 import { UpcomingBillsCard } from '@/components/UpcomingBillsCard';
-import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
-import { useMissionContext } from '@/contexts/MissionContext';
-import { useFamilyContext } from '@/contexts/FamilyContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStreak } from '@/hooks/useStreak';
 import { useWeeklySummary } from '@/hooks/useWeeklySummary';
-import { supabase } from '@/integrations/supabase/client';
 
 export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const personalFinance = useFinanceContext();
   const { transactions, currentMonthStats, categories, isFamily, piggyBanks, formatCurrency, _personalFinance } = useEffectiveFinance();
-  const { recentCompletions, markHomeShown, viewDetails, checkMissions, weeklyMissions, isLoadingWeekly, generateWeeklyMissions } = useMissionContext();
-  const { viewContext, goals: familyGoals } = useFamilyContext();
   const { user } = useAuth();
   const { currentStreak } = useStreak(user?.id ?? null);
   const weeklySummary = useWeeklySummary(transactions as any, categories as any, 0);
-
-  useEffect(() => {
-    if (!user?.id || !personalFinance.transactions) return;
-
-    const fetchAndCheck = async () => {
-      const incomeCount = (personalFinance.transactions as any[]).filter((t: any) => t.type === 'income').length;
-      const expenseCount = (personalFinance.transactions as any[]).filter((t: any) => t.type === 'expense').length;
-
-      const [goalsRes, piggyRes] = await Promise.all([
-        supabase.from('savings_goals').select('id, is_completed').eq('user_id', user.id),
-        supabase.from('piggy_bank').select('id').eq('user_id', user.id),
-      ]);
-
-      checkMissions({
-        transactionCount: (personalFinance.transactions as any[]).length,
-        incomeCount,
-        expenseCount,
-        streak: currentStreak,
-        savingsGoalCount: goalsRes.data?.length ?? 0,
-        completedGoalCount: goalsRes.data?.filter(g => g.is_completed).length ?? 0,
-        piggyBankCount: piggyRes.data?.length ?? 0,
-        monthlyBalance: personalFinance.currentMonthStats.balance,
-      });
-    };
-
-    fetchAndCheck();
-  }, [user?.id, personalFinance.transactions, currentStreak]);
 
   return (
     <div className="min-h-screen bg-background pb-28 lg:pb-8 safe-top">
