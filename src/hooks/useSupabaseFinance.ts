@@ -149,7 +149,7 @@ export function useSupabaseFinance(userId: string | null) {
           supabase.from('savings_goals').select('*').order('created_at', { ascending: false }),
           supabase.from('piggy_bank').select('*').order('created_at', { ascending: true }),
           supabase.from('piggy_bank_transactions').select('*').order('created_at', { ascending: false }),
-          supabase.from('profiles').select('*').maybeSingle(),
+          supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
         ]);
 
         if (transactionsRes.data) setTransactions(transactionsRes.data as Transaction[]);
