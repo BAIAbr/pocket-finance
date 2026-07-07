@@ -54,6 +54,7 @@ const App = () => (
                   <Route path="/history" element={<FinancialHistory />} />
                   <Route path="/achievements" element={<Achievements />} />
                   <Route path="/recurring" element={<Recurring />} />
+                  <Route path="/calendar" element={<CalendarPage />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                 </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
