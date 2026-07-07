@@ -9,6 +9,7 @@ import { WeeklyMissionsCard } from '@/components/WeeklyMissionsCard';
 import { WeeklySummaryCard } from '@/components/WeeklySummaryCard';
 import { FamilyDashboard } from '@/components/FamilyDashboard';
 import { QuickPiggyDeposit } from '@/components/QuickPiggyDeposit';
+import { UpcomingBillsCard } from '@/components/UpcomingBillsCard';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useMissionContext } from '@/contexts/MissionContext';
