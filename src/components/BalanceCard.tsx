@@ -56,7 +56,7 @@ export function BalanceCard() {
           </p>
 
           <div className="grid grid-cols-2 gap-2 sm:gap-4">
-            <div className="bg-primary-foreground/10 rounded-xl p-3 sm:p-4 backdrop-blur-sm border border-primary-foreground/10 hover:bg-white/15 transition-all duration-200 group/card overflow-hidden">
+            <div className="bg-primary-foreground/10 rounded-xl p-3 sm:p-4 backdrop-blur-sm border border-primary-foreground/10 hover:bg-primary-foreground/15 transition-all duration-200 group/card overflow-hidden">
               <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                 <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-400/30 flex items-center justify-center shrink-0">
                   <TrendingUp size={11} className="text-emerald-300" />
@@ -68,7 +68,7 @@ export function BalanceCard() {
               </p>
             </div>
             
-            <div className="bg-primary-foreground/10 rounded-xl p-3 sm:p-4 backdrop-blur-sm border border-primary-foreground/10 hover:bg-white/15 transition-all duration-200 group/card overflow-hidden">
+            <div className="bg-primary-foreground/10 rounded-xl p-3 sm:p-4 backdrop-blur-sm border border-primary-foreground/10 hover:bg-primary-foreground/15 transition-all duration-200 group/card overflow-hidden">
               <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                 <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-rose-400/30 flex items-center justify-center shrink-0">
                   <TrendingDown size={11} className="text-rose-300" />
