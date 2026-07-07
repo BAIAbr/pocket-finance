@@ -747,6 +747,95 @@ export type Database = {
         }
         Relationships: []
       }
+      theme_audit_log: {
+        Row: {
+          action: string
+          changes: Json
+          created_at: string
+          id: string
+          theme_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changes?: Json
+          created_at?: string
+          id?: string
+          theme_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changes?: Json
+          created_at?: string
+          id?: string
+          theme_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_audit_log_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "theme_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      theme_settings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          identity: Json
+          is_active: boolean
+          is_default: boolean
+          is_preset: boolean
+          layout: Json
+          mode: string
+          name: string
+          tokens_dark: Json
+          tokens_light: Json
+          typography: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          identity?: Json
+          is_active?: boolean
+          is_default?: boolean
+          is_preset?: boolean
+          layout?: Json
+          mode?: string
+          name: string
+          tokens_dark?: Json
+          tokens_light?: Json
+          typography?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          identity?: Json
+          is_active?: boolean
+          is_default?: boolean
+          is_preset?: boolean
+          layout?: Json
+          mode?: string
+          name?: string
+          tokens_dark?: Json
+          tokens_light?: Json
+          typography?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number

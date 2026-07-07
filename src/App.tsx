@@ -7,6 +7,7 @@ import { FinanceProvider } from "@/contexts/FinanceContext";
 import { MissionProvider } from "@/contexts/MissionContext";
 import { FamilyProvider } from "@/contexts/FamilyContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AppearanceProvider } from "@/contexts/AppearanceContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
@@ -29,6 +30,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <ThemeProvider>
+        <AppearanceProvider>
         <AuthProvider>
           <FinanceProvider>
             <MissionProvider>
@@ -59,6 +61,7 @@ const App = () => (
             </MissionProvider>
           </FinanceProvider>
         </AuthProvider>
+        </AppearanceProvider>
       </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>
