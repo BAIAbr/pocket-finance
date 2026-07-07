@@ -29,6 +29,7 @@ import Installments from "./pages/Installments";
 import Plans from "./pages/Plans";
 import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
+import VipRedeem from "./pages/VipRedeem";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
+                <Route path="/vip/:code" element={<VipRedeem />} />
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/reports" element={<Reports />} />
