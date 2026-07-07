@@ -61,6 +61,7 @@ const App = () => (
             </MissionProvider>
           </FinanceProvider>
         </AuthProvider>
+        </AppearanceProvider>
       </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>
