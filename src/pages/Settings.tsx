@@ -76,7 +76,7 @@ export default function SettingsPage() {
   const { isAuthenticated, signOut, profile: authProfile, user } = useAuth();
   const { isAdmin } = useAdminCheck(user?.id);
   const { planCode } = usePlanAccess();
-  const { plans } = useSubscription(user?.id);
+  const { plans, subscription } = useSubscription(user?.id);
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, isLoading: pushLoading, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } = usePushNotifications(user?.id);
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
