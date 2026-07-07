@@ -1,6 +1,7 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { BottomNav } from '@/components/BottomNav';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
+import { PlanSimulator } from '@/components/PlanSimulator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamilyContext } from '@/contexts/FamilyContext';
 import { Loader2, Users, User } from 'lucide-react';
@@ -78,6 +79,9 @@ export function AppLayout() {
           <BottomNav />
         </div>
       </div>
+
+      {/* Simulador de plano (apenas admin) */}
+      <PlanSimulator />
     </div>
   );
 }
