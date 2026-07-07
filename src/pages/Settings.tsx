@@ -7,7 +7,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useMissionContext } from '@/contexts/MissionContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check, Trophy, Users } from 'lucide-react';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check, Trophy, Users, CalendarClock } from 'lucide-react';
 import { FamilySettings } from '@/components/FamilySettings';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -244,6 +244,15 @@ export default function SettingsPage() {
                 </div>
                 <Progress value={userXP.total_xp % 200 / 200 * 100} className="h-1.5" />
                 <p className="text-[10px] text-muted-foreground mt-1 text-left">Faltam {200 - userXP.total_xp % 200} XP para o Nível {userXP.level + 1}</p>
+              </button>
+              <button
+                onClick={() => navigate('/recurring')}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale">
+                <div className="flex items-center gap-2">
+                  <CalendarClock size={18} className="text-primary" />
+                  <span className="font-medium">Assinaturas & Contas</span>
+                </div>
+                <span className="text-xs text-muted-foreground">Ver →</span>
               </button>
               <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 p-3 rounded-xl">
                 <Cloud size={14} className="text-primary" />
