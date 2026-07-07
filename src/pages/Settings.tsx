@@ -370,88 +370,6 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Currency */}
-        <section className="card-finance">
-          <h2 className="font-semibold mb-4 flex items-center gap-2">
-            <DollarSign size={18} />
-            Moeda
-          </h2>
-          <div className="space-y-2">
-            {currencies.map((currency) =>
-            <button
-              key={currency.code}
-              onClick={() => handleCurrencyChange(currency.code, currency.symbol)}
-              className={cn(
-                'w-full flex items-center justify-between p-3 rounded-xl transition-all touch-scale',
-                settings.currency === currency.code ?
-                'bg-accent/20 ring-1 ring-accent' :
-                'bg-secondary/50 hover:bg-secondary'
-              )}>
-
-                <div className="flex items-center gap-3">
-                  <span className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center font-mono font-bold">
-                    {currency.symbol}
-                  </span>
-                  <div className="text-left">
-                    <p className="font-medium">{currency.name}</p>
-                    <p className="text-xs text-muted-foreground">{currency.code}</p>
-                  </div>
-                </div>
-                {settings.currency === currency.code &&
-              <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-                  </div>
-              }
-              </button>
-            )}
-          </div>
-        </section>
-
-
-        {/* Push Notifications */}
-        {isAuthenticated && pushSupported &&
-        <section className="card-finance">
-            <h2 className="font-semibold mb-4 flex items-center gap-2">
-              <Bell size={18} />
-              Notificações
-            </h2>
-            <button
-            onClick={async () => {
-              if (pushSubscribed) {
-                const ok = await pushUnsubscribe();
-                if (ok) toast.success('Notificações desativadas');
-              } else {
-                const ok = await pushSubscribe();
-                if (ok) toast.success('Notificações ativadas! 🔔');else
-                toast('Permissão de notificação negada', { description: 'Habilite nas configurações do navegador.' });
-              }
-            }}
-            disabled={pushLoading}
-            className="w-full flex items-center justify-between py-3">
-
-              <div>
-                <p className="font-medium">{pushSubscribed ? 'Notificações ativadas' : 'Notificações desativadas'}</p>
-                <p className="text-sm text-muted-foreground">
-                  {pushSubscribed ? 'Receba lembretes para manter suas finanças em dia' : 'Ative para receber lembretes inteligentes'}
-                </p>
-              </div>
-              <div
-              className={cn(
-                'w-14 h-8 rounded-full flex items-center px-1 transition-all duration-300',
-                pushSubscribed ? 'bg-accent justify-end' : 'bg-secondary justify-start'
-              )}>
-
-                <div className="w-6 h-6 rounded-full bg-primary-foreground flex items-center justify-center shadow-md transition-all duration-300">
-                  {pushSubscribed ?
-                <Bell size={14} className="text-accent" /> :
-
-                <BellOff size={14} className="text-muted-foreground" />
-                }
-                </div>
-              </div>
-            </button>
-          </section>
-        }
 
         {/* Data */}
         {isAuthenticated &&
@@ -499,28 +417,6 @@ export default function SettingsPage() {
           </PlanGate>
         )}
 
-        {/* About */}
-        <section className="card-finance">
-          <h2 className="font-semibold mb-4 flex items-center gap-2">
-            <Info size={18} />
-            Sobre
-          </h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-2">
-              <span className="text-muted-foreground">Versão</span>
-              <span className="font-mono">2.1.0</span>
-            </div>
-            <div className="flex items-center justify-between py-2">
-              <span className="text-muted-foreground">Armazenamento</span>
-              <span className="font-mono flex items-center gap-1">
-                <Cloud size={14} className="text-primary" />
-                Nuvem
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">Seus dados são sincronizados de forma segura</p>
-          </div>
-        </section>
-
         {/* Contact */}
         <section className="card-finance">
           <h2 className="font-semibold mb-4 flex items-center gap-2">
@@ -541,6 +437,28 @@ export default function SettingsPage() {
               </div>
             </div>
           </a>
+        </section>
+
+        {/* About */}
+        <section className="card-finance">
+          <h2 className="font-semibold mb-4 flex items-center gap-2">
+            <Info size={18} />
+            Sobre
+          </h2>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between py-2">
+              <span className="text-muted-foreground">Versão</span>
+              <span className="font-mono">2.1.0</span>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <span className="text-muted-foreground">Armazenamento</span>
+              <span className="font-mono flex items-center gap-1">
+                <Cloud size={14} className="text-primary" />
+                Nuvem
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">Seus dados são sincronizados de forma segura</p>
+          </div>
         </section>
       </main>
     </div>);

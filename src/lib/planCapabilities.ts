@@ -6,7 +6,6 @@ export type PlanFeature =
   | 'ai'
   | 'recurring'
   | 'installments'
-  | 'calendar'
   | 'family'
   | 'push'
   | 'customCdi'
@@ -24,7 +23,6 @@ export const PLAN_CAPABILITIES: Record<string, PlanCapabilities> = {
       ai: false,
       recurring: false,
       installments: false,
-      calendar: false,
       family: false,
       push: true,
       customCdi: false,
@@ -37,7 +35,6 @@ export const PLAN_CAPABILITIES: Record<string, PlanCapabilities> = {
       ai: true,
       recurring: true,
       installments: true,
-      calendar: true,
       family: false,
       push: true,
       customCdi: false,
@@ -50,7 +47,6 @@ export const PLAN_CAPABILITIES: Record<string, PlanCapabilities> = {
       ai: true,
       recurring: true,
       installments: true,
-      calendar: true,
       family: true,
       push: true,
       customCdi: true,
@@ -63,7 +59,6 @@ export const FEATURE_LABELS: Record<PlanFeature, string> = {
   ai: 'IA Financeira Avançada',
   recurring: 'Assinaturas & Contas Recorrentes',
   installments: 'Compras Parceladas',
-  calendar: 'Calendário Financeiro',
   family: 'Modo Família',
   push: 'Notificações Push',
   customCdi: 'Rendimento CDI Personalizado',
