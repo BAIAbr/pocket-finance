@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts';
 import { format, subDays, isAfter, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import AdminAchievements from '@/components/AdminAchievements';
+
 import ThemeManager from '@/components/admin/ThemeManager';
 import { AdminSetPasswordButton } from '@/components/admin/AdminSetPasswordButton';
 import { GenerateResetLinkButton } from '@/components/admin/GenerateResetLinkButton';
@@ -234,14 +234,10 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="analytics" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="analytics" className="gap-1.5">
             <Activity size={14} />
             Analytics
-          </TabsTrigger>
-          <TabsTrigger value="achievements" className="gap-1.5">
-            <Trophy size={14} />
-            Conquistas
           </TabsTrigger>
           <TabsTrigger value="appearance" className="gap-1.5">
             <Palette size={14} />
@@ -498,9 +494,9 @@ export default function AdminDashboard() {
       </Card>
         </TabsContent>
 
-        <TabsContent value="achievements">
-          <AdminAchievements />
         </TabsContent>
+
+
 
         <TabsContent value="appearance">
           <ThemeManager />

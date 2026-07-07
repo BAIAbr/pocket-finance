@@ -35,30 +35,12 @@ export default function Dashboard() {
       </header>
 
       <main className="px-4 lg:px-8 space-y-5">
-        {/* Missions only in personal mode */}
-        {!isFamily && (
-          <MissionHomeCard
-            completions={recentCompletions}
-            onViewDetails={viewDetails}
-            onDismiss={markHomeShown}
-          />
-        )}
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className="animate-fade-in"><BalanceCard /></div>
           <div className="animate-fade-in stagger-1"><MiniChart /></div>
         </div>
 
-        {/* Weekly AI Missions - only personal */}
-        {!isFamily && (
-          <div className="animate-fade-in stagger-1">
-            <WeeklyMissionsCard
-              missions={weeklyMissions}
-              isLoading={isLoadingWeekly}
-              onGenerate={generateWeeklyMissions}
-            />
-          </div>
-        )}
+
 
         {/* Family goals in family mode */}
         {isFamily && <FamilyDashboard />}
