@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Loader2, User, Check, X, ShieldCheck, Sparkle } from 'lucide-react';
+import { Mail, Lock, Loader2, User, Check, X, ShieldCheck } from 'lucide-react';
+import finangoFox from '@/assets/finango-fox.png.asset.json';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
