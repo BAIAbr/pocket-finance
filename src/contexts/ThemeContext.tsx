@@ -292,6 +292,30 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
 const THEME_KEY = 'finango-theme';
 const COLOR_SCHEME_KEY = 'finango-color-scheme';
 
+/**
+ * Read the saved theme + color scheme from localStorage and apply them
+ * to `document.documentElement` synchronously, BEFORE React mounts.
+ * Prevents a flash of the default palette on page reload.
+ */
+export function preHydrateTheme() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  try {
+    const storedTheme = (localStorage.getItem(THEME_KEY) as Theme) || 'dark';
+    const storedScheme = (localStorage.getItem(COLOR_SCHEME_KEY) as ColorScheme) || 'default';
+    const root = document.documentElement;
+    if (storedTheme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
+    applySchemeVars(storedScheme, storedTheme);
+  } catch {
+    // localStorage may be unavailable (private mode, SSR); ignore.
+  }
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
