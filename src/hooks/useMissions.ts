@@ -135,32 +135,30 @@ export function useMissions() {
     if (!mission) return;
 
     try {
-      const { data: historyData } = await supabase.from('user_mission_history').insert({
-        user_id: userId, mission_id: mission.id, xp_earned: mission.xp_reward,
-        shown_home: false, shown_popup: false,
-      }).select().single();
+      const { data, error } = await supabase.rpc('award_mission' as any, { p_mission_key: missionKey });
+      if (error) throw error;
+      const result = data as any;
+      if (!result || result.already_completed) return;
 
-      const newTotalXP = userXP.total_xp + mission.xp_reward;
-      const newLevel = calculateLevel(newTotalXP);
-      await supabase.from('user_xp').update({ total_xp: newTotalXP, level: newLevel }).eq('user_id', userId);
+      setUserXP({ total_xp: result.total_xp, level: result.level });
 
-      await supabase.from('user_gamification_notifications').insert({
-        user_id: userId, type: 'mission_complete',
-        title: `Missão Concluída: ${mission.name}`, description: mission.description, icon: mission.icon,
-      });
-
-      setUserXP({ total_xp: newTotalXP, level: newLevel });
-
-      if (historyData) {
-        const completed = { ...(historyData as unknown as CompletedMission), mission };
-        setCompletedMissions(prev => [...prev, completed]);
-        setPendingCelebration(completed);
-        setRecentCompletions(prev => [...prev, completed]);
-      }
+      const completed: CompletedMission = {
+        id: result.history_id,
+        user_id: userId,
+        mission_id: mission.id,
+        xp_earned: result.xp_earned,
+        completed_at: new Date().toISOString(),
+        shown_home: false,
+        shown_popup: false,
+        mission,
+      };
+      setCompletedMissions(prev => [...prev, completed]);
+      setPendingCelebration(completed);
+      setRecentCompletions(prev => [...prev, completed]);
     } catch (error) {
       console.error('Error completing mission:', error);
     }
-  }, [userId, missions, completedMissions, userXP, isMissionCompleted]);
+  }, [userId, missions, isMissionCompleted]);
 
   const dismissCelebration = useCallback(async () => {
     if (!pendingCelebration) return;
