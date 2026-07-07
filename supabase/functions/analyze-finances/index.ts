@@ -36,7 +36,7 @@ serve(async (req) => {
 
     // Pull data
     const [txRes, catRes, goalsRes, piggyRes, recRes, instRes] = await Promise.all([
-      supabaseClient.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(1000),
+      supabaseClient.from('transactions').select('date,type,amount,category_id').eq('user_id', user.id).order('date', { ascending: false }).limit(400),
       supabaseClient.from('categories').select('*').eq('user_id', user.id),
       supabaseClient.from('savings_goals').select('*').eq('user_id', user.id),
       supabaseClient.from('piggy_bank').select('*').eq('user_id', user.id),
