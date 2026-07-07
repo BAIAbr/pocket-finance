@@ -24,7 +24,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import FinancialHistory from "./pages/FinancialHistory";
 
 import Recurring from "./pages/Recurring";
-import CalendarPage from "./pages/Calendar";
+
 import Installments from "./pages/Installments";
 import Plans from "./pages/Plans";
 import Security from "./pages/Security";
