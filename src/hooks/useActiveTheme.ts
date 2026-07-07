@@ -17,7 +17,7 @@ export function useActiveTheme() {
 
     const load = async () => {
       const { data, error } = await supabase
-        .from('theme_settings' as never)
+        .from('theme_settings')
         .select('*')
         .eq('is_active', true)
         .maybeSingle();
