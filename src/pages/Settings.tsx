@@ -278,6 +278,11 @@ export default function SettingsPage() {
                 <p className="text-xs mt-1 truncate text-primary-foreground/75">
                   {currentPlan ? `Plano ${currentPlan.name}` : badge.label === 'FREE' ? 'Plano Gratuito' : `Plano ${badge.label}`}
                 </p>
+                {isPremium && subscription?.started_at && (
+                  <p className="text-[11px] mt-0.5 truncate text-primary-foreground/70">
+                    {badge.label === 'VIP' ? 'VIP' : 'Premium'} desde {format(parseISO(subscription.started_at), "dd/MM/yyyy", { locale: ptBR })}
+                  </p>
+                )}
 
                 <div className="flex flex-wrap gap-2 mt-4 justify-center sm:justify-start">
                   <button
