@@ -100,6 +100,14 @@ ${JSON.stringify(financialContext)}`;
       throw new Error('Erro ao consultar IA');
     }
 
+    if (noStream) {
+      const json = await response.json();
+      const text = json.choices?.[0]?.message?.content || '';
+      return new Response(JSON.stringify({ content: text }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(response.body, {
       headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
     });
