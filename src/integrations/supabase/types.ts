@@ -1390,6 +1390,7 @@ export type Database = {
           plan_code: string
           updated_at: string
           uses_count: number
+          views_count: number
         }
         Insert: {
           code: string
@@ -1404,6 +1405,7 @@ export type Database = {
           plan_code: string
           updated_at?: string
           uses_count?: number
+          views_count?: number
         }
         Update: {
           code?: string
@@ -1418,6 +1420,7 @@ export type Database = {
           plan_code?: string
           updated_at?: string
           uses_count?: number
+          views_count?: number
         }
         Relationships: [
           {
@@ -1536,6 +1539,7 @@ export type Database = {
           valid: boolean
         }[]
       }
+      register_vip_view: { Args: { p_code: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
