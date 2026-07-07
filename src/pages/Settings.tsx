@@ -359,7 +359,11 @@ export default function SettingsPage() {
                   'bg-secondary/50 hover:bg-secondary'
                 )}>
 
-                  <span className="text-xl">{scheme.emoji}</span>
+                  {scheme.id === 'default' ? (
+                    <img src={finangoLogo.url} alt="Finango" className="w-6 h-6 object-contain" />
+                  ) : (
+                    <span className="text-xl">{scheme.emoji}</span>
+                  )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{scheme.name}</p>
                     <p className="text-[10px] text-muted-foreground truncate">{scheme.description}</p>
