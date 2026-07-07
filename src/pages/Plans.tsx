@@ -72,7 +72,7 @@ export default function PlansPage() {
 
                 <h3 className="text-xl font-bold">{plan.name}</h3>
                 {plan.description && (
-                  <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
+                  <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{plan.description}</p>
                 )}
 
                 <div className="mt-4 mb-6">
@@ -84,9 +84,9 @@ export default function PlansPage() {
 
                 <ul className="space-y-2 mb-6">
                   {plan.features.map((f, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm">
-                      <Check size={16} className="text-primary shrink-0 mt-0.5" />
-                      <span>{f}</span>
+                    <li key={i} className={cn('flex items-start gap-2 text-sm', !f.enabled && 'text-muted-foreground/60 line-through')}>
+                      <Check size={16} className={cn('shrink-0 mt-0.5', f.enabled ? 'text-primary' : 'text-muted-foreground/40')} />
+                      <span>{f.label}</span>
                     </li>
                   ))}
                 </ul>
