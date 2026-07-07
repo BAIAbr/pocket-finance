@@ -41,7 +41,7 @@ export function MissionDetailModal({ completion, userXP, totalMissions, complete
 
           {/* Large medal/trophy */}
           <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${rarity.color} flex items-center justify-center shadow-xl ${rarity.glow}`}>
-            <Icon className="w-12 h-12 text-white drop-shadow-md" />
+            <Icon className="w-12 h-12 text-primary-foreground drop-shadow-md" />
           </div>
 
           <div>

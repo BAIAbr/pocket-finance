@@ -89,21 +89,21 @@ export function CapyModal({ isOpen, onClose, moodData }: CapyModalProps) {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-sm mx-4 rounded-3xl overflow-hidden p-0 gap-0">
         {/* Header with gradient based on mood */}
-        <div className={`bg-gradient-to-br ${getMoodColor(moodData.mood)} p-6 pb-4 text-white`}>
+        <div className={`bg-gradient-to-br ${getMoodColor(moodData.mood)} p-6 pb-4 text-primary-foreground`}>
           <DialogHeader className="space-y-2">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-xl font-bold flex items-center gap-2">
                 Oi, eu sou a Capy! {getMoodEmoji(moodData.mood)}
               </DialogTitle>
             </div>
-            <DialogDescription className="text-white/90 text-sm">
+            <DialogDescription className="text-primary-foreground/90 text-sm">
               Sua guia financeira amigável
             </DialogDescription>
           </DialogHeader>
           
           {/* Capy Avatar centered */}
           <div className="flex justify-center mt-4">
-            <div className="bg-white/20 rounded-full p-3 backdrop-blur-sm">
+            <div className="bg-primary-foreground/20 rounded-full p-3 backdrop-blur-sm">
               <CapyAvatar mood={moodData.mood} size="lg" />
             </div>
           </div>

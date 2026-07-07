@@ -368,7 +368,7 @@ export default function AdminAchievements() {
                         </div>
                       ) : (
                         <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br shrink-0', rarity.color)}>
-                          <IconComp size={18} className="text-white" />
+                          <IconComp size={18} className="text-primary-foreground" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">

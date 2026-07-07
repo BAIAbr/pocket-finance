@@ -31,7 +31,7 @@ export function MissionHomeCard({ completions, onViewDetails, onDismiss }: Props
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${rarity.color} flex items-center justify-center shadow-md ${rarity.glow} flex-shrink-0`}>
-              <Icon className="w-6 h-6 text-white" />
+              <Icon className="w-6 h-6 text-primary-foreground" />
             </div>
 
             <div className="flex-1 min-w-0">

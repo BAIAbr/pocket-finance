@@ -63,7 +63,7 @@ export function MissionCelebrationModal({ completion, onDismiss, onViewDetails }
               transition={{ delay: 0.2, type: 'spring', damping: 12 }}
               className={`w-20 h-20 rounded-full bg-gradient-to-br ${rarity.color} flex items-center justify-center shadow-lg ${rarity.glow} mb-4`}
             >
-              <Icon className="w-10 h-10 text-white drop-shadow-md" />
+              <Icon className="w-10 h-10 text-primary-foreground drop-shadow-md" />
             </motion.div>
 
             <motion.div

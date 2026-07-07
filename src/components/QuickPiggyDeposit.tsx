@@ -152,8 +152,8 @@ export function QuickPiggyDeposit({ piggyBanks, formatCurrency, onDeposit }: Qui
         className={cn(
           "w-full py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all",
           showSuccess
-            ? "bg-income text-white"
-            : "gradient-balance text-white disabled:opacity-40 disabled:cursor-not-allowed touch-scale"
+            ? "bg-income text-primary-foreground"
+            : "gradient-balance text-primary-foreground disabled:opacity-40 disabled:cursor-not-allowed touch-scale"
         )}
       >
         {showSuccess ? (

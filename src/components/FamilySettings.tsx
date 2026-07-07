@@ -170,7 +170,7 @@ export function FamilySettings() {
                 'w-11 h-6 rounded-full flex items-center px-0.5 transition-all',
                 aiEnabled ? 'bg-primary justify-end' : 'bg-muted justify-start'
               )}>
-                <div className="w-5 h-5 rounded-full bg-white shadow" />
+                <div className="w-5 h-5 rounded-full bg-primary-foreground shadow" />
               </div>
             </button>
 
@@ -186,7 +186,7 @@ export function FamilySettings() {
                 'w-11 h-6 rounded-full flex items-center px-0.5 transition-all',
                 autoShare ? 'bg-primary justify-end' : 'bg-muted justify-start'
               )}>
-                <div className="w-5 h-5 rounded-full bg-white shadow" />
+                <div className="w-5 h-5 rounded-full bg-primary-foreground shadow" />
               </div>
             </button>
 
@@ -200,7 +200,7 @@ export function FamilySettings() {
               <button
                 onClick={handleCreateFamily}
                 disabled={!newFamilyName.trim()}
-                className="flex-1 py-3 rounded-xl gradient-balance text-white font-medium touch-scale disabled:opacity-50"
+                className="flex-1 py-3 rounded-xl gradient-balance text-primary-foreground font-medium touch-scale disabled:opacity-50"
               >
                 Criar
               </button>
@@ -231,7 +231,7 @@ export function FamilySettings() {
               <button
                 onClick={handleJoinFamily}
                 disabled={inviteCode.length < 4}
-                className="flex-1 py-3 rounded-xl gradient-balance text-white font-medium touch-scale disabled:opacity-50"
+                className="flex-1 py-3 rounded-xl gradient-balance text-primary-foreground font-medium touch-scale disabled:opacity-50"
               >
                 Entrar
               </button>
@@ -348,7 +348,7 @@ export function FamilySettings() {
             <div key={member.id} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50">
               <Avatar className="w-10 h-10">
                 {member.profile?.avatar_url && <AvatarImage src={member.profile.avatar_url} />}
-                <AvatarFallback className="gradient-balance text-white text-sm font-bold">
+                <AvatarFallback className="gradient-balance text-primary-foreground text-sm font-bold">
                   {(member.profile?.name || 'U').charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -424,7 +424,7 @@ export function FamilySettings() {
             <input type="date" value={goalDeadline} onChange={e => setGoalDeadline(e.target.value)} className="input-finance" />
             <div className="flex gap-2">
               <button onClick={() => setShowGoalForm(false)} className="flex-1 py-2 rounded-xl bg-secondary text-sm touch-scale">Cancelar</button>
-              <button onClick={handleCreateGoal} disabled={!goalName || !goalAmount} className="flex-1 py-2 rounded-xl gradient-balance text-white text-sm touch-scale disabled:opacity-50">Criar</button>
+              <button onClick={handleCreateGoal} disabled={!goalName || !goalAmount} className="flex-1 py-2 rounded-xl gradient-balance text-primary-foreground text-sm touch-scale disabled:opacity-50">Criar</button>
             </div>
           </div>
         )}
@@ -574,7 +574,7 @@ export function FamilySettings() {
               'w-11 h-6 rounded-full flex items-center px-0.5 transition-all shrink-0 ml-2',
               item.value ? 'bg-primary justify-end' : 'bg-muted justify-start'
             )}>
-              <div className="w-5 h-5 rounded-full bg-white shadow" />
+              <div className="w-5 h-5 rounded-full bg-primary-foreground shadow" />
             </div>
           </button>
         ))}

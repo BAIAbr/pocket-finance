@@ -164,21 +164,21 @@ export default function SettingsPage() {
 
       <main className="px-4 space-y-6">
         {/* Download App Button - Highly Visible */}
-        <section className="card-finance gradient-balance text-white">
+        <section className="card-finance gradient-balance text-primary-foreground">
           <button
             onClick={handleInstallApp}
             className="w-full flex items-center justify-between touch-scale">
 
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-primary-foreground/20 flex items-center justify-center">
                 <Download size={24} />
               </div>
               <div className="text-left">
                 <p className="font-semibold text-lg">Baixar Aplicativo</p>
-                <p className="text-sm text-white/80">Instale no seu celular</p>
+                <p className="text-sm text-primary-foreground/80">Instale no seu celular</p>
               </div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center">
               <Download size={20} />
             </div>
           </button>
@@ -198,7 +198,7 @@ export default function SettingsPage() {
                     {avatarUrl ?
                   <AvatarImage src={avatarUrl} alt={displayName} /> :
                   null}
-                    <AvatarFallback className="gradient-balance text-white font-bold text-xl">
+                    <AvatarFallback className="gradient-balance text-primary-foreground font-bold text-xl">
                       {displayName.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -208,7 +208,7 @@ export default function SettingsPage() {
                   className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-accent flex items-center justify-center text-accent-foreground shadow-md touch-scale">
 
                     {isUploadingAvatar ?
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> :
+                  <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> :
 
                   <Camera size={14} />
                   }
@@ -276,7 +276,7 @@ export default function SettingsPage() {
               </p>
               <button
               onClick={() => navigate('/auth')}
-              className="w-full py-3 rounded-xl gradient-balance text-white font-medium touch-scale">
+              className="w-full py-3 rounded-xl gradient-balance text-primary-foreground font-medium touch-scale">
 
                 Entrar ou criar conta
               </button>
@@ -306,7 +306,7 @@ export default function SettingsPage() {
                 theme === 'dark' ? 'bg-accent justify-end' : 'bg-secondary justify-start'
               )}>
 
-              <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-md transition-all duration-300">
+              <div className="w-6 h-6 rounded-full bg-primary-foreground flex items-center justify-center shadow-md transition-all duration-300">
                 {theme === 'dark' ?
                 <Moon size={14} className="text-accent" /> :
 
@@ -377,7 +377,7 @@ export default function SettingsPage() {
                 </div>
                 {settings.currency === currency.code &&
               <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-white" />
+                    <div className="w-2 h-2 rounded-full bg-primary-foreground" />
                   </div>
               }
               </button>
@@ -419,7 +419,7 @@ export default function SettingsPage() {
                 pushSubscribed ? 'bg-accent justify-end' : 'bg-secondary justify-start'
               )}>
 
-                <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-md transition-all duration-300">
+                <div className="w-6 h-6 rounded-full bg-primary-foreground flex items-center justify-center shadow-md transition-all duration-300">
                   {pushSubscribed ?
                 <Bell size={14} className="text-accent" /> :
 
@@ -507,7 +507,7 @@ export default function SettingsPage() {
 
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full gradient-balance flex items-center justify-center">
-                <Mail size={18} className="text-white" />
+                <Mail size={18} className="text-primary-foreground" />
               </div>
               <div className="text-left">
                 <p className="font-medium">Email de Suporte</p>

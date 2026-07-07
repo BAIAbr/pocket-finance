@@ -182,14 +182,14 @@ export function QuickCategoryModal({
             onClick={handleSave}
             disabled={!name.trim() || isSaving}
             className={cn(
-              'w-full py-3.5 rounded-xl font-semibold text-white transition-all touch-scale flex items-center justify-center gap-2',
+              'w-full py-3.5 rounded-xl font-semibold text-primary-foreground transition-all touch-scale flex items-center justify-center gap-2',
               name.trim() && !isSaving
                 ? 'gradient-balance shadow-glow-accent'
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
             )}
           >
             {isSaving ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
             ) : (
               <>
                 <Check size={18} />

@@ -341,7 +341,7 @@ export default function Categories() {
                 onClick={handleSave}
                 disabled={!name.trim()}
                 className={cn(
-                  'w-full py-4 rounded-xl font-semibold text-white transition-all touch-scale flex items-center justify-center gap-2',
+                  'w-full py-4 rounded-xl font-semibold text-primary-foreground transition-all touch-scale flex items-center justify-center gap-2',
                   name.trim()
                     ? 'gradient-balance shadow-glow-accent'
                     : 'bg-muted text-muted-foreground cursor-not-allowed'

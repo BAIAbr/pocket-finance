@@ -118,7 +118,7 @@ export default function SavingsPage() {
           </p>
           <button
             onClick={() => navigate('/auth')}
-            className="px-6 py-3 rounded-xl gradient-balance text-white font-medium touch-scale"
+            className="px-6 py-3 rounded-xl gradient-balance text-primary-foreground font-medium touch-scale"
           >
             Entrar ou criar conta
           </button>
@@ -669,7 +669,7 @@ function CreatePiggyBankModal({
                   style={{ backgroundColor: color }}
                 >
                   {selectedColor === color && (
-                    <Check size={16} className="text-white mx-auto" />
+                    <Check size={16} className="text-primary-foreground mx-auto" />
                   )}
                 </button>
               ))}
@@ -742,14 +742,14 @@ function CreatePiggyBankModal({
             onClick={handleSubmit}
             disabled={!name.trim() || isSubmitting}
             className={cn(
-              'w-full py-4 rounded-xl font-semibold text-white transition-all touch-scale',
+              'w-full py-4 rounded-xl font-semibold text-primary-foreground transition-all touch-scale',
               name.trim() && !isSubmitting
                 ? 'gradient-income shadow-glow-income'
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
             )}
           >
             {isSubmitting ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
+              <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mx-auto" />
             ) : (
               'Criar Cofrinho'
             )}
@@ -838,7 +838,7 @@ function EditPiggyBankModal({
                   style={{ backgroundColor: color }}
                 >
                   {selectedColor === color && (
-                    <Check size={16} className="text-white mx-auto" />
+                    <Check size={16} className="text-primary-foreground mx-auto" />
                   )}
                 </button>
               ))}
@@ -893,7 +893,7 @@ function EditPiggyBankModal({
             onClick={handleSave}
             disabled={!name.trim()}
             className={cn(
-              'w-full py-4 rounded-xl font-semibold text-white transition-all touch-scale',
+              'w-full py-4 rounded-xl font-semibold text-primary-foreground transition-all touch-scale',
               name.trim()
                 ? 'gradient-income shadow-glow-income'
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
@@ -1029,14 +1029,14 @@ function TransactionModal({
             onClick={handleSubmit}
             disabled={!amount || numAmount <= 0 || exceedsBalance || isSubmitting}
             className={cn(
-              'w-full py-4 rounded-xl font-semibold text-white transition-all touch-scale',
+              'w-full py-4 rounded-xl font-semibold text-primary-foreground transition-all touch-scale',
               amount && numAmount > 0 && !exceedsBalance && !isSubmitting
                 ? isWithdraw ? 'bg-destructive' : 'gradient-income shadow-glow-income'
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
             )}
           >
             {isSubmitting ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
+              <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mx-auto" />
             ) : (
               isWithdraw ? 'Retirar' : 'Depositar'
             )}
