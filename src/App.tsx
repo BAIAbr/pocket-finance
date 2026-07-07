@@ -56,7 +56,7 @@ const App = () => (
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/history" element={<FinancialHistory />} />
                   <Route path="/recurring" element={<PlanGate feature="recurring"><Recurring /></PlanGate>} />
-                  <Route path="/calendar" element={<PlanGate feature="calendar"><CalendarPage /></PlanGate>} />
+                  
                   <Route path="/installments" element={<PlanGate feature="installments"><Installments /></PlanGate>} />
                   <Route path="/plans" element={<Plans />} />
                   <Route path="/security" element={<Security />} />
