@@ -125,6 +125,10 @@ export default {
           "0%, 100%": { boxShadow: "0 4px 14px -3px hsl(var(--primary) / 0.4)" },
           "50%": { boxShadow: "0 6px 24px -3px hsl(var(--primary) / 0.55)" },
         },
+        "vip-sheen": {
+          "0%": { transform: "translateX(-100%) skewX(-12deg)" },
+          "100%": { transform: "translateX(200%) skewX(-12deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
