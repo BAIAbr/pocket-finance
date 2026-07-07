@@ -153,7 +153,7 @@ export default function SavingsPage() {
     <div className="min-h-screen bg-background pb-24 safe-top">
       {/* Header */}
       <header className="px-4 pt-6 pb-4">
-        <h1 className="text-2xl font-bold">{isFamily ? 'Metas da Família' : 'Cofrinhos'}</h1>
+        <h1 className="text-2xl font-bold">{isFamily ? 'Metas da Família' : 'Metas'}</h1>
         <p className="text-muted-foreground text-sm">
           {isFamily ? 'Metas compartilhadas da família' : 'Seus objetivos financeiros com rendimento CDI'}
         </p>
