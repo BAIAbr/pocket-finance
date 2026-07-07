@@ -83,6 +83,7 @@ export default function SavingsPage() {
   };
 
   const { fireSuccess, fireGoalComplete } = useConfetti();
+  const { maxPiggyBanks, canCreatePiggyBank, planCode } = usePlanAccess();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPiggyId, setSelectedPiggyId] = useState<string | null>(null);
@@ -180,11 +181,30 @@ export default function SavingsPage() {
 
         {/* Add Piggy Bank Button */}
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            if (!isFamily && !canCreatePiggyBank(piggyBanks.length)) {
+              toast.error(`Limite do plano atingido (${maxPiggyBanks} meta${maxPiggyBanks > 1 ? 's' : ''}). Faça upgrade para criar mais.`);
+              navigate('/plans');
+              return;
+            }
+            setShowCreateModal(true);
+          }}
           className="w-full card-finance flex items-center justify-center gap-2 py-4 border-2 border-dashed border-muted-foreground/30 hover:border-accent transition-all touch-scale"
         >
-          <Plus size={20} className="text-accent" />
-          <span className="font-medium">{isFamily ? 'Nova Meta Familiar' : 'Nova Meta'}</span>
+          {!isFamily && !canCreatePiggyBank(piggyBanks.length) ? (
+            <>
+              <Lock size={18} className="text-muted-foreground" />
+              <span className="font-medium text-muted-foreground">
+                Limite do plano ({maxPiggyBanks}) — Upgrade
+              </span>
+              <Crown size={16} className="text-primary" />
+            </>
+          ) : (
+            <>
+              <Plus size={20} className="text-accent" />
+              <span className="font-medium">{isFamily ? 'Nova Meta Familiar' : 'Nova Meta'}</span>
+            </>
+          )}
         </button>
 
         {/* Active Piggy Banks */}
