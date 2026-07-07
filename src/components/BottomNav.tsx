@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 const mainNavItems = [
   { path: '/', icon: Home, label: 'Início' },
   { path: '/history', icon: History, label: 'Histórico' },
-  { path: '/ai-insights', icon: Brain, label: 'IA' },
+  { path: '/ai-insights', icon: Brain, label: 'Finango IA' },
   { path: '/savings', icon: Target, label: 'Metas' },
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
