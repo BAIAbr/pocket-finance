@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Loader2, Save, Crown } from 'lucide-react';
+import { Loader2, Save, Crown, Plus, Trash2, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import { normalizeFeatures, type PlanFeatureItem } from '@/hooks/useSubscription';
 
 interface Plan {
   id: string;
@@ -15,7 +16,7 @@ interface Plan {
   name: string;
   description: string | null;
   price_monthly: number;
-  features: string[];
+  features: PlanFeatureItem[];
   is_highlighted: boolean;
   sort_order: number;
   is_active: boolean;
@@ -38,7 +39,7 @@ export default function PlansManager() {
       setPlans(
         data.map((p: any) => ({
           ...p,
-          features: Array.isArray(p.features) ? p.features : [],
+          features: normalizeFeatures(p.features),
         }))
       );
     }
@@ -53,15 +54,49 @@ export default function PlansManager() {
     setPlans((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   };
 
+  const updateFeature = (planId: string, idx: number, patch: Partial<PlanFeatureItem>) => {
+    setPlans((prev) => prev.map((p) => {
+      if (p.id !== planId) return p;
+      const features = p.features.map((f, i) => (i === idx ? { ...f, ...patch } : f));
+      return { ...p, features };
+    }));
+  };
+
+  const addFeature = (planId: string) => {
+    setPlans((prev) => prev.map((p) =>
+      p.id === planId ? { ...p, features: [...p.features, { label: '', enabled: true }] } : p
+    ));
+  };
+
+  const removeFeature = (planId: string, idx: number) => {
+    setPlans((prev) => prev.map((p) =>
+      p.id === planId ? { ...p, features: p.features.filter((_, i) => i !== idx) } : p
+    ));
+  };
+
+  const moveFeature = (planId: string, idx: number, dir: -1 | 1) => {
+    setPlans((prev) => prev.map((p) => {
+      if (p.id !== planId) return p;
+      const next = [...p.features];
+      const target = idx + dir;
+      if (target < 0 || target >= next.length) return p;
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return { ...p, features: next };
+    }));
+  };
+
   const save = async (plan: Plan) => {
     setSavingId(plan.id);
+    const cleanFeatures = plan.features
+      .map((f) => ({ label: f.label.trim(), enabled: f.enabled }))
+      .filter((f) => f.label.length > 0);
     const { error } = await supabase
       .from('subscription_plans')
       .update({
         name: plan.name,
         description: plan.description,
         price_monthly: plan.price_monthly,
-        features: plan.features,
+        features: cleanFeatures as any,
         is_highlighted: plan.is_highlighted,
         is_active: plan.is_active,
         sort_order: plan.sort_order,
@@ -86,7 +121,7 @@ export default function PlansManager() {
   return (
     <div className="space-y-4">
       <div className="text-sm text-muted-foreground">
-        Edite preço, nome, descrição e benefícios de cada plano. As mudanças aparecem imediatamente na página de Planos.
+        Edite preço, nome, descrição (múltiplas linhas permitidas) e ative/desative cada benefício. As mudanças aparecem imediatamente na página de Planos.
       </div>
 
       {plans.map((plan) => (
@@ -122,24 +157,79 @@ export default function PlansManager() {
             </div>
 
             <div>
-              <Label className="text-xs">Descrição</Label>
-              <Input
+              <Label className="text-xs">Descrição (texto livre, quebras de linha permitidas)</Label>
+              <Textarea
+                rows={4}
                 value={plan.description ?? ''}
                 onChange={(e) => updateField(plan.id, { description: e.target.value })}
+                placeholder="Escreva livremente. Enter cria nova linha."
+                className="whitespace-pre-wrap"
               />
             </div>
 
             <div>
-              <Label className="text-xs">Benefícios (um por linha)</Label>
-              <Textarea
-                rows={6}
-                value={plan.features.join('\n')}
-                onChange={(e) =>
-                  updateField(plan.id, {
-                    features: e.target.value.split('\n').map((s) => s.trim()).filter(Boolean),
-                  })
-                }
-              />
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-xs">Benefícios</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addFeature(plan.id)}
+                  className="h-7 gap-1 text-xs"
+                >
+                  <Plus size={12} /> Adicionar
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {plan.features.length === 0 && (
+                  <p className="text-xs text-muted-foreground italic">Nenhum benefício. Clique em "Adicionar".</p>
+                )}
+                {plan.features.map((f, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary/30"
+                  >
+                    <div className="flex flex-col">
+                      <button
+                        type="button"
+                        onClick={() => moveFeature(plan.id, idx, -1)}
+                        disabled={idx === 0}
+                        className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-[10px] leading-none"
+                        title="Mover para cima"
+                      >▲</button>
+                      <button
+                        type="button"
+                        onClick={() => moveFeature(plan.id, idx, 1)}
+                        disabled={idx === plan.features.length - 1}
+                        className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-[10px] leading-none"
+                        title="Mover para baixo"
+                      >▼</button>
+                    </div>
+                    <Switch
+                      checked={f.enabled}
+                      onCheckedChange={(v) => updateFeature(plan.id, idx, { enabled: v })}
+                    />
+                    <Input
+                      value={f.label}
+                      onChange={(e) => updateFeature(plan.id, idx, { label: e.target.value })}
+                      placeholder="Nome do benefício"
+                      className="flex-1 h-9"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFeature(plan.id, idx)}
+                      className="h-9 w-9 p-0 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-2">
+                Use o interruptor para ativar/desativar cada benefício. Desativados aparecem riscados aos usuários.
+              </p>
             </div>
 
             <div className="flex flex-wrap gap-4 pt-1">

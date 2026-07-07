@@ -1,16 +1,30 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface PlanFeatureItem {
+  label: string;
+  enabled: boolean;
+}
+
 export interface SubscriptionPlan {
   id: string;
   code: string;
   name: string;
   description: string | null;
   price_monthly: number;
-  features: string[];
+  features: PlanFeatureItem[];
   is_highlighted: boolean;
   sort_order: number;
   is_active: boolean;
+}
+
+export function normalizeFeatures(raw: any): PlanFeatureItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((f: any) => {
+    if (typeof f === 'string') return { label: f, enabled: true };
+    if (f && typeof f === 'object') return { label: String(f.label ?? ''), enabled: f.enabled !== false };
+    return { label: String(f ?? ''), enabled: true };
+  }).filter(f => f.label.length > 0);
 }
 
 export interface UserSubscription {
@@ -37,7 +51,7 @@ export function useSubscription(userId: string | undefined) {
       setPlans(
         data.map((p: any) => ({
           ...p,
-          features: Array.isArray(p.features) ? p.features : [],
+          features: normalizeFeatures(p.features),
         }))
       );
     }
