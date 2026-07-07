@@ -1,40 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Sparkles, TrendingDown, RefreshCw, AlertTriangle, Lightbulb, ArrowDownRight, ArrowUpRight, Wallet } from 'lucide-react';
+import {
+  Brain, Sparkles, RefreshCw, AlertTriangle, Lightbulb, ArrowDownRight, ArrowUpRight,
+  Wallet, TrendingUp, Target, Calendar, MessageCircle, Send, X, CheckCircle2,
+  ShieldAlert, Star, Loader2,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface FinancialReport {
-  gastos_fixos: {
-    items: { nome: string; valor_medio: number; frequencia: string }[];
-    total_mensal: number;
-    percentual_renda: number;
+interface FinangoReport {
+  saudacao: string;
+  resumo_intro: string;
+  diagnostico: {
+    positivos: { titulo: string; descricao: string; valor?: string }[];
+    atencao: { titulo: string; descricao: string; valor?: string }[];
   };
-  gastos_variaveis: {
-    items: { categoria: string; total: number; variacao_percentual: number }[];
-    total_periodo: number;
+  alertas: { tipo: string; titulo: string; descricao: string; severidade: 'info' | 'warning' | 'critical' }[];
+  recomendacoes: { acao: string; motivo: string; impacto: string }[];
+  comparativos: {
+    '3_meses': { receita: number; despesa: number; economia: number };
+    '6_meses': { receita: number; despesa: number; economia: number };
+    '12_meses': { receita: number; despesa: number; economia: number };
   };
-  recorrentes: {
-    items: { servico: string; valor_medio: number; frequencia: string }[];
-    alertas: string[];
+  finango_score: {
+    pontuacao: number;
+    classificacao: string;
+    fatores: string[];
   };
-  resumo: {
-    total_fixos: number;
-    total_variaveis: number;
-    total_geral: number;
-    renda_total: number;
+  metas_analise: { nome: string; progresso_percentual: number; tempo_estimado: string; sugestao: string }[];
+  previsao_mes: {
+    saldo_previsto: number;
+    economia_prevista: number;
+    proximos_vencimentos: { descricao: string; valor: number; quando: string }[];
+    maior_gasto_esperado: { categoria: string; valor_estimado: number };
   };
-  insights: string[];
+  assinaturas_detectadas: { descricao: string; valor: number; frequencia: string }[];
 }
 
+const CACHE_KEY = 'finango_ia_report_v1';
+
 export default function AIInsights() {
-  const { formatCurrency } = useFinanceContext();
-  const [report, setReport] = useState<FinancialReport | null>(null);
+  const { formatCurrency, transactions } = useFinanceContext();
+  const [report, setReport] = useState<FinangoReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [lastSignature, setLastSignature] = useState<string | null>(null);
 
-  const analyze = async () => {
+  // Signature = number of transactions + latest date; recomputes only on real changes
+  const currentSignature = `${transactions?.length ?? 0}::${transactions?.[0]?.date ?? ''}`;
+
+  const analyze = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -48,67 +65,67 @@ export default function AIInsights() {
       if (response.error) throw response.error;
       if (response.data?.error) throw new Error(response.data.error);
       setReport(response.data);
+      setLastSignature(currentSignature);
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ report: response.data, signature: currentSignature, at: Date.now() }));
+      } catch {}
     } catch (err: any) {
       setError(err.message || 'Erro ao gerar análise');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentSignature]);
+
+  // Load cache + auto-refresh when signature changes
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setReport(parsed.report);
+        setLastSignature(parsed.signature);
+        // Auto-refresh if data changed (>1min old and signature differs)
+        if (parsed.signature !== currentSignature && Date.now() - parsed.at > 60_000) {
+          analyze();
+        }
+      } else {
+        analyze();
+      }
+    } catch {
+      analyze();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const isStale = lastSignature !== null && lastSignature !== currentSignature;
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
+      {/* Header */}
       <header className="px-4 pt-6 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-            <Brain size={22} className="text-primary" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/30">
+              <Brain size={22} className="text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">🧠 Finango IA</h1>
+              <p className="text-xs text-muted-foreground">Seu copiloto financeiro inteligente</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">Análise IA</h1>
-            <p className="text-sm text-muted-foreground">Insights inteligentes sobre suas finanças</p>
-          </div>
+          <button
+            onClick={analyze}
+            disabled={loading}
+            className="w-10 h-10 rounded-xl bg-secondary hover:bg-secondary/70 flex items-center justify-center touch-scale disabled:opacity-50"
+            aria-label="Atualizar análise"
+          >
+            <RefreshCw size={18} className={cn(loading && 'animate-spin')} />
+          </button>
         </div>
       </header>
 
       <main className="px-4 space-y-4">
-        {!report && !loading && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card-finance text-center py-10 space-y-4"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-              <Sparkles size={32} className="text-primary" />
-            </div>
-            <h2 className="text-lg font-semibold">Relatório Financeiro Inteligente</h2>
-            <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-              A IA vai analisar todas as suas transações e gerar insights sobre seus gastos fixos, variáveis e recorrentes.
-            </p>
-            <button
-              onClick={analyze}
-              className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium touch-scale inline-flex items-center gap-2"
-            >
-              <Sparkles size={18} />
-              Gerar Análise
-            </button>
-          </motion.div>
-        )}
-
-        {loading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="card-finance text-center py-10 space-y-4"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
-              <Brain size={32} className="text-primary" />
-            </div>
-            <p className="text-sm text-muted-foreground">Analisando suas transações com IA...</p>
-            <div className="w-48 h-1.5 bg-secondary rounded-full mx-auto overflow-hidden">
-              <div className="h-full bg-primary rounded-full animate-[shimmer_1.5s_ease-in-out_infinite]" style={{ width: '60%' }} />
-            </div>
-          </motion.div>
-        )}
-
+        {loading && !report && <LoadingState />}
         {error && (
           <div className="card-finance border-destructive/30 bg-destructive/5 p-4">
             <p className="text-sm text-destructive">{error}</p>
@@ -116,148 +133,484 @@ export default function AIInsights() {
           </div>
         )}
 
-        <AnimatePresence>
-          {report && (
+        {isStale && report && !loading && (
+          <button
+            onClick={analyze}
+            className="w-full card-finance bg-primary/5 border-primary/30 flex items-center justify-center gap-2 py-3 text-sm text-primary font-medium touch-scale"
+          >
+            <Sparkles size={16} /> Novos lançamentos detectados — atualizar análise
+          </button>
+        )}
+
+        <AnimatePresence mode="wait">
+          {report && !('error' in (report as any)) && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              key="report"
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               className="space-y-4"
             >
-              {/* Refresh button */}
-              <div className="flex justify-end">
-                <button
-                  onClick={analyze}
-                  disabled={loading}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <RefreshCw size={14} className={cn(loading && 'animate-spin')} />
-                  Atualizar
-                </button>
+              {/* Greeting */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                className="card-finance bg-gradient-to-br from-primary/10 via-background to-background border-primary/20"
+              >
+                <p className="text-lg font-semibold">{report.saudacao}</p>
+                <p className="text-sm text-muted-foreground mt-1">{report.resumo_intro}</p>
+              </motion.div>
+
+              {/* Finango Score */}
+              {report.finango_score && (
+                <ScoreCard score={report.finango_score} />
+              )}
+
+              {/* Diagnóstico */}
+              <div className="grid gap-3">
+                {report.diagnostico?.positivos?.length > 0 && (
+                  <DiagnosisSection
+                    title="Pontos positivos"
+                    icon={<CheckCircle2 size={16} />}
+                    tone="income"
+                    items={report.diagnostico.positivos}
+                  />
+                )}
+                {report.diagnostico?.atencao?.length > 0 && (
+                  <DiagnosisSection
+                    title="Pontos de atenção"
+                    icon={<ShieldAlert size={16} />}
+                    tone="warning"
+                    items={report.diagnostico.atencao}
+                  />
+                )}
               </div>
 
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 gap-3">
-                <SummaryCard
-                  icon={<ArrowUpRight size={16} />}
-                  label="Renda"
-                  value={formatCurrency(report.resumo.renda_total)}
-                  color="text-income"
-                />
-                <SummaryCard
-                  icon={<ArrowDownRight size={16} />}
-                  label="Total Gasto"
-                  value={formatCurrency(report.resumo.total_geral)}
-                  color="text-expense"
-                />
-                <SummaryCard
-                  icon={<Wallet size={16} />}
-                  label="Gastos Fixos"
-                  value={formatCurrency(report.resumo.total_fixos)}
-                  color="text-warning"
-                />
-                <SummaryCard
-                  icon={<TrendingDown size={16} />}
-                  label="Gastos Variáveis"
-                  value={formatCurrency(report.resumo.total_variaveis)}
-                  color="text-muted-foreground"
-                />
-              </div>
-
-              {/* Fixed Expenses */}
-              {report.gastos_fixos.items.length > 0 && (
-                <Section title="💰 Gastos Fixos" subtitle={`${report.gastos_fixos.percentual_renda.toFixed(0)}% da renda`}>
-                  {report.gastos_fixos.items.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
-                      <div>
-                        <p className="font-medium text-sm">{item.nome}</p>
-                        <p className="text-xs text-muted-foreground">{item.frequencia}</p>
-                      </div>
-                      <span className="font-mono text-sm font-semibold">{formatCurrency(item.valor_medio)}</span>
-                    </div>
-                  ))}
+              {/* Alertas */}
+              {report.alertas?.length > 0 && (
+                <Section title="Alertas inteligentes" icon={<AlertTriangle size={16} className="text-warning" />}>
+                  <div className="space-y-2">
+                    {report.alertas.map((a, i) => (
+                      <AlertCard key={i} alert={a} />
+                    ))}
+                  </div>
                 </Section>
               )}
 
-              {/* Variable Expenses */}
-              {report.gastos_variaveis.items.length > 0 && (
-                <Section title="📊 Gastos Variáveis" subtitle={`Total: ${formatCurrency(report.gastos_variaveis.total_periodo)}`}>
-                  {report.gastos_variaveis.items.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
-                      <p className="font-medium text-sm">{item.categoria}</p>
-                      <div className="text-right">
-                        <span className="font-mono text-sm font-semibold">{formatCurrency(item.total)}</span>
-                        {item.variacao_percentual !== 0 && (
-                          <p className={cn(
-                            'text-xs',
-                            item.variacao_percentual > 0 ? 'text-expense' : 'text-income'
-                          )}>
-                            {item.variacao_percentual > 0 ? '+' : ''}{item.variacao_percentual.toFixed(0)}%
-                          </p>
+              {/* Recomendações */}
+              {report.recomendacoes?.length > 0 && (
+                <Section title="Recomendações" icon={<Lightbulb size={16} className="text-primary" />}>
+                  <div className="space-y-2">
+                    {report.recomendacoes.map((r, i) => (
+                      <div key={i} className="p-3 rounded-xl bg-secondary/40 border border-border/40">
+                        <p className="font-semibold text-sm">{r.acao}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{r.motivo}</p>
+                        {r.impacto && (
+                          <p className="text-xs text-primary mt-1.5 font-medium">💡 {r.impacto}</p>
                         )}
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </Section>
               )}
 
-              {/* Recurring alerts */}
-              {report.recorrentes.alertas.length > 0 && (
-                <Section title="⚠️ Alertas" icon={<AlertTriangle size={16} className="text-warning" />}>
-                  {report.recorrentes.alertas.map((alerta, i) => (
-                    <div key={i} className="flex items-start gap-2 py-2">
-                      <AlertTriangle size={14} className="text-warning mt-0.5 shrink-0" />
-                      <p className="text-sm">{alerta}</p>
-                    </div>
-                  ))}
+              {/* Comparativos */}
+              {report.comparativos && (
+                <Section title="Comparativos" icon={<TrendingUp size={16} className="text-primary" />}>
+                  <div className="space-y-2">
+                    {(['3_meses', '6_meses', '12_meses'] as const).map((k) => {
+                      const c = report.comparativos[k];
+                      if (!c) return null;
+                      const label = k.replace('_', ' ');
+                      return (
+                        <div key={k} className="p-3 rounded-xl bg-secondary/40">
+                          <p className="text-xs uppercase text-muted-foreground mb-2">Últimos {label}</p>
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div>
+                              <p className="text-muted-foreground">Receita</p>
+                              <p className="font-mono font-semibold text-income">{formatCurrency(c.receita || 0)}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">Despesa</p>
+                              <p className="font-mono font-semibold text-expense">{formatCurrency(c.despesa || 0)}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">Economia</p>
+                              <p className={cn('font-mono font-semibold', (c.economia || 0) >= 0 ? 'text-income' : 'text-expense')}>
+                                {formatCurrency(c.economia || 0)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </Section>
               )}
 
-              {/* Insights */}
-              {report.insights.length > 0 && (
-                <Section title="💡 Insights" icon={<Lightbulb size={16} className="text-primary" />}>
-                  {report.insights.map((insight, i) => (
-                    <div key={i} className="flex items-start gap-2 py-2">
-                      <Sparkles size={14} className="text-primary mt-0.5 shrink-0" />
-                      <p className="text-sm">{insight}</p>
+              {/* Metas */}
+              {report.metas_analise?.length > 0 && (
+                <Section title="Metas e cofrinhos" icon={<Target size={16} className="text-primary" />}>
+                  <div className="space-y-3">
+                    {report.metas_analise.map((m, i) => (
+                      <div key={i} className="p-3 rounded-xl bg-secondary/40">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <p className="font-semibold text-sm">{m.nome}</p>
+                          <span className="text-xs text-muted-foreground">{m.tempo_estimado}</span>
+                        </div>
+                        <div className="h-2 bg-background rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-primary to-primary/60 transition-all"
+                            style={{ width: `${Math.min(100, Math.max(0, m.progresso_percentual || 0))}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">{m.sugestao}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {/* Previsão do mês */}
+              {report.previsao_mes && (
+                <Section title="Previsão do mês" icon={<Calendar size={16} className="text-primary" />}>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <MiniStat label="Saldo previsto" value={formatCurrency(report.previsao_mes.saldo_previsto || 0)} icon={<Wallet size={14} />} />
+                    <MiniStat label="Economia prevista" value={formatCurrency(report.previsao_mes.economia_prevista || 0)} icon={<ArrowUpRight size={14} />} tone="income" />
+                  </div>
+                  {report.previsao_mes.proximos_vencimentos?.length > 0 && (
+                    <div className="space-y-1.5 mb-2">
+                      <p className="text-xs text-muted-foreground font-medium">Próximos vencimentos</p>
+                      {report.previsao_mes.proximos_vencimentos.map((v, i) => (
+                        <div key={i} className="flex items-center justify-between text-sm py-1">
+                          <span>{v.descricao} <span className="text-xs text-muted-foreground">· {v.quando}</span></span>
+                          <span className="font-mono font-semibold">{formatCurrency(v.valor)}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
+                  {report.previsao_mes.maior_gasto_esperado?.categoria && (
+                    <div className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/30">
+                      Maior gasto esperado: <span className="text-foreground font-medium">{report.previsao_mes.maior_gasto_esperado.categoria}</span> — {formatCurrency(report.previsao_mes.maior_gasto_esperado.valor_estimado || 0)}
+                    </div>
+                  )}
+                  <p className="text-[10px] text-muted-foreground mt-3 italic">Projeções baseadas no seu histórico financeiro.</p>
+                </Section>
+              )}
+
+              {/* Assinaturas detectadas */}
+              {report.assinaturas_detectadas?.length > 0 && (
+                <Section title="Possíveis assinaturas" icon={<RefreshCw size={16} className="text-primary" />}>
+                  <div className="space-y-2">
+                    {report.assinaturas_detectadas.map((a, i) => (
+                      <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40">
+                        <div>
+                          <p className="text-sm font-medium">{a.descricao}</p>
+                          <p className="text-xs text-muted-foreground">{a.frequencia}</p>
+                        </div>
+                        <span className="font-mono text-sm font-semibold">{formatCurrency(a.valor)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </Section>
               )}
             </motion.div>
           )}
         </AnimatePresence>
       </main>
+
+      {/* Chat FAB */}
+      <button
+        onClick={() => setChatOpen(true)}
+        className="fixed bottom-24 right-4 z-30 px-4 h-12 rounded-full bg-gradient-to-r from-primary to-primary/70 text-primary-foreground shadow-xl shadow-primary/40 flex items-center gap-2 font-semibold touch-scale"
+      >
+        <MessageCircle size={18} />
+        <span className="text-sm">Conversar com a IA</span>
+      </button>
+
+      <AnimatePresence>
+        {chatOpen && <ChatDrawer onClose={() => setChatOpen(false)} />}
+      </AnimatePresence>
     </div>
   );
 }
 
-function SummaryCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
+function LoadingState() {
   return (
-    <div className="card-finance">
-      <div className={cn('flex items-center gap-2 mb-2', color)}>
-        {icon}
-        <span className="text-xs text-muted-foreground">{label}</span>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-finance text-center py-10 space-y-4">
+      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
+        <Brain size={32} className="text-primary" />
       </div>
-      <p className={cn('font-mono text-lg font-bold', color)}>{value}</p>
-    </div>
+      <p className="text-sm text-muted-foreground">A Finango IA está analisando suas finanças...</p>
+      <div className="w-48 h-1.5 bg-secondary rounded-full mx-auto overflow-hidden">
+        <div className="h-full bg-primary rounded-full animate-[shimmer_1.5s_ease-in-out_infinite]" style={{ width: '60%' }} />
+      </div>
+    </motion.div>
   );
 }
 
-function Section({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon?: React.ReactNode; children: React.ReactNode }) {
+function ScoreCard({ score }: { score: FinangoReport['finango_score'] }) {
+  const pct = Math.min(100, Math.max(0, score.pontuacao || 0));
+  const toneClass =
+    pct >= 80 ? 'text-income' :
+    pct >= 60 ? 'text-primary' :
+    pct >= 40 ? 'text-warning' : 'text-expense';
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="card-finance"
+      initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+      className="card-finance bg-gradient-to-br from-primary/10 to-background border-primary/20"
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          {icon}
-          <h3 className="font-semibold text-sm">{title}</h3>
+          <Star size={18} className="text-primary fill-primary" />
+          <h3 className="font-bold">Finango Score</h3>
         </div>
-        {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
+        <span className={cn('text-xs font-semibold px-2 py-1 rounded-full bg-secondary', toneClass)}>
+          {score.classificacao}
+        </span>
+      </div>
+      <div className="flex items-end gap-2 mb-3">
+        <span className={cn('text-5xl font-bold font-mono', toneClass)}>{pct}</span>
+        <span className="text-lg text-muted-foreground mb-1">/ 100</span>
+      </div>
+      <div className="h-2 bg-secondary rounded-full overflow-hidden mb-3">
+        <motion.div
+          initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="h-full bg-gradient-to-r from-primary to-primary/60"
+        />
+      </div>
+      {score.fatores?.length > 0 && (
+        <ul className="space-y-1">
+          {score.fatores.map((f, i) => (
+            <li key={i} className="text-xs text-muted-foreground flex gap-1.5"><span className="text-primary">•</span>{f}</li>
+          ))}
+        </ul>
+      )}
+    </motion.div>
+  );
+}
+
+function DiagnosisSection({ title, icon, tone, items }: {
+  title: string; icon: React.ReactNode; tone: 'income' | 'warning';
+  items: { titulo: string; descricao: string; valor?: string }[];
+}) {
+  const toneClass = tone === 'income' ? 'text-income border-income/20 bg-income/5' : 'text-warning border-warning/20 bg-warning/5';
+  return (
+    <div className={cn('card-finance border', toneClass)}>
+      <div className="flex items-center gap-2 mb-3">
+        {icon}
+        <h3 className="font-semibold text-sm">{title}</h3>
+      </div>
+      <div className="space-y-2">
+        {items.map((it, i) => (
+          <div key={i} className="p-2.5 rounded-lg bg-background/60">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm font-medium text-foreground">{it.titulo}</p>
+              {it.valor && <span className="text-xs font-mono font-semibold shrink-0">{it.valor}</span>}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">{it.descricao}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AlertCard({ alert }: { alert: FinangoReport['alertas'][number] }) {
+  const tone =
+    alert.severidade === 'critical' ? 'border-destructive/30 bg-destructive/5' :
+    alert.severidade === 'warning' ? 'border-warning/30 bg-warning/5' :
+    'border-border bg-secondary/40';
+  const iconTone =
+    alert.severidade === 'critical' ? 'text-destructive' :
+    alert.severidade === 'warning' ? 'text-warning' : 'text-muted-foreground';
+  return (
+    <div className={cn('p-3 rounded-xl border flex gap-2.5', tone)}>
+      <AlertTriangle size={16} className={cn('shrink-0 mt-0.5', iconTone)} />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold">{alert.titulo}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{alert.descricao}</p>
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-finance">
+      <div className="flex items-center gap-2 mb-3">
+        {icon}
+        <h3 className="font-semibold text-sm">{title}</h3>
       </div>
       {children}
+    </motion.div>
+  );
+}
+
+function MiniStat({ label, value, icon, tone }: { label: string; value: string; icon: React.ReactNode; tone?: 'income' }) {
+  return (
+    <div className="p-3 rounded-xl bg-secondary/40">
+      <div className={cn('flex items-center gap-1.5 text-xs text-muted-foreground mb-1', tone === 'income' && 'text-income')}>
+        {icon}<span>{label}</span>
+      </div>
+      <p className="font-mono font-bold text-sm">{value}</p>
+    </div>
+  );
+}
+
+// -------- Chat drawer --------
+function ChatDrawer({ onClose }: { onClose: () => void }) {
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
+    { role: 'assistant', content: 'Oi! Sou a Finango IA. Pergunte sobre seus gastos, metas, categorias ou economia. 💬' },
+  ]);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || sending) return;
+    const next = [...messages, { role: 'user' as const, content: text }];
+    setMessages(next);
+    setInput('');
+    setSending(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Faça login primeiro');
+
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/finango-ai-chat`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ messages: next }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Erro' }));
+        throw new Error(err.error || 'Erro na resposta');
+      }
+
+      const reader = resp.body?.getReader();
+      if (!reader) throw new Error('Sem resposta');
+      const decoder = new TextDecoder();
+      let assistantMsg = '';
+      setMessages((m) => [...m, { role: 'assistant', content: '' }]);
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(data);
+            const delta = parsed.choices?.[0]?.delta?.content || '';
+            if (delta) {
+              assistantMsg += delta;
+              setMessages((m) => {
+                const copy = [...m];
+                copy[copy.length - 1] = { role: 'assistant', content: assistantMsg };
+                return copy;
+              });
+            }
+          } catch {}
+        }
+      }
+    } catch (err: any) {
+      setMessages((m) => [...m, { role: 'assistant', content: `❌ ${err.message || 'Erro ao consultar a IA'}` }]);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const quickPrompts = [
+    'Quanto economizei este mês?',
+    'Onde estou gastando mais?',
+    'Quais categorias cresceram?',
+    'Quanto sobrou da minha renda?',
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="absolute bottom-0 left-0 right-0 h-[85vh] bg-card rounded-t-3xl border-t border-border shadow-2xl flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-border/50">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+              <Brain size={18} className="text-primary-foreground" />
+            </div>
+            <div>
+              <p className="font-bold text-sm">Finango IA</p>
+              <p className="text-[10px] text-muted-foreground">Online · usa seus dados reais</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center touch-scale">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {messages.map((m, i) => (
+            <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
+              <div className={cn(
+                'max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm whitespace-pre-wrap',
+                m.role === 'user'
+                  ? 'bg-primary text-primary-foreground rounded-br-md'
+                  : 'bg-secondary text-foreground rounded-bl-md'
+              )}>
+                {m.content || <Loader2 size={14} className="animate-spin" />}
+              </div>
+            </div>
+          ))}
+          <div ref={endRef} />
+        </div>
+
+        {messages.length <= 1 && (
+          <div className="px-4 pb-2 flex flex-wrap gap-2">
+            {quickPrompts.map((q) => (
+              <button key={q} onClick={() => setInput(q)} className="text-xs px-3 py-1.5 rounded-full bg-secondary hover:bg-secondary/70">
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="p-3 border-t border-border/50 flex items-end gap-2 safe-bottom">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+            placeholder="Pergunte algo à Finango IA..."
+            rows={1}
+            className="flex-1 resize-none rounded-2xl bg-secondary px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary max-h-24"
+            disabled={sending}
+          />
+          <button
+            onClick={send}
+            disabled={sending || !input.trim()}
+            className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 touch-scale shrink-0"
+          >
+            {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+          </button>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
