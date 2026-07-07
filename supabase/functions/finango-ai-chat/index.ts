@@ -32,11 +32,13 @@ serve(async (req) => {
       });
     }
 
+    const url = new URL(req.url);
+    const noStream = url.searchParams.get('stream') === 'false';
     const { messages }: { messages: ChatMessage[] } = await req.json();
 
-    // Fetch user financial data
+    // Fetch user financial data (compact payload for speed)
     const [txRes, catRes, piggyRes, goalsRes, recRes] = await Promise.all([
-      supabaseClient.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(500),
+      supabaseClient.from('transactions').select('date,type,amount,category_id,description').eq('user_id', user.id).order('date', { ascending: false }).limit(120),
       supabaseClient.from('categories').select('id,name,type').eq('user_id', user.id),
       supabaseClient.from('piggy_bank').select('name,balance,target_amount,total_yield,currency').eq('user_id', user.id),
       supabaseClient.from('savings_goals').select('name,target_amount,current_amount,deadline,is_completed').eq('user_id', user.id),
@@ -47,7 +49,7 @@ serve(async (req) => {
     (catRes.data || []).forEach((c: any) => { catMap[c.id] = c.name; });
 
     const financialContext = {
-      transacoes_recentes: (txRes.data || []).slice(0, 200).map((t: any) => ({
+      transacoes_recentes: (txRes.data || []).map((t: any) => ({
         data: t.date, tipo: t.type, valor: Number(t.amount),
         categoria: catMap[t.category_id] || 'Sem categoria',
         descricao: t.description,
@@ -59,7 +61,7 @@ serve(async (req) => {
 
     const systemPrompt = `Você é o Finango IA, assistente financeiro pessoal e amigável do usuário no app Finango.
 Responda em português do Brasil, de forma clara, direta e acolhedora. Use os dados financeiros REAIS do usuário fornecidos abaixo.
-Se os dados forem insuficientes para responder, diga isso claramente e sugira o que registrar.
+Seja conciso: respostas curtas e diretas ao ponto (máximo 6 linhas quando possível).
 Formate valores em R$ (ex: R$ 1.234,56). Use markdown quando ajudar a leitura.
 Não invente dados. Não fale de outros usuários.
 
@@ -73,12 +75,12 @@ ${JSON.stringify(financialContext)}`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: 'google/gemini-2.5-flash-lite',
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages,
         ],
-        stream: true,
+        stream: !noStream,
       }),
     });
 
