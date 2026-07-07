@@ -512,6 +512,10 @@ export default function AdminDashboard() {
           <PlansManager />
         </TabsContent>
 
+        <TabsContent value="vip">
+          <VipCodesManager />
+        </TabsContent>
+
         <TabsContent value="appearance">
           <ThemeManager />
         </TabsContent>
