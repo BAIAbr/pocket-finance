@@ -8,6 +8,8 @@ import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   Moon, Sun, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail,
   ShieldCheck, Bell, BellOff, Palette, Check, CalendarClock, CreditCard,
