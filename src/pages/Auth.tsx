@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Loader2, User, Check, X, ShieldCheck, Sparkle } from 'lucide-react';
+import { Mail, Lock, Loader2, User, Check, X, ShieldCheck } from 'lucide-react';
+import finangoFox from '@/assets/finango-fox.png.asset.json';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -116,8 +117,8 @@ export default function AuthPage() {
             transition={{ duration: 0.6 }}
             className="flex items-center gap-3"
           >
-            <div className="w-11 h-11 rounded-2xl bg-primary flex items-center justify-center shadow-glow-accent">
-              <Sparkle className="w-6 h-6 text-primary-foreground" strokeWidth={2.5} />
+            <div className="w-11 h-11 rounded-2xl bg-primary flex items-center justify-center shadow-glow-accent overflow-hidden">
+              <img src={finangoFox.url} alt="Finango" className="w-8 h-8 object-contain" />
             </div>
             <span className="text-2xl font-black tracking-tight">FINANGO</span>
           </motion.div>
@@ -184,8 +185,8 @@ export default function AuthPage() {
             <div className="relative rounded-3xl border border-border/70 bg-card/80 backdrop-blur-2xl shadow-2xl p-7 sm:p-9 space-y-6">
               {/* Mobile logo */}
               <div className="flex items-center justify-center gap-2 lg:hidden">
-                <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-glow-accent">
-                  <Sparkle className="w-5 h-5 text-primary-foreground" strokeWidth={2.5} />
+                <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-glow-accent overflow-hidden">
+                  <img src={finangoFox.url} alt="Finango" className="w-6 h-6 object-contain" />
                 </div>
                 <span className="text-xl font-black tracking-tight">FINANGO</span>
               </div>
