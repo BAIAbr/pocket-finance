@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check, Users, CalendarClock, CalendarDays, CreditCard, Shield, Crown } from 'lucide-react';
 import { FamilySettings } from '@/components/FamilySettings';
+import { PlanGate } from '@/components/PlanGate';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -501,7 +502,11 @@ export default function SettingsPage() {
         }
 
         {/* Family Mode */}
-        {isAuthenticated && <FamilySettings />}
+        {isAuthenticated && (
+          <PlanGate feature="family" inline>
+            <FamilySettings />
+          </PlanGate>
+        )}
 
         {/* About */}
         <section className="card-finance">
