@@ -254,19 +254,7 @@ export default function CalendarPage() {
                     <p className={cn('font-semibold text-sm whitespace-nowrap', e.type === 'income' ? 'text-income' : 'text-expense')}>
                       {e.type === 'income' ? '+' : '-'}{fmt(e.amount)}
                     </p>
-                    {e.kind === 'recurring' && e.recurringId && isSameDay(e.date, new Date(new Date().setHours(0,0,0,0))) === false && days >= 0 && (
-                      <button
-                        onClick={() => {
-                          const r = recurring.find(x => x.id === e.recurringId);
-                          if (r) payNow(r);
-                        }}
-                        className="p-2 rounded-lg bg-primary/15 hover:bg-primary/25 text-primary touch-scale"
-                        title="Marcar como paga"
-                      >
-                        <Check size={14} />
-                      </button>
-                    )}
-                    {e.kind === 'recurring' && e.recurringId && days === 0 && (
+                    {e.kind === 'recurring' && e.recurringId && days >= 0 && (
                       <button
                         onClick={() => {
                           const r = recurring.find(x => x.id === e.recurringId);
