@@ -59,18 +59,31 @@ export default function PlansPage() {
                 key={plan.id}
                 className={cn(
                   'relative p-6 rounded-2xl border transition-all',
-                  plan.is_highlighted
+                  isCurrent
+                    ? 'border-primary ring-2 ring-primary/40 shadow-xl shadow-primary/20 bg-gradient-to-br from-primary/10 via-card to-card scale-[1.02]'
+                    : plan.is_highlighted
                     ? 'border-primary shadow-lg shadow-primary/10 bg-card scale-[1.02]'
                     : 'border-border bg-card/50'
                 )}
               >
-                {plan.is_highlighted && (
+                {isCurrent ? (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-primary to-orange-400 text-primary-foreground text-xs font-bold flex items-center gap-1 shadow-md">
+                    <Check size={12} /> Seu plano atual
+                  </div>
+                ) : plan.is_highlighted ? (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center gap-1">
                     <Crown size={12} /> Mais popular
                   </div>
-                )}
+                ) : null}
 
-                <h3 className="text-xl font-bold">{plan.name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-bold">{plan.name}</h3>
+                  {isCurrent && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold uppercase tracking-wide">
+                      Ativo
+                    </span>
+                  )}
+                </div>
                 {plan.description && (
                   <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{plan.description}</p>
                 )}
@@ -97,7 +110,7 @@ export default function PlansPage() {
                   className={cn(
                     'w-full py-2.5 rounded-xl font-semibold transition-all touch-scale',
                     isCurrent
-                      ? 'bg-secondary text-muted-foreground cursor-default'
+                      ? 'bg-primary/15 text-primary ring-1 ring-primary/30 cursor-default'
                       : plan.is_highlighted
                       ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                       : 'bg-secondary hover:bg-secondary/80'
@@ -106,7 +119,7 @@ export default function PlansPage() {
                   {busy === plan.code ? (
                     <Loader2 className="w-4 h-4 animate-spin mx-auto" />
                   ) : isCurrent ? (
-                    'Plano atual'
+                    <span className="inline-flex items-center gap-1.5"><Check size={16} /> Plano atual</span>
                   ) : (
                     'Selecionar'
                   )}
