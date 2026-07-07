@@ -237,15 +237,6 @@ export default function SettingsPage() {
                 <span className="text-xs text-muted-foreground">Ver →</span>
               </button>
               <button
-                onClick={() => navigate('/calendar')}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale">
-                <div className="flex items-center gap-2">
-                  <CalendarDays size={18} className="text-primary" />
-                  <span className="font-medium">Calendário Financeiro</span>
-                </div>
-                <span className="text-xs text-muted-foreground">Ver →</span>
-              </button>
-              <button
                 onClick={() => navigate('/installments')}
                 className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale">
                 <div className="flex items-center gap-2">
