@@ -11,6 +11,7 @@ import { FamilySettings } from '@/components/FamilySettings';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import finangoLogo from '@/assets/finango-logo.png.asset.json';
 
 export default function SettingsPage() {
   const { settings, setSettings, clearAllData, profile, updateProfile } = useFinanceContext();
