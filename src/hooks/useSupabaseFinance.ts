@@ -439,12 +439,12 @@ export function useSupabaseFinance(userId: string | null) {
 
     if (error) {
       console.error('Create piggy bank error:', error);
-      toast.error('Erro ao criar cofrinho');
+      toast.error('Erro ao criar meta');
       return null;
     }
 
     setPiggyBanks(prev => [...prev, newPiggy as PiggyBank]);
-    toast.success('Cofrinho criado!');
+    toast.success('Meta criado!');
     return newPiggy as PiggyBank;
   }, [userId]);
 
@@ -455,7 +455,7 @@ export function useSupabaseFinance(userId: string | null) {
       .eq('id', id);
 
     if (error) {
-      toast.error('Erro ao atualizar cofrinho');
+      toast.error('Erro ao atualizar meta');
       return;
     }
 
@@ -488,17 +488,17 @@ export function useSupabaseFinance(userId: string | null) {
 
     if (error) {
       console.error('Delete piggy bank error:', error);
-      toast.error('Erro ao excluir cofrinho');
+      toast.error('Erro ao excluir meta');
       return false;
     }
 
     if (!data || data.length === 0) {
-      toast.error('Você não tem permissão para excluir este cofrinho');
+      toast.error('Você não tem permissão para excluir este meta');
       return false;
     }
 
     setPiggyBanks(prev => prev.filter(p => p.id !== id));
-    toast.success('Cofrinho excluído');
+    toast.success('Meta excluído');
     return true;
   }, []);
 
@@ -575,7 +575,7 @@ export function useSupabaseFinance(userId: string | null) {
     const currentPrincipal = Number(piggy.principal_amount) || 0;
     
     if (amount > currentBalance) {
-      toast.error('Saldo insuficiente no cofrinho');
+      toast.error('Saldo insuficiente no meta');
       return;
     }
 
@@ -621,7 +621,7 @@ export function useSupabaseFinance(userId: string | null) {
       setPiggyBankTransactions(transactionsData as PiggyBankTransaction[]);
     }
 
-    toast.success(`${formatCurrency(amount)} retirado do cofrinho`);
+    toast.success(`${formatCurrency(amount)} retirado do meta`);
   }, [userId, piggyBanks]);
 
   const deletePiggyBankTransaction = useCallback(async (transactionId: string) => {
@@ -636,7 +636,7 @@ export function useSupabaseFinance(userId: string | null) {
 
     const piggy = piggyBanks.find(p => p.id === transaction.piggy_bank_id);
     if (!piggy) {
-      toast.error('Cofrinho não encontrado');
+      toast.error('Meta não encontrado');
       return false;
     }
 

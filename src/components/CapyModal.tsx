@@ -26,9 +26,9 @@ const educationalContent = [
     content: 'Metas são objetivos financeiros que você quer alcançar! Por exemplo, juntar R$ 5.000 para uma viagem. Você define o valor, o prazo, e vai acompanhando seu progresso.',
   },
   {
-    title: 'O que são Cofrinhos?',
+    title: 'O que são Metas?',
     icon: '🐷',
-    content: 'Cofrinhos são como contas de poupança virtuais dentro do app. O legal é que eles rendem automaticamente baseado no CDI, então seu dinheiro cresce sozinho!',
+    content: 'Metas são como contas de poupança virtuais dentro do app. O legal é que eles rendem automaticamente baseado no CDI, então seu dinheiro cresce sozinho!',
   },
   {
     title: 'Gastos Fixos vs Variáveis',
@@ -38,7 +38,7 @@ const educationalContent = [
   {
     title: 'O que é CDI?',
     icon: '📈',
-    content: 'CDI é uma taxa de referência do mercado financeiro. Quando seu cofrinho rende "100% do CDI", significa que ele acompanha essa taxa. Quanto maior o CDI, mais seu dinheiro rende!',
+    content: 'CDI é uma taxa de referência do mercado financeiro. Quando seu meta rende "100% do CDI", significa que ele acompanha essa taxa. Quanto maior o CDI, mais seu dinheiro rende!',
   },
   {
     title: 'Categorias de Gastos',

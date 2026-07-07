@@ -136,12 +136,12 @@ export default function AuthPage() {
               e controle.
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              A plataforma completa para organizar receitas, despesas, cofrinhos e metas —
+              A plataforma completa para organizar receitas, despesas, metas e metas —
               com inteligência artificial e visão de família.
             </p>
 
             <div className="flex flex-wrap gap-2 pt-2">
-              {['Cofrinhos', 'Modo família', 'IA financeira', 'Metas'].map((tag) => (
+              {['Metas', 'Modo família', 'IA financeira', 'Metas'].map((tag) => (
                 <span
                   key={tag}
                   className="text-xs font-medium px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground border border-border"
