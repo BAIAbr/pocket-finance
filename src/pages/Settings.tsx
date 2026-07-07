@@ -417,28 +417,6 @@ export default function SettingsPage() {
           </PlanGate>
         )}
 
-        {/* About */}
-        <section className="card-finance">
-          <h2 className="font-semibold mb-4 flex items-center gap-2">
-            <Info size={18} />
-            Sobre
-          </h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-2">
-              <span className="text-muted-foreground">Versão</span>
-              <span className="font-mono">2.1.0</span>
-            </div>
-            <div className="flex items-center justify-between py-2">
-              <span className="text-muted-foreground">Armazenamento</span>
-              <span className="font-mono flex items-center gap-1">
-                <Cloud size={14} className="text-primary" />
-                Nuvem
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">Seus dados são sincronizados de forma segura</p>
-          </div>
-        </section>
-
         {/* Contact */}
         <section className="card-finance">
           <h2 className="font-semibold mb-4 flex items-center gap-2">
@@ -459,6 +437,28 @@ export default function SettingsPage() {
               </div>
             </div>
           </a>
+        </section>
+
+        {/* About */}
+        <section className="card-finance">
+          <h2 className="font-semibold mb-4 flex items-center gap-2">
+            <Info size={18} />
+            Sobre
+          </h2>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between py-2">
+              <span className="text-muted-foreground">Versão</span>
+              <span className="font-mono">2.1.0</span>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <span className="text-muted-foreground">Armazenamento</span>
+              <span className="font-mono flex items-center gap-1">
+                <Cloud size={14} className="text-primary" />
+                Nuvem
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">Seus dados são sincronizados de forma segura</p>
+          </div>
         </section>
       </main>
     </div>);
