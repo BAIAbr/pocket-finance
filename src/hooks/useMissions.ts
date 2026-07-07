@@ -189,25 +189,26 @@ export function useMissions() {
     const mission = weeklyMissions.find(m => m.id === missionId);
     if (!mission || mission.is_completed) return;
 
-    const isCompleted = newValue >= mission.target_value;
-    await supabase.from('weekly_missions').update({
-      current_value: newValue, is_completed: isCompleted,
-    }).eq('id', missionId);
-
-    if (isCompleted && userId) {
-      const newTotalXP = userXP.total_xp + mission.xp_reward;
-      const newLevel = calculateLevel(newTotalXP);
-      await supabase.from('user_xp').update({ total_xp: newTotalXP, level: newLevel }).eq('user_id', userId);
-      setUserXP({ total_xp: newTotalXP, level: newLevel });
-
-      await supabase.from('user_gamification_notifications').insert({
-        user_id: userId, type: 'mission_complete',
-        title: `Missão Semanal: ${mission.title}`, description: mission.description, icon: mission.icon,
-      });
+    const { data, error } = await supabase.rpc('update_weekly_mission_progress' as any, {
+      p_mission_id: missionId,
+      p_new_value: newValue,
+    });
+    if (error) {
+      console.error('Error updating weekly progress:', error);
+      return;
     }
+    const result = data as any;
+    if (!result || result.already_completed) return;
 
-    setWeeklyMissions(prev => prev.map(m => m.id === missionId ? { ...m, current_value: newValue, is_completed: isCompleted } : m));
-  }, [weeklyMissions, userId, userXP]);
+    if (result.is_completed && result.total_xp != null) {
+      setUserXP({ total_xp: result.total_xp, level: result.level });
+    }
+    setWeeklyMissions(prev => prev.map(m =>
+      m.id === missionId
+        ? { ...m, current_value: result.current_value, is_completed: result.is_completed }
+        : m
+    ));
+  }, [weeklyMissions]);
 
   const checkMissions = useCallback(async (context: {
     transactionCount?: number; incomeCount?: number; expenseCount?: number;
