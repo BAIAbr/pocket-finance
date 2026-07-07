@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
+import { usePlanAccess } from '@/hooks/usePlanAccess';
+import { toast } from 'sonner';
+import { Lock, Crown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useConfetti } from '@/hooks/useConfetti';
