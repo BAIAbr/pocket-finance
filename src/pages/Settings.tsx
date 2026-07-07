@@ -8,6 +8,8 @@ import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   Moon, Sun, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail,
   ShieldCheck, Bell, BellOff, Palette, Check, CalendarClock, CreditCard,
@@ -74,7 +76,7 @@ export default function SettingsPage() {
   const { isAuthenticated, signOut, profile: authProfile, user } = useAuth();
   const { isAdmin } = useAdminCheck(user?.id);
   const { planCode } = usePlanAccess();
-  const { plans } = useSubscription(user?.id);
+  const { plans, subscription } = useSubscription(user?.id);
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, isLoading: pushLoading, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } = usePushNotifications(user?.id);
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
@@ -276,6 +278,11 @@ export default function SettingsPage() {
                 <p className="text-xs mt-1 truncate text-primary-foreground/75">
                   {currentPlan ? `Plano ${currentPlan.name}` : badge.label === 'FREE' ? 'Plano Gratuito' : `Plano ${badge.label}`}
                 </p>
+                {isPremium && subscription?.started_at && (
+                  <p className="text-[11px] mt-0.5 truncate text-primary-foreground/70">
+                    {badge.label === 'VIP' ? 'VIP' : 'Premium'} desde {format(parseISO(subscription.started_at), "dd/MM/yyyy", { locale: ptBR })}
+                  </p>
+                )}
 
                 <div className="flex flex-wrap gap-2 mt-4 justify-center sm:justify-start">
                   <button
