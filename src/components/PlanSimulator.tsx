@@ -19,8 +19,9 @@ export function PlanSimulator() {
   const { realPlanCode, planCode, isSimulating } = usePlanAccess();
   const { setSimulatedPlan } = useSimulatedPlan();
   const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
 
-  if (!isAdmin) return null;
+  if (!isAdmin || isMobile) return null;
 
   return (
     <div className="fixed bottom-24 lg:bottom-4 left-4 z-[60] pointer-events-none">
