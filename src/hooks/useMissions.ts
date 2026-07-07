@@ -96,9 +96,8 @@ export function useMissions() {
       }
       if (xpRes.data) {
         setUserXP(xpRes.data as unknown as UserXP);
-      } else {
-        await supabase.from('user_xp').insert({ user_id: userId, total_xp: 0, level: 1 });
       }
+      // Note: initial user_xp row is created server-side by award_mission RPC on first XP award.
 
       if (historyRes.data) {
         const unshownPopup = (historyRes.data as unknown as CompletedMission[]).find(m => !m.shown_popup);
@@ -136,32 +135,30 @@ export function useMissions() {
     if (!mission) return;
 
     try {
-      const { data: historyData } = await supabase.from('user_mission_history').insert({
-        user_id: userId, mission_id: mission.id, xp_earned: mission.xp_reward,
-        shown_home: false, shown_popup: false,
-      }).select().single();
+      const { data, error } = await supabase.rpc('award_mission' as any, { p_mission_key: missionKey });
+      if (error) throw error;
+      const result = data as any;
+      if (!result || result.already_completed) return;
 
-      const newTotalXP = userXP.total_xp + mission.xp_reward;
-      const newLevel = calculateLevel(newTotalXP);
-      await supabase.from('user_xp').update({ total_xp: newTotalXP, level: newLevel }).eq('user_id', userId);
+      setUserXP({ total_xp: result.total_xp, level: result.level });
 
-      await supabase.from('user_gamification_notifications').insert({
-        user_id: userId, type: 'mission_complete',
-        title: `Missão Concluída: ${mission.name}`, description: mission.description, icon: mission.icon,
-      });
-
-      setUserXP({ total_xp: newTotalXP, level: newLevel });
-
-      if (historyData) {
-        const completed = { ...(historyData as unknown as CompletedMission), mission };
-        setCompletedMissions(prev => [...prev, completed]);
-        setPendingCelebration(completed);
-        setRecentCompletions(prev => [...prev, completed]);
-      }
+      const completed: CompletedMission = {
+        id: result.history_id,
+        user_id: userId,
+        mission_id: mission.id,
+        xp_earned: result.xp_earned,
+        completed_at: new Date().toISOString(),
+        shown_home: false,
+        shown_popup: false,
+        mission,
+      };
+      setCompletedMissions(prev => [...prev, completed]);
+      setPendingCelebration(completed);
+      setRecentCompletions(prev => [...prev, completed]);
     } catch (error) {
       console.error('Error completing mission:', error);
     }
-  }, [userId, missions, completedMissions, userXP, isMissionCompleted]);
+  }, [userId, missions, isMissionCompleted]);
 
   const dismissCelebration = useCallback(async () => {
     if (!pendingCelebration) return;
@@ -192,25 +189,26 @@ export function useMissions() {
     const mission = weeklyMissions.find(m => m.id === missionId);
     if (!mission || mission.is_completed) return;
 
-    const isCompleted = newValue >= mission.target_value;
-    await supabase.from('weekly_missions').update({
-      current_value: newValue, is_completed: isCompleted,
-    }).eq('id', missionId);
-
-    if (isCompleted && userId) {
-      const newTotalXP = userXP.total_xp + mission.xp_reward;
-      const newLevel = calculateLevel(newTotalXP);
-      await supabase.from('user_xp').update({ total_xp: newTotalXP, level: newLevel }).eq('user_id', userId);
-      setUserXP({ total_xp: newTotalXP, level: newLevel });
-
-      await supabase.from('user_gamification_notifications').insert({
-        user_id: userId, type: 'mission_complete',
-        title: `Missão Semanal: ${mission.title}`, description: mission.description, icon: mission.icon,
-      });
+    const { data, error } = await supabase.rpc('update_weekly_mission_progress' as any, {
+      p_mission_id: missionId,
+      p_new_value: newValue,
+    });
+    if (error) {
+      console.error('Error updating weekly progress:', error);
+      return;
     }
+    const result = data as any;
+    if (!result || result.already_completed) return;
 
-    setWeeklyMissions(prev => prev.map(m => m.id === missionId ? { ...m, current_value: newValue, is_completed: isCompleted } : m));
-  }, [weeklyMissions, userId, userXP]);
+    if (result.is_completed && result.total_xp != null) {
+      setUserXP({ total_xp: result.total_xp, level: result.level });
+    }
+    setWeeklyMissions(prev => prev.map(m =>
+      m.id === missionId
+        ? { ...m, current_value: result.current_value, is_completed: result.is_completed }
+        : m
+    ));
+  }, [weeklyMissions]);
 
   const checkMissions = useCallback(async (context: {
     transactionCount?: number; incomeCount?: number; expenseCount?: number;

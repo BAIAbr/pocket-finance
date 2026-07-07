@@ -15,9 +15,12 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } },
     });
+    // Service-role client used to write gamification rows (RLS locks direct client writes)
+    const admin = createClient(supabaseUrl, serviceKey);
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
@@ -165,7 +168,7 @@ Responda APENAS com o JSON, sem explicação.`;
       expires_at: weekEnd.toISOString(),
     }));
 
-    const { data: inserted, error: insertError } = await supabase
+    const { data: inserted, error: insertError } = await admin
       .from("weekly_missions")
       .insert(toInsert)
       .select();
