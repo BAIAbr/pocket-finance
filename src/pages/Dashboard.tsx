@@ -9,6 +9,7 @@ import { WeeklyMissionsCard } from '@/components/WeeklyMissionsCard';
 import { WeeklySummaryCard } from '@/components/WeeklySummaryCard';
 import { FamilyDashboard } from '@/components/FamilyDashboard';
 import { QuickPiggyDeposit } from '@/components/QuickPiggyDeposit';
+import { UpcomingBillsCard } from '@/components/UpcomingBillsCard';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useMissionContext } from '@/contexts/MissionContext';
@@ -106,6 +107,13 @@ export default function Dashboard() {
               formatCurrency={formatCurrency}
               onDeposit={_personalFinance.depositToPiggyBank}
             />
+          </div>
+        )}
+
+        {/* Próximas contas / assinaturas (personal only) */}
+        {!isFamily && (
+          <div className="animate-fade-in stagger-2">
+            <UpcomingBillsCard />
           </div>
         )}
 
