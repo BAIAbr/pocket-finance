@@ -47,9 +47,16 @@ export default function AuthPage() {
     return Math.round((validCount / passwordRequirements.length) * 100);
   }, [passwordValidation]);
 
+  const goAfterAuth = () => {
+    const pending = sessionStorage.getItem('pendingVipCode');
+    if (pending) { navigate(`/vip/${pending}`); return; }
+    navigate('/');
+  };
+
   useEffect(() => {
-    if (isAuthenticated) navigate('/');
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated) goAfterAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
