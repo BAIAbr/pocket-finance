@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppearanceProvider } from "@/contexts/AppearanceContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
+import { PlanGate } from "@/components/PlanGate";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import AIInsights from "./pages/AIInsights";
@@ -49,14 +50,14 @@ const App = () => (
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/reports" element={<Reports />} />
-                  <Route path="/ai-insights" element={<AIInsights />} />
+                  <Route path="/ai-insights" element={<PlanGate feature="ai"><AIInsights /></PlanGate>} />
                   <Route path="/categories" element={<Categories />} />
                   <Route path="/savings" element={<Savings />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/history" element={<FinancialHistory />} />
-                  <Route path="/recurring" element={<Recurring />} />
-                  <Route path="/calendar" element={<CalendarPage />} />
-                  <Route path="/installments" element={<Installments />} />
+                  <Route path="/recurring" element={<PlanGate feature="recurring"><Recurring /></PlanGate>} />
+                  <Route path="/calendar" element={<PlanGate feature="calendar"><CalendarPage /></PlanGate>} />
+                  <Route path="/installments" element={<PlanGate feature="installments"><Installments /></PlanGate>} />
                   <Route path="/plans" element={<Plans />} />
                   <Route path="/security" element={<Security />} />
                   <Route path="/admin" element={<AdminDashboard />} />
