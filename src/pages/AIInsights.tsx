@@ -542,72 +542,111 @@ function ChatDrawer({ onClose }: { onClose: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm md:bg-transparent md:backdrop-blur-0 md:pointer-events-none"
       onClick={onClose}
     >
       <motion.div
-        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className="absolute bottom-0 left-0 right-0 h-[85vh] bg-card rounded-t-3xl border-t border-border shadow-2xl flex flex-col"
+        initial={{ y: '100%', opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: '100%', opacity: 0 }}
+        transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+        className={cn(
+          // Mobile: full-width bottom sheet
+          'absolute bottom-0 left-0 right-0 h-[88vh] bg-card rounded-t-3xl border-t border-border shadow-2xl flex flex-col overflow-hidden',
+          // Desktop: floating chat window, bottom-right
+          'md:pointer-events-auto md:inset-auto md:bottom-6 md:right-6 md:left-auto md:h-[560px] md:w-[380px] md:rounded-2xl md:border md:border-border/60'
+        )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-border/50">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-              <Brain size={18} className="text-primary-foreground" />
+        {/* Grab handle (mobile only) */}
+        <div className="md:hidden pt-2 pb-1 flex justify-center">
+          <div className="w-10 h-1.5 rounded-full bg-muted-foreground/30" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-gradient-to-r from-primary/10 via-transparent to-transparent">
+          <div className="flex items-center gap-2.5">
+            <div className="relative">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md shadow-primary/30">
+                <Brain size={18} className="text-primary-foreground" />
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-income border-2 border-card" />
             </div>
             <div>
-              <p className="font-bold text-sm">Finango IA</p>
+              <p className="font-bold text-sm leading-tight">Finango IA</p>
               <p className="text-[10px] text-muted-foreground">Online · usa seus dados reais</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center touch-scale">
-            <X size={18} />
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-secondary hover:bg-secondary/70 flex items-center justify-center touch-scale transition-colors"
+            aria-label="Fechar chat"
+          >
+            <X size={16} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-2.5 bg-gradient-to-b from-background/40 to-background/0">
           {messages.map((m, i) => (
-            <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18 }}
+              className={cn('flex items-end gap-1.5', m.role === 'user' ? 'justify-end' : 'justify-start')}
+            >
+              {m.role === 'assistant' && (
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0 mb-0.5">
+                  <Brain size={12} className="text-primary-foreground" />
+                </div>
+              )}
               <div className={cn(
-                'max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm whitespace-pre-wrap',
+                'max-w-[80%] px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap shadow-sm',
                 m.role === 'user'
-                  ? 'bg-primary text-primary-foreground rounded-br-md'
-                  : 'bg-secondary text-foreground rounded-bl-md'
+                  ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm'
+                  : 'bg-secondary text-foreground rounded-2xl rounded-bl-sm'
               )}>
                 {m.content || <Loader2 size={14} className="animate-spin" />}
               </div>
-            </div>
+            </motion.div>
           ))}
           <div ref={endRef} />
         </div>
 
+        {/* Quick prompts */}
         {messages.length <= 1 && (
-          <div className="px-4 pb-2 flex flex-wrap gap-2">
+          <div className="px-3 pb-2 flex flex-wrap gap-1.5">
             {quickPrompts.map((q) => (
-              <button key={q} onClick={() => setInput(q)} className="text-xs px-3 py-1.5 rounded-full bg-secondary hover:bg-secondary/70">
+              <button
+                key={q}
+                onClick={() => setInput(q)}
+                className="text-[11px] px-2.5 py-1 rounded-full bg-secondary hover:bg-primary/15 hover:text-primary transition-colors border border-border/40"
+              >
                 {q}
               </button>
             ))}
           </div>
         )}
 
-        <div className="p-3 border-t border-border/50 flex items-end gap-2 safe-bottom">
+        {/* Composer */}
+        <div className="p-2.5 border-t border-border/50 flex items-end gap-2 bg-card safe-bottom">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
             placeholder="Pergunte algo à Finango IA..."
             rows={1}
-            className="flex-1 resize-none rounded-2xl bg-secondary px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary max-h-24"
+            className="flex-1 resize-none rounded-2xl bg-secondary px-3.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-primary/60 max-h-24 placeholder:text-muted-foreground/70"
             disabled={sending}
           />
           <button
             onClick={send}
             disabled={sending || !input.trim()}
-            className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 touch-scale shrink-0"
+            className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 touch-scale shrink-0 shadow-md shadow-primary/30 hover:shadow-lg transition-shadow"
+            aria-label="Enviar mensagem"
           >
-            {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+            {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
           </button>
         </div>
       </motion.div>
