@@ -6,7 +6,6 @@ export type PlanFeature =
   | 'ai'
   | 'recurring'
   | 'installments'
-  | 'calendar'
   | 'family'
   | 'push'
   | 'customCdi'
