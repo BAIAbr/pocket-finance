@@ -110,10 +110,10 @@ export function CapyMascot() {
         
         {/* Speech bubble */}
         <div className="relative mb-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="bg-white dark:bg-secondary text-foreground text-xs px-3 py-2 rounded-xl shadow-lg whitespace-nowrap">
+          <div className="bg-popover text-foreground text-xs px-3 py-2 rounded-xl shadow-lg whitespace-nowrap">
             Clique em mim! 💬
           </div>
-          <div className="absolute -left-1 bottom-2 w-3 h-3 bg-white dark:bg-secondary rotate-45 transform" />
+          <div className="absolute -left-1 bottom-2 w-3 h-3 bg-popover rotate-45 transform" />
         </div>
       </button>
 

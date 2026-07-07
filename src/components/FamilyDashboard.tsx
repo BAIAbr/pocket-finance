@@ -163,7 +163,7 @@ export function FamilyDashboard() {
                 <div key={member.id} className="flex items-center gap-3">
                   <Avatar className="w-6 h-6">
                     {member.profile?.avatar_url && <AvatarImage src={member.profile.avatar_url} />}
-                    <AvatarFallback className="gradient-balance text-white text-[10px]">
+                    <AvatarFallback className="gradient-balance text-primary-foreground text-[10px]">
                       {(member.profile?.name || 'U').charAt(0)}
                     </AvatarFallback>
                   </Avatar>

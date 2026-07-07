@@ -85,7 +85,7 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditTrans
               className={cn(
                 'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium transition-all text-sm',
                 type === 'expense'
-                  ? 'gradient-expense text-white shadow-glow-expense'
+                  ? 'gradient-expense text-primary-foreground shadow-glow-expense'
                   : 'text-muted-foreground'
               )}
             >
@@ -97,7 +97,7 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditTrans
               className={cn(
                 'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium transition-all text-sm',
                 type === 'income'
-                  ? 'gradient-income text-white shadow-glow-income'
+                  ? 'gradient-income text-primary-foreground shadow-glow-income'
                   : 'text-muted-foreground'
               )}
             >
@@ -181,7 +181,7 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditTrans
                 <button
                   onClick={handleDelete}
                   disabled={isSubmitting}
-                  className="flex-1 py-3 rounded-xl font-semibold text-white bg-destructive hover:bg-destructive/90 transition-all"
+                  className="flex-1 py-3 rounded-xl font-semibold text-primary-foreground bg-destructive hover:bg-destructive/90 transition-all"
                 >
                   Confirmar exclusão
                 </button>
@@ -205,7 +205,7 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditTrans
                   onClick={handleSubmit}
                   disabled={!amount || !categoryId || isSubmitting}
                   className={cn(
-                    'flex-1 py-3 rounded-xl font-semibold text-white transition-all',
+                    'flex-1 py-3 rounded-xl font-semibold text-primary-foreground transition-all',
                     amount && categoryId && !isSubmitting
                       ? type === 'income'
                         ? 'gradient-income shadow-glow-income'
@@ -214,7 +214,7 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditTrans
                   )}
                 >
                   {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mx-auto" />
                   ) : (
                     'Salvar alterações'
                   )}

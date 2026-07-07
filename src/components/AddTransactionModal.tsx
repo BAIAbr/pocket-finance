@@ -100,7 +100,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                 'w-20 h-20 rounded-full flex items-center justify-center animate-success-pop',
                 type === 'income' ? 'gradient-income' : 'gradient-expense'
               )}>
-                <Check size={40} className="text-white" />
+                <Check size={40} className="text-primary-foreground" />
               </div>
               <p className="mt-4 text-lg font-medium">Transação adicionada!</p>
             </div>
@@ -125,7 +125,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                     className={cn(
                       'flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all',
                       type === 'expense' 
-                        ? 'gradient-expense text-white shadow-glow-expense' 
+                        ? 'gradient-expense text-primary-foreground shadow-glow-expense' 
                         : 'text-muted-foreground'
                     )}
                   >
@@ -137,7 +137,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                     className={cn(
                       'flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all',
                       type === 'income' 
-                        ? 'gradient-income text-white shadow-glow-income' 
+                        ? 'gradient-income text-primary-foreground shadow-glow-income' 
                         : 'text-muted-foreground'
                     )}
                   >
@@ -273,7 +273,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                   onClick={handleSubmit}
                   disabled={!amount || !categoryId || isSubmitting}
                   className={cn(
-                    'w-full py-4 rounded-xl font-semibold text-white transition-all touch-scale',
+                    'w-full py-4 rounded-xl font-semibold text-primary-foreground transition-all touch-scale',
                     amount && categoryId && !isSubmitting
                       ? type === 'income' 
                         ? 'gradient-income shadow-glow-income' 
@@ -282,7 +282,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                   )}
                 >
                   {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mx-auto" />
                   ) : (
                     `Adicionar ${type === 'income' ? 'Entrada' : 'Saída'}`
                   )}

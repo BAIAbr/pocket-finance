@@ -63,7 +63,7 @@ function MissionCard({ mission, isCompleted, completedAt, rarityLabel }: { missi
             mission.image_url ? (
               <img src={mission.image_url} alt={mission.name} className="w-full h-full object-contain" loading="lazy" />
             ) : (
-              <IconComponent size={22} className="text-white drop-shadow-md" />
+              <IconComponent size={22} className="text-primary-foreground drop-shadow-md" />
             )
           ) : (
             <Lock size={20} className="text-muted-foreground" />
