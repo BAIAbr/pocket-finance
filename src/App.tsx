@@ -25,6 +25,8 @@ import Achievements from "./pages/Achievements";
 import Recurring from "./pages/Recurring";
 import CalendarPage from "./pages/Calendar";
 import Installments from "./pages/Installments";
+import Plans from "./pages/Plans";
+import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +59,8 @@ const App = () => (
                   <Route path="/recurring" element={<Recurring />} />
                   <Route path="/calendar" element={<CalendarPage />} />
                   <Route path="/installments" element={<Installments />} />
+                  <Route path="/plans" element={<Plans />} />
+                  <Route path="/security" element={<Security />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                 </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

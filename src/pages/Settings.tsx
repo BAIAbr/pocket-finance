@@ -7,7 +7,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useMissionContext } from '@/contexts/MissionContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check, Trophy, Users, CalendarClock, CalendarDays, CreditCard } from 'lucide-react';
+import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check, Trophy, Users, CalendarClock, CalendarDays, CreditCard, Shield, Crown } from 'lucide-react';
 import { FamilySettings } from '@/components/FamilySettings';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -271,6 +271,24 @@ export default function SettingsPage() {
                   <span className="font-medium">Compras Parceladas</span>
                 </div>
                 <span className="text-xs text-muted-foreground">Ver →</span>
+              </button>
+              <button
+                onClick={() => navigate('/security')}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale">
+                <div className="flex items-center gap-2">
+                  <Shield size={18} className="text-primary" />
+                  <span className="font-medium">Segurança & 2FA</span>
+                </div>
+                <span className="text-xs text-muted-foreground">Ver →</span>
+              </button>
+              <button
+                onClick={() => navigate('/plans')}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-primary/10 hover:bg-primary/20 transition-all touch-scale">
+                <div className="flex items-center gap-2">
+                  <Crown size={18} className="text-primary" />
+                  <span className="font-medium">Planos & Assinatura</span>
+                </div>
+                <span className="text-xs text-primary font-medium">Ver →</span>
               </button>
               <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 p-3 rounded-xl">
                 <Cloud size={14} className="text-primary" />
