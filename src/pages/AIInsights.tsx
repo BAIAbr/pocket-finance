@@ -317,18 +317,7 @@ export default function AIInsights() {
         </AnimatePresence>
       </main>
 
-      {/* Chat FAB */}
-      <button
-        onClick={() => setChatOpen(true)}
-        className="fixed bottom-24 right-4 z-30 px-4 h-12 rounded-full bg-gradient-to-r from-primary to-primary/70 text-primary-foreground shadow-xl shadow-primary/40 flex items-center gap-2 font-semibold touch-scale"
-      >
-        <MessageCircle size={18} />
-        <span className="text-sm">Conversar com a IA</span>
-      </button>
-
-      <AnimatePresence>
-        {chatOpen && <ChatDrawer onClose={() => setChatOpen(false)} />}
-      </AnimatePresence>
+      {/* Chat com a IA temporariamente desativado */}
     </div>
   );
 }

@@ -47,10 +47,12 @@ export default function VipRedeem() {
   const [redeemed, setRedeemed] = useState<RedeemResult>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Public lookup
+  // Public lookup + view tracking
   useEffect(() => {
     (async () => {
       setLoading(true);
+      // Fire-and-forget view registration
+      supabase.rpc('register_vip_view' as any, { p_code: code }).then(() => {}, () => {});
       const { data, error } = await supabase.rpc('get_vip_code_info', { p_code: code });
       if (error) {
         setError('Não foi possível consultar o código.');
