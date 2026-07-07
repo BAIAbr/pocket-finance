@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import finangoLogo from '@/assets/finango-logo.png.asset.json';
+import foxMask from '@/assets/finango-fox-mask.png.asset.json';
 
 const INSTAGRAM_URL = 'https://instagram.com/finango.finance';
 const INSTAGRAM_HANDLE = '@finango.finance';
