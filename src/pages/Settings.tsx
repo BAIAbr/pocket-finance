@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Moon, Sun, DollarSign, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail, ShieldCheck, Bell, BellOff, Palette, Check, Users, CalendarClock, CalendarDays, CreditCard, Shield, Crown } from 'lucide-react';
 import { FamilySettings } from '@/components/FamilySettings';
+import { VipRedeemInput } from '@/components/VipRedeemInput';
 import { PlanGate } from '@/components/PlanGate';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -301,6 +302,9 @@ export default function SettingsPage() {
             </div>
           }
         </section>
+
+        {/* Resgate de código VIP */}
+        {isAuthenticated && <VipRedeemInput />}
 
         {/* Appearance */}
         <section className="card-finance">
