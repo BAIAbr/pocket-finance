@@ -50,12 +50,12 @@ export function useSecurityEvents(userId: string | undefined) {
 
   const logEvent = async (event_type: string, metadata?: Record<string, unknown>) => {
     if (!userId) return;
-    await supabase.from('security_events').insert({
+    await supabase.from('security_events').insert([{
       user_id: userId,
       event_type,
       user_agent: navigator.userAgent,
-      metadata: metadata ?? {},
-    });
+      metadata: (metadata ?? {}) as any,
+    }]);
     await load();
   };
 
