@@ -69,7 +69,7 @@ export default function AuthPage() {
           else toast.error(error.message);
         } else {
           toast.success('Bem-vindo de volta!');
-          navigate('/');
+          goAfterAuth();
         }
       } else {
         if (!name.trim()) { toast.error('Informe seu nome'); setIsLoading(false); return; }
@@ -80,7 +80,7 @@ export default function AuthPage() {
           else toast.error(error.message);
         } else {
           toast.success('Conta criada com sucesso!');
-          navigate('/');
+          goAfterAuth();
         }
       }
     } catch {
