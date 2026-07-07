@@ -23,6 +23,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import FinancialHistory from "./pages/FinancialHistory";
 import Achievements from "./pages/Achievements";
 import Recurring from "./pages/Recurring";
+import CalendarPage from "./pages/Calendar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
