@@ -193,7 +193,7 @@ export default function SettingsPage() {
             {/* Fox watermark — changes color with theme (uses primary token via mask) */}
             <div
               aria-hidden
-              className="absolute -right-6 -bottom-6 sm:right-4 sm:bottom-2 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-90"
+              className="absolute -right-6 bottom-0 sm:right-4 sm:bottom-6 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-90"
               style={{
                 backgroundColor: 'hsl(var(--primary-foreground))',
                 WebkitMaskImage: `url(${foxMask.url})`,
