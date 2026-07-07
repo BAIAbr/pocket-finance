@@ -494,7 +494,7 @@ export default function AdminDashboard() {
       </Card>
         </TabsContent>
 
-        </TabsContent>
+
 
 
 
