@@ -211,7 +211,7 @@ export default function SettingsPage() {
             {/* Second, tinted fox layer for stronger theme accent */}
             <div
               aria-hidden
-              className="absolute -right-6 -bottom-6 sm:right-4 sm:bottom-2 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-40"
+              className="absolute -right-6 bottom-0 sm:right-4 sm:bottom-6 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-40"
               style={{
                 backgroundColor: 'hsl(var(--primary))',
                 WebkitMaskImage: `url(${foxMask.url})`,
