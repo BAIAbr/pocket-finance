@@ -630,11 +630,32 @@ function ChatDrawer({ onClose }: { onClose: () => void }) {
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md shadow-primary/30">
                 <Brain size={18} className="text-primary-foreground" />
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-income border-2 border-card" />
+              <span className={cn(
+                'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card',
+                status === 'online' && 'bg-income',
+                status === 'degraded' && 'bg-warning',
+                status === 'offline' && 'bg-expense'
+              )} />
             </div>
             <div>
               <p className="font-bold text-sm leading-tight">Finango IA</p>
-              <p className="text-[10px] text-muted-foreground">Online · usa seus dados reais</p>
+              <div className="flex items-center gap-1 text-[10px]">
+                <span className={cn(
+                  'inline-block w-1.5 h-1.5 rounded-full',
+                  status === 'online' && 'bg-income animate-pulse',
+                  status === 'degraded' && 'bg-warning',
+                  status === 'offline' && 'bg-expense'
+                )} />
+                <span className={cn(
+                  'font-medium',
+                  status === 'online' && 'text-income',
+                  status === 'degraded' && 'text-warning',
+                  status === 'offline' && 'text-expense'
+                )}>
+                  {status === 'online' ? 'Online' : status === 'degraded' ? 'Conexão instável' : 'Offline'}
+                </span>
+                <span className="text-muted-foreground">· usa seus dados reais</span>
+              </div>
             </div>
           </div>
           <button
