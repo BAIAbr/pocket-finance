@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import finangoLogo from '@/assets/finango-logo.png.asset.json';
+import foxMask from '@/assets/finango-fox-mask.png.asset.json';
 
 const INSTAGRAM_URL = 'https://instagram.com/finango.finance';
 const INSTAGRAM_HANDLE = '@finango.finance';
@@ -179,23 +180,55 @@ export default function SettingsPage() {
         {/* ===================== PREMIUM PROFILE HEADER ===================== */}
         {isAuthenticated ? (
           <section
-            className={cn(
-              'relative overflow-hidden rounded-3xl p-6 shadow-lg',
-              isPremium
-                ? 'bg-gradient-to-br from-primary via-orange-500 to-orange-400 text-primary-foreground'
-                : 'bg-card border border-border'
-            )}
+            className="relative overflow-hidden rounded-3xl p-6 shadow-lg text-primary-foreground"
+            style={{
+              backgroundImage:
+                'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 55%, hsl(var(--balance-end)) 100%)',
+            }}
           >
-            {isPremium && (
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
-            )}
-            <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-5">
+            {/* Glow accents */}
+            <div className="absolute -top-16 -left-10 w-52 h-52 rounded-full bg-white/15 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-20 right-1/3 w-48 h-48 rounded-full bg-black/10 blur-3xl pointer-events-none" />
+
+            {/* Fox watermark — changes color with theme (uses primary token via mask) */}
+            <div
+              aria-hidden
+              className="absolute -right-6 -bottom-6 sm:right-4 sm:bottom-2 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-90"
+              style={{
+                backgroundColor: 'hsl(var(--primary-foreground))',
+                WebkitMaskImage: `url(${foxMask.url})`,
+                maskImage: `url(${foxMask.url})`,
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                maskPosition: 'center',
+                WebkitMaskSize: 'contain',
+                maskSize: 'contain',
+                filter: 'drop-shadow(0 4px 12px hsl(0 0% 0% / 0.25))',
+                mixBlendMode: 'soft-light',
+              }}
+            />
+            {/* Second, tinted fox layer for stronger theme accent */}
+            <div
+              aria-hidden
+              className="absolute -right-6 -bottom-6 sm:right-4 sm:bottom-2 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-40"
+              style={{
+                backgroundColor: 'hsl(var(--primary))',
+                WebkitMaskImage: `url(${foxMask.url})`,
+                maskImage: `url(${foxMask.url})`,
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                maskPosition: 'center',
+                WebkitMaskSize: 'contain',
+                maskSize: 'contain',
+              }}
+            />
+
+            <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:pr-32">
               {/* Avatar */}
               <div className="relative">
-                <Avatar className={cn(
-                  'w-24 h-24 ring-4 cursor-pointer touch-scale',
-                  isPremium ? 'ring-white/40' : 'ring-primary/20'
-                )} onClick={handleAvatarClick}>
+                <Avatar className="w-24 h-24 ring-4 ring-white/40 cursor-pointer touch-scale" onClick={handleAvatarClick}>
                   {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
                   <AvatarFallback className="bg-gradient-to-br from-primary to-orange-500 text-primary-foreground font-bold text-2xl">
                     {displayName.charAt(0).toUpperCase()}
@@ -217,11 +250,11 @@ export default function SettingsPage() {
               {/* Info */}
               <div className="flex-1 min-w-0 text-center sm:text-left">
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
-                  <h2 className="text-xl font-bold truncate">{displayName}</h2>
+                  <h2 className="text-xl font-bold truncate drop-shadow-sm">{displayName}</h2>
                   <button
                     onClick={() => navigate('/plans')}
                     className={cn(
-                      'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide touch-scale',
+                      'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide touch-scale shadow-md',
                       badge.className
                     )}
                   >
@@ -229,22 +262,15 @@ export default function SettingsPage() {
                     <span>{badge.label}</span>
                   </button>
                 </div>
-                <p className={cn('text-sm truncate', isPremium ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
-                  {displayEmail}
-                </p>
-                <p className={cn('text-xs mt-1 truncate', isPremium ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+                <p className="text-sm truncate text-primary-foreground/85">{displayEmail}</p>
+                <p className="text-xs mt-1 truncate text-primary-foreground/75">
                   {currentPlan ? `Plano ${currentPlan.name}` : badge.label === 'FREE' ? 'Plano Gratuito' : `Plano ${badge.label}`}
                 </p>
 
                 <div className="flex flex-wrap gap-2 mt-4 justify-center sm:justify-start">
                   <button
                     onClick={() => navigate('/plans')}
-                    className={cn(
-                      'inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold touch-scale',
-                      isPremium
-                        ? 'bg-white text-primary hover:bg-white/90'
-                        : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    )}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold touch-scale bg-white text-primary hover:bg-white/90 shadow-md"
                   >
                     <Crown size={16} /> Gerenciar Plano
                   </button>
@@ -252,10 +278,7 @@ export default function SettingsPage() {
                     <button
                       onClick={handleRemoveAvatar}
                       disabled={isRemovingAvatar}
-                      className={cn(
-                        'inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium touch-scale',
-                        isPremium ? 'bg-white/15 text-primary-foreground hover:bg-white/25' : 'bg-secondary hover:bg-secondary/80'
-                      )}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium touch-scale bg-white/15 text-primary-foreground hover:bg-white/25 backdrop-blur"
                     >
                       <X size={14} /> Remover foto
                     </button>
