@@ -85,7 +85,7 @@ export default function VipCodesManager() {
 
   useEffect(() => { load(); }, []);
 
-  const buildLink = (code: string) => `${window.location.origin}/#/vip/${code}`;
+  const buildLink = (code: string) => `${window.location.origin}/vip/${code}`;
 
   const handleCopy = async (code: string) => {
     try {
