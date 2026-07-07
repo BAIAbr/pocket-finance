@@ -1526,25 +1526,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      award_mission: { Args: { p_mission_key: string }; Returns: Json }
       find_family_by_invite_code: { Args: { p_code: string }; Returns: string }
-      get_vip_code_info: {
-        Args: { p_code: string }
-        Returns: {
-          code: string
-          description: string
-          duration_days: number
-          plan_code: string
-          plan_name: string
-          reason: string
-          valid: boolean
-        }[]
-      }
-      register_vip_view: { Args: { p_code: string }; Returns: undefined }
-      update_weekly_mission_progress: {
-        Args: { p_mission_id: string; p_new_value: number }
-        Returns: Json
-      }
     }
     Enums: {
       app_role: "admin" | "user"
