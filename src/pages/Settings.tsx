@@ -263,6 +263,15 @@ export default function SettingsPage() {
                 </div>
                 <span className="text-xs text-muted-foreground">Ver →</span>
               </button>
+              <button
+                onClick={() => navigate('/installments')}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale">
+                <div className="flex items-center gap-2">
+                  <CreditCard size={18} className="text-primary" />
+                  <span className="font-medium">Compras Parceladas</span>
+                </div>
+                <span className="text-xs text-muted-foreground">Ver →</span>
+              </button>
               <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 p-3 rounded-xl">
                 <Cloud size={14} className="text-primary" />
                 <span>Dados sincronizados na nuvem</span>
