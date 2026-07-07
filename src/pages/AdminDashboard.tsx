@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
-import { Loader2, Users, Clock, Activity, TrendingUp, TrendingDown, Download, ArrowLeft, Search, Palette, CreditCard } from 'lucide-react';
+import { Loader2, Users, Clock, Activity, TrendingUp, TrendingDown, Download, ArrowLeft, Search, Palette, CreditCard, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
