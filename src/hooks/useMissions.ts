@@ -96,9 +96,8 @@ export function useMissions() {
       }
       if (xpRes.data) {
         setUserXP(xpRes.data as unknown as UserXP);
-      } else {
-        await supabase.from('user_xp').insert({ user_id: userId, total_xp: 0, level: 1 });
       }
+      // Note: initial user_xp row is created server-side by award_mission RPC on first XP award.
 
       if (historyRes.data) {
         const unshownPopup = (historyRes.data as unknown as CompletedMission[]).find(m => !m.shown_popup);
