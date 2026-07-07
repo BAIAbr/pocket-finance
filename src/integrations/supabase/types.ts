@@ -1376,6 +1376,97 @@ export type Database = {
         }
         Relationships: []
       }
+      vip_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_days: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          plan_code: string
+          updated_at: string
+          uses_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_days?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          plan_code: string
+          updated_at?: string
+          uses_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_days?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          plan_code?: string
+          updated_at?: string
+          uses_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vip_codes_plan_code_fkey"
+            columns: ["plan_code"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      vip_redemptions: {
+        Row: {
+          code: string
+          expires_at: string | null
+          id: string
+          plan_code: string
+          redeemed_at: string
+          user_id: string
+          vip_code_id: string
+        }
+        Insert: {
+          code: string
+          expires_at?: string | null
+          id?: string
+          plan_code: string
+          redeemed_at?: string
+          user_id: string
+          vip_code_id: string
+        }
+        Update: {
+          code?: string
+          expires_at?: string | null
+          id?: string
+          plan_code?: string
+          redeemed_at?: string
+          user_id?: string
+          vip_code_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vip_redemptions_vip_code_id_fkey"
+            columns: ["vip_code_id"]
+            isOneToOne: false
+            referencedRelation: "vip_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_missions: {
         Row: {
           created_at: string
@@ -1433,6 +1524,18 @@ export type Database = {
     }
     Functions: {
       find_family_by_invite_code: { Args: { p_code: string }; Returns: string }
+      get_vip_code_info: {
+        Args: { p_code: string }
+        Returns: {
+          code: string
+          description: string
+          duration_days: number
+          plan_code: string
+          plan_name: string
+          reason: string
+          valid: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
