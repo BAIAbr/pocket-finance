@@ -51,13 +51,11 @@ export default function VipRedeem() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      // Fire-and-forget view registration
-      supabase.rpc('register_vip_view' as any, { p_code: code }).then(() => {}, () => {});
-      const { data, error } = await supabase.rpc('get_vip_code_info', { p_code: code });
+      const { data, error } = await supabase.functions.invoke('vip-code-info', { body: { code } });
       if (error) {
         setError('Não foi possível consultar o código.');
-      } else if (data && data[0]) {
-        setLookup(data[0] as LookupResult);
+      } else if ((data as any)?.result) {
+        setLookup((data as any).result as LookupResult);
       } else {
         setLookup({ valid: false, reason: 'not_found', code, description: null, plan_code: null, plan_name: null, duration_days: null });
       }

@@ -135,8 +135,11 @@ export function useMissions() {
     if (!mission) return;
 
     try {
-      const { data, error } = await supabase.rpc('award_mission' as any, { p_mission_key: missionKey });
+      const { data: resp, error } = await supabase.functions.invoke('mission-action', {
+        body: { action: 'award_mission', mission_key: missionKey },
+      });
       if (error) throw error;
+      const data = (resp as any)?.result;
       const result = data as any;
       if (!result || result.already_completed) return;
 
@@ -189,15 +192,14 @@ export function useMissions() {
     const mission = weeklyMissions.find(m => m.id === missionId);
     if (!mission || mission.is_completed) return;
 
-    const { data, error } = await supabase.rpc('update_weekly_mission_progress' as any, {
-      p_mission_id: missionId,
-      p_new_value: newValue,
+    const { data: resp, error } = await supabase.functions.invoke('mission-action', {
+      body: { action: 'update_weekly_progress', mission_id: missionId, new_value: newValue },
     });
     if (error) {
       console.error('Error updating weekly progress:', error);
       return;
     }
-    const result = data as any;
+    const result = (resp as any)?.result;
     if (!result || result.already_completed) return;
 
     if (result.is_completed && result.total_xp != null) {
