@@ -190,10 +190,20 @@ export default function SettingsPage() {
             <div className="absolute -top-16 -left-10 w-52 h-52 rounded-full bg-white/15 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-20 right-1/3 w-48 h-48 rounded-full bg-black/10 blur-3xl pointer-events-none" />
 
+            {/* VIP subtle sheen animation */}
+            {badge.label === 'VIP' && (
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div
+                  className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/15 to-transparent animate-vip-sheen"
+                  style={{ animationDuration: '4s' }}
+                />
+              </div>
+            )}
+
             {/* Fox watermark — changes color with theme (uses primary token via mask) */}
             <div
               aria-hidden
-              className="absolute -right-6 -bottom-6 sm:right-4 sm:bottom-2 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-90"
+              className="absolute -right-6 bottom-0 sm:right-4 sm:bottom-6 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-90"
               style={{
                 backgroundColor: 'hsl(var(--primary-foreground))',
                 WebkitMaskImage: `url(${foxMask.url})`,
@@ -211,7 +221,7 @@ export default function SettingsPage() {
             {/* Second, tinted fox layer for stronger theme accent */}
             <div
               aria-hidden
-              className="absolute -right-6 -bottom-6 sm:right-4 sm:bottom-2 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-40"
+              className="absolute -right-6 bottom-0 sm:right-4 sm:bottom-6 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-40"
               style={{
                 backgroundColor: 'hsl(var(--primary))',
                 WebkitMaskImage: `url(${foxMask.url})`,
