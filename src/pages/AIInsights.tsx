@@ -692,6 +692,16 @@ function ChatDrawer({ onClose }: { onClose: () => void }) {
               </div>
             </motion.div>
           ))}
+          {messages[messages.length - 1]?.error && lastUserMsg && !sending && (
+            <div className="flex justify-center pt-1">
+              <button
+                onClick={retry}
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              >
+                <RefreshCw size={12} /> Tentar novamente
+              </button>
+            </div>
+          )}
           <div ref={endRef} />
         </div>
 
