@@ -93,7 +93,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
         />
         
         {/* Modal */}
-        <div className="relative w-full lg:max-w-lg bg-card rounded-t-3xl lg:rounded-3xl animate-slide-up max-h-screen lg:max-h-[85vh] overflow-y-auto shadow-2xl">
+        <div className="relative w-full lg:max-w-md bg-card rounded-t-3xl lg:rounded-3xl animate-slide-up max-h-screen lg:max-h-[85vh] overflow-y-auto shadow-2xl">
           {showSuccess ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className={cn(
@@ -107,7 +107,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
           ) : (
             <>
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-border">
+              <div className="flex items-center justify-between p-4 lg:px-6 lg:py-3 border-b border-border">
                 <h2 className="text-lg font-semibold">Nova Transação</h2>
                 <button 
                   onClick={onClose}
@@ -117,7 +117,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                 </button>
               </div>
 
-              <div className="p-4 space-y-6">
+              <div className="p-4 lg:p-6 space-y-5 lg:space-y-4">
                 {/* Type Toggle */}
                 <div className="flex gap-2 p-1 bg-secondary rounded-xl">
                   <button
