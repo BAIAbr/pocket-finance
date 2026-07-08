@@ -4,6 +4,7 @@ import { useFinanceContext } from '@/contexts/FinanceContext';
 import { RecurringInput, RecurringTransaction, Frequency } from '@/hooks/useRecurring';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { MoneyInput } from '@/components/ui/money-input';
 
 interface Props {
   isOpen: boolean;

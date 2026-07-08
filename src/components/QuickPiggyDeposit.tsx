@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { PiggyBank, ChevronDown, ArrowUpRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { MoneyInput } from '@/components/ui/money-input';
 
 interface PiggyBankItem {
   id: string;
@@ -115,17 +116,11 @@ export function QuickPiggyDeposit({ piggyBanks, formatCurrency, onDeposit }: Qui
       </div>
 
       {/* Amount input */}
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">R$</span>
-        <input
-          type="number"
-          inputMode="decimal"
-          placeholder="0,00"
-          value={amount}
-          onChange={e => setAmount(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent/30"
-        />
-      </div>
+      <MoneyInput
+        value={amount}
+        onChange={setAmount}
+        className="w-full px-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent/30"
+      />
 
       {/* Quick amounts */}
       <div className="flex gap-2">
