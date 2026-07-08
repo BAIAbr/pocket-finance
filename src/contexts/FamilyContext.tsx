@@ -134,8 +134,8 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
           .maybeSingle();
 
         if (createdFamily) {
-          const { data: code } = await supabase.rpc('get_family_invite_code', { _family_id: createdFamily.id });
-          setFamily({ ...(createdFamily as any), invite_code: code ?? '' } as Family);
+          const { data: codeResp } = await supabase.functions.invoke('get-family-invite-code', { body: { family_id: createdFamily.id } });
+          setFamily({ ...(createdFamily as any), invite_code: (codeResp as any)?.invite_code ?? '' } as Family);
         } else {
           setFamily(null);
         }
@@ -155,10 +155,10 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         supabase.from('family_goals').select('*').eq('family_id', familyId).order('created_at', { ascending: false }),
         supabase.from('family_insights').select('*').eq('family_id', familyId).order('created_at', { ascending: false }).limit(20),
         supabase.from('shared_transactions').select('*').eq('family_id', familyId).order('created_at', { ascending: false }),
-        supabase.rpc('get_family_invite_code', { _family_id: familyId }),
+        supabase.functions.invoke('get-family-invite-code', { body: { family_id: familyId } }),
       ]);
 
-      if (familyRes.data) setFamily({ ...(familyRes.data as any), invite_code: inviteCodeRes.data ?? '' } as Family);
+      if (familyRes.data) setFamily({ ...(familyRes.data as any), invite_code: (inviteCodeRes.data as any)?.invite_code ?? '' } as Family);
 
       if (membersRes.data) {
         // Fetch profiles for members

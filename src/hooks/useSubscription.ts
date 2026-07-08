@@ -80,13 +80,12 @@ export function useSubscription(userId: string | undefined) {
 
   const selectPlan = async (planCode: string) => {
     if (!userId) throw new Error('Não autenticado');
-    const { error } = await supabase
-      .from('user_subscriptions')
-      .upsert(
-        { user_id: userId, plan_code: planCode, status: 'active', started_at: new Date().toISOString() },
-        { onConflict: 'user_id' }
-      );
+    if (planCode !== 'free') {
+      throw new Error('Planos pagos exigem verificação de pagamento ou código VIP.');
+    }
+    const { data, error } = await supabase.functions.invoke('select-plan', { body: { plan_code: planCode } });
     if (error) throw error;
+    if ((data as any)?.error) throw new Error((data as any).message ?? (data as any).error);
     await loadSubscription();
   };
 
