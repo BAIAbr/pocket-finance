@@ -67,7 +67,7 @@ export function AppLayout() {
             </div>
           </div>
         )}
-        <div className="flex-1">
+        <div className="flex-1 w-full lg:max-w-6xl lg:mx-auto lg:px-4">
           <Outlet />
         </div>
         <footer className="text-center text-xs text-muted-foreground py-4 pb-28 lg:pb-4">
