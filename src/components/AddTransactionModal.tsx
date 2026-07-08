@@ -93,7 +93,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
         />
         
         {/* Modal */}
-        <div className="relative w-full lg:max-w-md bg-card rounded-t-3xl lg:rounded-3xl animate-slide-up max-h-screen lg:max-h-[85vh] overflow-y-auto shadow-2xl">
+        <div className="relative w-full lg:max-w-md bg-card rounded-t-3xl lg:rounded-3xl animate-slide-up max-h-screen lg:max-h-[80vh] overflow-y-auto shadow-2xl">
           {showSuccess ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className={cn(
