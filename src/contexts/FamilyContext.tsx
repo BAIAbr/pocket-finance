@@ -134,8 +134,8 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
           .maybeSingle();
 
         if (createdFamily) {
-          const { data: code } = await supabase.rpc('get_family_invite_code', { _family_id: createdFamily.id });
-          setFamily({ ...(createdFamily as any), invite_code: code ?? '' } as Family);
+          const { data: codeResp } = await supabase.functions.invoke('get-family-invite-code', { body: { family_id: createdFamily.id } });
+          setFamily({ ...(createdFamily as any), invite_code: (codeResp as any)?.invite_code ?? '' } as Family);
         } else {
           setFamily(null);
         }
