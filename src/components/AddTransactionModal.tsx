@@ -249,7 +249,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                     type="button"
                     onClick={() => setShareWithFamily(!shareWithFamily)}
                     className={cn(
-                      'w-full flex items-center gap-3 p-3 rounded-xl transition-all touch-scale',
+                      'w-full flex items-center gap-3 p-3 lg:p-2.5 rounded-xl transition-all touch-scale',
                       shareWithFamily ? 'bg-primary/15 ring-1 ring-primary' : 'bg-secondary/50'
                     )}
                   >
@@ -273,7 +273,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                   onClick={handleSubmit}
                   disabled={!amount || !categoryId || isSubmitting}
                   className={cn(
-                    'w-full py-4 rounded-xl font-semibold text-primary-foreground transition-all touch-scale',
+                    'w-full py-4 lg:py-3 rounded-xl font-semibold text-primary-foreground transition-all touch-scale',
                     amount && categoryId && !isSubmitting
                       ? type === 'income' 
                         ? 'gradient-income shadow-glow-income' 
@@ -290,7 +290,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
               </div>
 
               {/* Safe area spacing */}
-              <div className="h-8" />
+              <div className="h-8 lg:h-4" />
             </>
           )}
         </div>
