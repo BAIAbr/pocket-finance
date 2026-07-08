@@ -7,6 +7,7 @@ import { getIconByName } from '@/lib/icons';
 import { format } from 'date-fns';
 import { QuickCategoryModal } from './QuickCategoryModal';
 import { useNavigate } from 'react-router-dom';
+import { MoneyInput } from '@/components/ui/money-input';
 
 interface AddTransactionModalProps {
   isOpen: boolean;
