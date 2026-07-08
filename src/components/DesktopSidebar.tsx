@@ -1,4 +1,4 @@
-import { Home, History, Brain, Target, Settings } from 'lucide-react';
+import { Home, History, Brain, Target, Settings, TrendingUp } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -7,6 +7,7 @@ const navItems = [
   { path: '/history', icon: History, label: 'Histórico' },
   { path: '/ai-insights', icon: Brain, label: 'IA' },
   { path: '/savings', icon: Target, label: 'Metas' },
+  { path: '/planning', icon: TrendingUp, label: 'Planejamento' },
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
 

@@ -16,6 +16,7 @@ import Reports from "./pages/Reports";
 import AIInsights from "./pages/AIInsights";
 import Categories from "./pages/Categories";
 import Savings from "./pages/Savings";
+import Planning from "./pages/Planning";
 import SettingsPage from "./pages/Settings";
 import AuthPage from "./pages/Auth";
 import ResetPasswordPage from "./pages/ResetPassword";
@@ -55,6 +56,7 @@ const App = () => (
                   <Route path="/ai-insights" element={<PlanGate feature="ai"><AIInsights /></PlanGate>} />
                   <Route path="/categories" element={<Categories />} />
                   <Route path="/savings" element={<Savings />} />
+                  <Route path="/planning" element={<PlanGate feature="planning"><Planning /></PlanGate>} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/history" element={<FinancialHistory />} />
                   <Route path="/recurring" element={<PlanGate feature="recurring"><Recurring /></PlanGate>} />
