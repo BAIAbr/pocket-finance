@@ -155,10 +155,10 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         supabase.from('family_goals').select('*').eq('family_id', familyId).order('created_at', { ascending: false }),
         supabase.from('family_insights').select('*').eq('family_id', familyId).order('created_at', { ascending: false }).limit(20),
         supabase.from('shared_transactions').select('*').eq('family_id', familyId).order('created_at', { ascending: false }),
-        supabase.rpc('get_family_invite_code', { _family_id: familyId }),
+        supabase.functions.invoke('get-family-invite-code', { body: { family_id: familyId } }),
       ]);
 
-      if (familyRes.data) setFamily({ ...(familyRes.data as any), invite_code: inviteCodeRes.data ?? '' } as Family);
+      if (familyRes.data) setFamily({ ...(familyRes.data as any), invite_code: (inviteCodeRes.data as any)?.invite_code ?? '' } as Family);
 
       if (membersRes.data) {
         // Fetch profiles for members
