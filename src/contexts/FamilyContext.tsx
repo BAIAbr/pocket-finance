@@ -194,8 +194,9 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await supabase
       .from('families')
       .insert({ nome, created_by: userId, ai_enabled: aiEnabled, auto_share: autoShare })
-      .select()
+      .select('id, nome, created_by, plano, ai_enabled, auto_share, created_at, updated_at')
       .single();
+
 
     if (error) {
       toast.error('Erro ao criar família');
