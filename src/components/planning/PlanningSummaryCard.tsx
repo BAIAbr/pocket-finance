@@ -4,6 +4,7 @@ import { useFinancialGoals } from '@/hooks/useFinancialGoals';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { monthsToReach } from '@/lib/planning/calculations';
 import { cdiPercentageToAnnualRate } from '@/hooks/useCdiYield';
+import { formatDuration } from '@/lib/currency';
 
 export function PlanningSummaryCard() {
   const { primaryGoal, goals } = useFinancialGoals();
@@ -81,7 +82,7 @@ export function PlanningSummaryCard() {
         </div>
         <div className="rounded-xl bg-secondary/50 p-2">
           <p className="text-[10px] text-muted-foreground uppercase">Tempo restante</p>
-          <p className="text-sm font-bold mt-0.5">{monthsLeft == null ? '—' : `${monthsLeft} m`}</p>
+          <p className="text-sm font-bold mt-0.5">{formatDuration(monthsLeft)}</p>
         </div>
       </div>
     </div>
