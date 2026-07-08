@@ -35,55 +35,62 @@ export default function Dashboard() {
       </header>
 
       <main className="px-4 lg:px-8 space-y-5">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div className="animate-fade-in"><BalanceCard /></div>
-          <div className="animate-fade-in stagger-1"><MiniChart /></div>
+        {/* Balance is always highlighted at the top */}
+        <div className="animate-fade-in">
+          <BalanceCard />
         </div>
 
-
-
-        {/* Family goals in family mode */}
+        {/* Family goals in family mode (full width) */}
         {isFamily && <FamilyDashboard />}
 
-        {/* Quick Piggy Deposit */}
-        {(piggyBanks as any[]).filter((p: any) => !p.is_completed).length > 0 && (
-          <div className="animate-fade-in stagger-2">
-            <QuickPiggyDeposit
-              piggyBanks={(piggyBanks as any[]).filter((p: any) => !p.is_completed)}
-              formatCurrency={formatCurrency}
-              onDeposit={_personalFinance.depositToPiggyBank}
-            />
-          </div>
-        )}
+        {/* Desktop: two balanced columns. Mobile: single stack (unchanged order) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+          {/* LEFT column */}
+          <div className="space-y-5">
+            <div className="animate-fade-in stagger-1"><MiniChart /></div>
 
-        {/* Próximas contas / assinaturas (personal only) */}
-        {!isFamily && (
-          <div className="animate-fade-in stagger-2">
-            <UpcomingBillsCard />
-          </div>
-        )}
+            {(piggyBanks as any[]).filter((p: any) => !p.is_completed).length > 0 && (
+              <div className="animate-fade-in stagger-2">
+                <QuickPiggyDeposit
+                  piggyBanks={(piggyBanks as any[]).filter((p: any) => !p.is_completed)}
+                  formatCurrency={formatCurrency}
+                  onDeposit={_personalFinance.depositToPiggyBank}
+                />
+              </div>
+            )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div className="animate-fade-in stagger-2">
-            <WeeklySummaryCard
-              totalSpent={weeklySummary.totalSpent}
-              variationPercent={weeklySummary.variationPercent}
-              topCategory={weeklySummary.topCategory}
-              currentStreak={isFamily ? 0 : currentStreak}
-              isVisible={weeklySummary.isVisible}
-            />
+            {!isFamily && (
+              <div className="animate-fade-in stagger-2">
+                <UpcomingBillsCard />
+              </div>
+            )}
           </div>
-          <div className="animate-fade-in stagger-2">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-lg">
-                {isFamily ? 'Transações Compartilhadas' : 'Últimas Transações'}
-              </h2>
-              <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">Últimos 7 dias</span>
+
+          {/* RIGHT column */}
+          <div className="space-y-5">
+            <div className="animate-fade-in stagger-2">
+              <WeeklySummaryCard
+                totalSpent={weeklySummary.totalSpent}
+                variationPercent={weeklySummary.variationPercent}
+                topCategory={weeklySummary.topCategory}
+                currentStreak={isFamily ? 0 : currentStreak}
+                isVisible={weeklySummary.isVisible}
+              />
             </div>
-            <TransactionList compact />
+
+            <div className="animate-fade-in stagger-2">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-semibold text-lg">
+                  {isFamily ? 'Transações Compartilhadas' : 'Últimas Transações'}
+                </h2>
+                <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">Últimos 7 dias</span>
+              </div>
+              <TransactionList compact />
+            </div>
           </div>
         </div>
       </main>
+
 
       <FloatingActionButton onClick={() => setIsModalOpen(true)} />
       <AddTransactionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
