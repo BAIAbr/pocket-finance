@@ -85,7 +85,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
 
   return (
     <>
-      <div className="fixed inset-0 z-50">
+      <div className="fixed inset-0 z-50 flex items-end lg:items-center lg:justify-center">
         {/* Backdrop */}
         <div 
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -93,7 +93,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
         />
         
         {/* Modal */}
-        <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div className="relative w-full lg:w-auto lg:max-w-lg bg-card rounded-t-3xl lg:rounded-3xl animate-slide-up max-h-screen lg:max-h-[85vh] overflow-y-auto shadow-2xl">
           {showSuccess ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className={cn(
