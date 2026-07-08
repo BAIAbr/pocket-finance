@@ -224,6 +224,97 @@ export type Database = {
           },
         ]
       }
+      financial_goals: {
+        Row: {
+          category_id: string | null
+          cdi_percentage: number
+          color: string
+          created_at: string
+          custom_annual_rate: number | null
+          family_id: string | null
+          goal_type: string
+          icon: string
+          id: string
+          initial_amount: number
+          is_completed: boolean
+          is_primary: boolean
+          monthly_contribution: number
+          notes: string | null
+          piggy_bank_id: string | null
+          target_amount: number
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          cdi_percentage?: number
+          color?: string
+          created_at?: string
+          custom_annual_rate?: number | null
+          family_id?: string | null
+          goal_type?: string
+          icon?: string
+          id?: string
+          initial_amount?: number
+          is_completed?: boolean
+          is_primary?: boolean
+          monthly_contribution?: number
+          notes?: string | null
+          piggy_bank_id?: string | null
+          target_amount: number
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          cdi_percentage?: number
+          color?: string
+          created_at?: string
+          custom_annual_rate?: number | null
+          family_id?: string | null
+          goal_type?: string
+          icon?: string
+          id?: string
+          initial_amount?: number
+          is_completed?: boolean
+          is_primary?: boolean
+          monthly_contribution?: number
+          notes?: string | null
+          piggy_bank_id?: string | null
+          target_amount?: number
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_goals_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_goals_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_goals_piggy_bank_id_fkey"
+            columns: ["piggy_bank_id"]
+            isOneToOne: false
+            referencedRelation: "piggy_bank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       installment_items: {
         Row: {
           amount: number

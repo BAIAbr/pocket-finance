@@ -9,7 +9,8 @@ export type PlanFeature =
   | 'family'
   | 'push'
   | 'customCdi'
-  | 'advancedExport';
+  | 'advancedExport'
+  | 'planning';
 
 export interface PlanCapabilities {
   maxPiggyBanks: number; // -1 = unlimited
@@ -27,6 +28,7 @@ export const PLAN_CAPABILITIES: Record<string, PlanCapabilities> = {
       push: true,
       customCdi: false,
       advancedExport: false,
+      planning: false,
     },
   },
   pro: {
@@ -39,6 +41,7 @@ export const PLAN_CAPABILITIES: Record<string, PlanCapabilities> = {
       push: true,
       customCdi: false,
       advancedExport: false,
+      planning: true,
     },
   },
   premium: {
@@ -51,6 +54,7 @@ export const PLAN_CAPABILITIES: Record<string, PlanCapabilities> = {
       push: true,
       customCdi: true,
       advancedExport: true,
+      planning: true,
     },
   },
 };
@@ -63,6 +67,7 @@ export const FEATURE_LABELS: Record<PlanFeature, string> = {
   push: 'Notificações Push',
   customCdi: 'Rendimento CDI Personalizado',
   advancedExport: 'Exportação Avançada',
+  planning: 'Planejamento Financeiro Inteligente',
 };
 
 export function getCapabilities(planCode: string | undefined): PlanCapabilities {
