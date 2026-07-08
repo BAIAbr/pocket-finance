@@ -4,6 +4,7 @@ import { useFinanceContext } from '@/contexts/FinanceContext';
 import { RecurringInput, RecurringTransaction, Frequency } from '@/hooks/useRecurring';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { MoneyInput } from '@/components/ui/money-input';
 
 interface Props {
   isOpen: boolean;
@@ -85,7 +86,7 @@ export function RecurringFormModal({ isOpen, onClose, onSubmit, editing }: Props
 
           <div>
             <label className="text-xs text-muted-foreground font-medium">Valor</label>
-            <input type="number" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0,00" className="w-full mt-1 px-4 py-3 bg-secondary rounded-xl outline-none focus:ring-2 focus:ring-primary" />
+            <MoneyInput value={amount} onChange={setAmount} className="w-full mt-1 px-4 py-3 bg-secondary rounded-xl outline-none focus:ring-2 focus:ring-primary" />
           </div>
 
           <div>

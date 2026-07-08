@@ -10,6 +10,7 @@ import { useCdiYield, cdiPercentageToAnnualRate, annualRateToCdiPercentage, esti
 import { YieldChart } from '@/components/YieldChart';
 import { ConsolidatedYieldChart } from '@/components/ConsolidatedYieldChart';
 import { Slider } from '@/components/ui/slider';
+import { MoneyInput } from '@/components/ui/money-input';
 import { 
   PiggyBank, 
   Plus, 
@@ -722,20 +723,12 @@ function CreatePiggyBankModal({
 
           <div>
             <label className="block text-sm text-muted-foreground mb-2">Meta (opcional)</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                {CURRENCY_OPTIONS.find(c => c.code === selectedCurrency)?.symbol || 'R$'}
-              </span>
-              <input
-                type="number"
-                inputMode="decimal"
-                placeholder="0,00"
-                value={targetAmount}
-                onChange={(e) => setTargetAmount(e.target.value)}
-                className="input-finance pl-12"
-                min="0"
-              />
-            </div>
+            <MoneyInput
+              value={targetAmount}
+              onChange={setTargetAmount}
+              symbol={CURRENCY_OPTIONS.find(c => c.code === selectedCurrency)?.symbol || 'R$'}
+              className="input-finance"
+            />
             <p className="text-xs text-muted-foreground mt-1">Deixe vazio para um meta sem valor alvo</p>
           </div>
 
@@ -870,18 +863,7 @@ function EditPiggyBankModal({
 
           <div>
             <label className="block text-sm text-muted-foreground mb-2">Meta (opcional)</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                placeholder="0,00"
-                value={targetAmount}
-                onChange={(e) => setTargetAmount(e.target.value)}
-                className="input-finance pl-12"
-                min="0"
-              />
-            </div>
+            <MoneyInput value={targetAmount} onChange={setTargetAmount} className="input-finance" />
           </div>
 
           <div>
@@ -1019,18 +1001,13 @@ function TransactionModal({
 
           <div>
             <label className="block text-sm text-muted-foreground mb-2">Valor</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                placeholder="0,00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className={cn("input-finance pl-12", exceedsBalance && "border-destructive")}
-                min="0"
-              />
-            </div>
+            <MoneyInput
+              value={amount}
+              onChange={setAmount}
+              symbol={currencySymbol}
+              hasError={exceedsBalance}
+              className={cn("input-finance", exceedsBalance && "border-destructive")}
+            />
             {exceedsBalance && (
               <p className="text-xs text-destructive mt-1">Valor maior que o saldo disponível</p>
             )}
