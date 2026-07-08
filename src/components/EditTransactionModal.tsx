@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { MoneyInput } from '@/components/ui/money-input';
 
 interface EditTransactionModalProps {
   transaction: Transaction | null;
@@ -109,16 +110,11 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditTrans
           {/* Amount */}
           <div>
             <label className="block text-sm text-muted-foreground mb-1.5">Valor</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="amount-input w-full h-14 pl-12 pr-4 rounded-xl bg-secondary"
-              />
-            </div>
+            <MoneyInput
+              value={amount}
+              onChange={setAmount}
+              className="amount-input w-full h-14 px-4 rounded-xl bg-secondary"
+            />
           </div>
 
           {/* Category */}
