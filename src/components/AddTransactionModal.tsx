@@ -149,19 +149,11 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                 {/* Amount */}
                 <div>
                   <label className="block text-sm text-muted-foreground mb-2">Valor</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">
-                      R$
-                    </span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      placeholder="0,00"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="amount-input w-full h-16 lg:h-14 pl-12 pr-4 rounded-xl bg-secondary"
-                    />
-                  </div>
+                  <MoneyInput
+                    value={amount}
+                    onChange={setAmount}
+                    className="amount-input w-full h-16 lg:h-14 px-4 rounded-xl bg-secondary"
+                  />
                 </div>
 
                 {/* Category */}
