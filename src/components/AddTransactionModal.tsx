@@ -182,21 +182,21 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                       const isSelected = categoryId === category.id;
                       
                       return (
-                        <button
+                      <button
                           key={category.id}
                           onClick={() => setCategoryId(category.id)}
                           className={cn(
-                            'flex flex-col items-center gap-1 p-3 rounded-xl transition-all touch-scale',
+                            'flex flex-col items-center gap-1 p-3 lg:p-2 rounded-xl transition-all touch-scale',
                             isSelected 
                               ? 'bg-secondary ring-2 ring-accent' 
                               : 'bg-secondary/50 hover:bg-secondary'
                           )}
                         >
                           <div 
-                            className="w-10 h-10 rounded-full flex items-center justify-center"
+                            className="w-10 h-10 lg:w-9 lg:h-9 rounded-full flex items-center justify-center"
                             style={{ backgroundColor: `${category.color}20` }}
                           >
-                            <IconComponent size={20} style={{ color: category.color }} />
+                            <IconComponent size={20} className="lg:w-[18px] lg:h-[18px]" style={{ color: category.color }} />
                           </div>
                           <span className="text-xs text-center truncate w-full">
                             {category.name}
@@ -208,10 +208,10 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                     {/* Add New Category Button */}
                     <button
                       onClick={() => setShowQuickCategoryModal(true)}
-                      className="flex flex-col items-center gap-1 p-3 rounded-xl transition-all touch-scale bg-secondary/30 hover:bg-secondary/50 border-2 border-dashed border-border"
+                      className="flex flex-col items-center gap-1 p-3 lg:p-2 rounded-xl transition-all touch-scale bg-secondary/30 hover:bg-secondary/50 border-2 border-dashed border-border"
                     >
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-accent/20">
-                        <Plus size={20} className="text-accent" />
+                      <div className="w-10 h-10 lg:w-9 lg:h-9 rounded-full flex items-center justify-center bg-accent/20">
+                        <Plus size={20} className="lg:w-[18px] lg:h-[18px]" className="text-accent" />
                       </div>
                       <span className="text-xs text-center text-muted-foreground">
                         Nova
