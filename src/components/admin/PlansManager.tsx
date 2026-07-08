@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Save, Crown, Plus, Trash2, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { normalizeFeatures, type PlanFeatureItem } from '@/hooks/useSubscription';
+import { MoneyInput } from '@/components/ui/money-input';
 
 interface Plan {
   id: string;
@@ -144,14 +145,12 @@ export default function PlansManager() {
               </div>
               <div>
                 <Label className="text-xs">Preço mensal (R$)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                <MoneyInput
                   value={plan.price_monthly}
-                  onChange={(e) =>
-                    updateField(plan.id, { price_monthly: parseFloat(e.target.value) || 0 })
+                  onChange={(v) =>
+                    updateField(plan.id, { price_monthly: parseFloat(v) || 0 })
                   }
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 />
               </div>
             </div>

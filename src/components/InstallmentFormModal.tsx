@@ -3,6 +3,7 @@ import { X, CreditCard } from 'lucide-react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { InstallmentInput } from '@/hooks/useInstallments';
 import { format } from 'date-fns';
+import { MoneyInput } from '@/components/ui/money-input';
 
 interface Props {
   isOpen: boolean;
@@ -71,9 +72,7 @@ export function InstallmentFormModal({ isOpen, onClose, onSubmit }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-muted-foreground font-medium">Valor total</label>
-              <input type="number" step="0.01" min="0.01" value={total} onChange={e => setTotal(e.target.value)} required
-                placeholder="0,00"
-                className="w-full mt-1 px-4 py-3 bg-secondary rounded-xl outline-none focus:ring-2 focus:ring-primary" />
+              <MoneyInput value={total} onChange={setTotal} className="w-full mt-1 px-4 py-3 bg-secondary rounded-xl outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <div>
               <label className="text-xs text-muted-foreground font-medium">Nº parcelas</label>

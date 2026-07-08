@@ -10,6 +10,7 @@ import { useCdiYield, cdiPercentageToAnnualRate, annualRateToCdiPercentage, esti
 import { YieldChart } from '@/components/YieldChart';
 import { ConsolidatedYieldChart } from '@/components/ConsolidatedYieldChart';
 import { Slider } from '@/components/ui/slider';
+import { MoneyInput } from '@/components/ui/money-input';
 import { 
   PiggyBank, 
   Plus, 

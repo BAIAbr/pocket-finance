@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { MoneyInput } from '@/components/ui/money-input';
 
 type Section = 'main' | 'members' | 'goals' | 'insights' | 'privacy';
 
@@ -417,10 +418,7 @@ export function FamilySettings() {
           <div className="space-y-3 p-3 rounded-xl bg-secondary/50">
             <input type="text" value={goalName} onChange={e => setGoalName(e.target.value)} placeholder="Nome da meta" className="input-finance" />
             <input type="text" value={goalDesc} onChange={e => setGoalDesc(e.target.value)} placeholder="Descrição (opcional)" className="input-finance" />
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
-              <input type="number" value={goalAmount} onChange={e => setGoalAmount(e.target.value)} placeholder="0,00" className="input-finance pl-10" />
-            </div>
+            <MoneyInput value={goalAmount} onChange={setGoalAmount} className="input-finance" />
             <input type="date" value={goalDeadline} onChange={e => setGoalDeadline(e.target.value)} className="input-finance" />
             <div className="flex gap-2">
               <button onClick={() => setShowGoalForm(false)} className="flex-1 py-2 rounded-xl bg-secondary text-sm touch-scale">Cancelar</button>
