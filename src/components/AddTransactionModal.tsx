@@ -85,7 +85,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
 
   return (
     <>
-      <div className="fixed inset-0 z-50">
+      <div className="fixed inset-0 z-50 flex items-end lg:items-center lg:justify-center">
         {/* Backdrop */}
         <div 
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -93,7 +93,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
         />
         
         {/* Modal */}
-        <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div className="relative w-full lg:max-w-md bg-card rounded-t-3xl lg:rounded-3xl animate-slide-up max-h-screen lg:max-h-[80vh] overflow-y-auto shadow-2xl">
           {showSuccess ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className={cn(
@@ -107,7 +107,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
           ) : (
             <>
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-border">
+              <div className="flex items-center justify-between p-4 lg:px-6 lg:py-3 border-b border-border">
                 <h2 className="text-lg font-semibold">Nova Transação</h2>
                 <button 
                   onClick={onClose}
@@ -117,7 +117,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                 </button>
               </div>
 
-              <div className="p-4 space-y-6">
+              <div className="p-4 lg:p-6 space-y-5 lg:space-y-4">
                 {/* Type Toggle */}
                 <div className="flex gap-2 p-1 bg-secondary rounded-xl">
                   <button
@@ -159,7 +159,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                       placeholder="0,00"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="amount-input w-full h-16 pl-12 pr-4 rounded-xl bg-secondary"
+                      className="amount-input w-full h-16 lg:h-14 pl-12 pr-4 rounded-xl bg-secondary"
                     />
                   </div>
                 </div>
@@ -176,27 +176,27 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                       Gerenciar
                     </button>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 lg:grid-cols-5 gap-2">
                     {filteredCategories.map(category => {
                       const IconComponent = getIconByName(category.icon);
                       const isSelected = categoryId === category.id;
                       
                       return (
-                        <button
+                      <button
                           key={category.id}
                           onClick={() => setCategoryId(category.id)}
                           className={cn(
-                            'flex flex-col items-center gap-1 p-3 rounded-xl transition-all touch-scale',
+                            'flex flex-col items-center gap-1 p-3 lg:p-2 rounded-xl transition-all touch-scale',
                             isSelected 
                               ? 'bg-secondary ring-2 ring-accent' 
                               : 'bg-secondary/50 hover:bg-secondary'
                           )}
                         >
                           <div 
-                            className="w-10 h-10 rounded-full flex items-center justify-center"
+                            className="w-10 h-10 lg:w-9 lg:h-9 rounded-full flex items-center justify-center"
                             style={{ backgroundColor: `${category.color}20` }}
                           >
-                            <IconComponent size={20} style={{ color: category.color }} />
+                            <IconComponent size={20} className="lg:w-[18px] lg:h-[18px]" style={{ color: category.color }} />
                           </div>
                           <span className="text-xs text-center truncate w-full">
                             {category.name}
@@ -208,10 +208,10 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                     {/* Add New Category Button */}
                     <button
                       onClick={() => setShowQuickCategoryModal(true)}
-                      className="flex flex-col items-center gap-1 p-3 rounded-xl transition-all touch-scale bg-secondary/30 hover:bg-secondary/50 border-2 border-dashed border-border"
+                      className="flex flex-col items-center gap-1 p-3 lg:p-2 rounded-xl transition-all touch-scale bg-secondary/30 hover:bg-secondary/50 border-2 border-dashed border-border"
                     >
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-accent/20">
-                        <Plus size={20} className="text-accent" />
+                      <div className="w-10 h-10 lg:w-9 lg:h-9 rounded-full flex items-center justify-center bg-accent/20">
+                        <Plus size={20} className="text-accent lg:w-[18px] lg:h-[18px]" />
                       </div>
                       <span className="text-xs text-center text-muted-foreground">
                         Nova
@@ -249,7 +249,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                     type="button"
                     onClick={() => setShareWithFamily(!shareWithFamily)}
                     className={cn(
-                      'w-full flex items-center gap-3 p-3 rounded-xl transition-all touch-scale',
+                      'w-full flex items-center gap-3 p-3 lg:p-2.5 rounded-xl transition-all touch-scale',
                       shareWithFamily ? 'bg-primary/15 ring-1 ring-primary' : 'bg-secondary/50'
                     )}
                   >
@@ -273,7 +273,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                   onClick={handleSubmit}
                   disabled={!amount || !categoryId || isSubmitting}
                   className={cn(
-                    'w-full py-4 rounded-xl font-semibold text-primary-foreground transition-all touch-scale',
+                    'w-full py-4 lg:py-3 rounded-xl font-semibold text-primary-foreground transition-all touch-scale',
                     amount && categoryId && !isSubmitting
                       ? type === 'income' 
                         ? 'gradient-income shadow-glow-income' 
@@ -290,7 +290,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
               </div>
 
               {/* Safe area spacing */}
-              <div className="h-8" />
+              <div className="h-8 lg:h-4" />
             </>
           )}
         </div>
