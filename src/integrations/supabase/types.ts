@@ -1527,6 +1527,7 @@ export type Database = {
     }
     Functions: {
       find_family_by_invite_code: { Args: { p_code: string }; Returns: string }
+      get_family_invite_code: { Args: { _family_id: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"

@@ -129,12 +129,13 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
         // Also check if user created a family but hasn't been added as member yet
         const { data: createdFamily } = await supabase
           .from('families')
-          .select('*')
+          .select('id, nome, created_by, plano, ai_enabled, auto_share, created_at, updated_at')
           .eq('created_by', userId)
           .maybeSingle();
 
         if (createdFamily) {
-          setFamily(createdFamily as unknown as Family);
+          const { data: code } = await supabase.rpc('get_family_invite_code', { _family_id: createdFamily.id });
+          setFamily({ ...(createdFamily as any), invite_code: code ?? '' } as Family);
         } else {
           setFamily(null);
         }
@@ -148,15 +149,17 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
 
       const familyId = membership.family_id;
 
-      const [familyRes, membersRes, goalsRes, insightsRes, sharedRes] = await Promise.all([
-        supabase.from('families').select('*').eq('id', familyId).single(),
+      const [familyRes, membersRes, goalsRes, insightsRes, sharedRes, inviteCodeRes] = await Promise.all([
+        supabase.from('families').select('id, nome, created_by, plano, ai_enabled, auto_share, created_at, updated_at').eq('id', familyId).single(),
         supabase.from('family_members').select('*').eq('family_id', familyId),
         supabase.from('family_goals').select('*').eq('family_id', familyId).order('created_at', { ascending: false }),
         supabase.from('family_insights').select('*').eq('family_id', familyId).order('created_at', { ascending: false }).limit(20),
         supabase.from('shared_transactions').select('*').eq('family_id', familyId).order('created_at', { ascending: false }),
+        supabase.rpc('get_family_invite_code', { _family_id: familyId }),
       ]);
 
-      if (familyRes.data) setFamily(familyRes.data as unknown as Family);
+      if (familyRes.data) setFamily({ ...(familyRes.data as any), invite_code: inviteCodeRes.data ?? '' } as Family);
+
       if (membersRes.data) {
         // Fetch profiles for members
         const memberUserIds = membersRes.data.map((m: any) => m.user_id);
@@ -191,8 +194,9 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await supabase
       .from('families')
       .insert({ nome, created_by: userId, ai_enabled: aiEnabled, auto_share: autoShare })
-      .select()
+      .select('id, nome, created_by, plano, ai_enabled, auto_share, created_at, updated_at')
       .single();
+
 
     if (error) {
       toast.error('Erro ao criar família');
