@@ -159,7 +159,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                       placeholder="0,00"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="amount-input w-full h-16 pl-12 pr-4 rounded-xl bg-secondary"
+                      className="amount-input w-full h-16 lg:h-14 pl-12 pr-4 rounded-xl bg-secondary"
                     />
                   </div>
                 </div>
@@ -176,7 +176,7 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
                       Gerenciar
                     </button>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 lg:grid-cols-5 gap-2">
                     {filteredCategories.map(category => {
                       const IconComponent = getIconByName(category.icon);
                       const isSelected = categoryId === category.id;
