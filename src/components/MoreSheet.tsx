@@ -140,7 +140,7 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
             <div className="overflow-y-auto px-4 pb-6">
               {/* Profile Header Card */}
               <motion.button
-                onClick={go('/settings')}
+                onClick={go('/profile')}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
