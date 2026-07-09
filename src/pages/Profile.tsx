@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
-import { useMissions } from '@/contexts/MissionContext';
+import { useMissionContext } from '@/contexts/MissionContext';
 import { cn } from '@/lib/utils';
 import foxMask from '@/assets/finango-fox-mask.png.asset.json';
 
