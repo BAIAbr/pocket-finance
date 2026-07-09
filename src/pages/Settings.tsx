@@ -1,40 +1,25 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useTheme, COLOR_SCHEMES } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { usePlanAccess } from '@/hooks/usePlanAccess';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
-  Moon, Sun, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail,
+  Moon, Sun, Trash2, Info, User, Cloud, Download, Mail,
   ShieldCheck, Bell, BellOff, Palette, Check, CalendarClock, CreditCard,
-  Shield, Crown, Sparkles, ChevronRight, Instagram, HelpCircle, X, Star,
+  Shield, Crown, Sparkles, ChevronRight, Instagram,
 } from 'lucide-react';
 import { FamilySettings } from '@/components/FamilySettings';
 import { VipRedeemInput } from '@/components/VipRedeemInput';
 import { PlanGate } from '@/components/PlanGate';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import finangoLogo from '@/assets/finango-logo.png.asset.json';
-import foxMask from '@/assets/finango-fox-mask.png.asset.json';
 
 const INSTAGRAM_URL = 'https://instagram.com/finango.finance';
 const INSTAGRAM_HANDLE = '@finango.finance';
 const SUPPORT_EMAIL = 'suporte@finango.online';
-
-function planBadgeMeta(code: string) {
-  const c = (code || 'free').toLowerCase();
-  if (c.includes('vip')) return { label: 'VIP', icon: '👑', className: 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black' };
-  if (c.includes('premium') || c.includes('pro') || c.includes('plus')) return { label: 'PREMIUM', icon: '💎', className: 'bg-gradient-to-r from-primary to-orange-400 text-primary-foreground' };
-  if (c.includes('family') || c.includes('familia')) return { label: 'FAMÍLIA', icon: '👨‍👩‍👧', className: 'bg-gradient-to-r from-primary to-orange-400 text-primary-foreground' };
-  return { label: 'FREE', icon: '🟢', className: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/30' };
-}
 
 interface RowProps {
   icon: React.ReactNode;
@@ -71,82 +56,15 @@ function Row({ icon, label, description, onClick, danger, highlight, trailing }:
 }
 
 export default function SettingsPage() {
-  const { settings, setSettings, clearAllData, profile, updateProfile } = useFinanceContext();
+  const { clearAllData } = useFinanceContext();
   const { theme, toggleTheme, colorScheme, setColorScheme } = useTheme();
-  const { isAuthenticated, signOut, profile: authProfile, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { isAdmin } = useAdminCheck(user?.id);
-  const { planCode } = usePlanAccess();
-  const { plans, subscription } = useSubscription(user?.id);
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, isLoading: pushLoading, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } = usePushNotifications(user?.id);
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const [showConfirmLogout, setShowConfirmLogout] = useState(false);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleLogout = async () => {
-    await signOut();
-    toast.success('Até logo!');
-    navigate('/auth');
-  };
 
-  const handleAvatarClick = () => fileInputRef.current?.click();
-
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-    if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) {
-      toast.error('Formato inválido. Use PNG, JPG ou WEBP.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('A imagem deve ter no máximo 5MB');
-      return;
-    }
-    setIsUploadingAvatar(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
-      try {
-        const { data: files } = await supabase.storage.from('avatars').list(user.id);
-        if (files && files.length > 0) {
-          await supabase.storage.from('avatars').remove(files.map((f) => `${user.id}/${f.name}`));
-        }
-      } catch {}
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
-      await updateProfile({ avatar_url: `${publicUrl}?t=${Date.now()}` });
-      toast.success('Foto de perfil atualizada!');
-    } catch (error) {
-      console.error(error);
-      toast.error('Erro ao enviar foto');
-    } finally {
-      setIsUploadingAvatar(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleRemoveAvatar = async () => {
-    if (!user) return;
-    setIsRemovingAvatar(true);
-    try {
-      try {
-        const { data: files } = await supabase.storage.from('avatars').list(user.id);
-        if (files && files.length > 0) {
-          await supabase.storage.from('avatars').remove(files.map((f) => `${user.id}/${f.name}`));
-        }
-      } catch {}
-      await updateProfile({ avatar_url: null });
-      toast.success('Foto removida');
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao remover foto');
-    } finally {
-      setIsRemovingAvatar(false);
-    }
-  };
 
   const handleInstallApp = () => {
     const deferredPrompt = (window as any).deferredPrompt;
@@ -165,12 +83,6 @@ export default function SettingsPage() {
     }
   };
 
-  const displayName = profile?.name || authProfile?.email?.split('@')[0] || 'Usuário';
-  const displayEmail = profile?.email || authProfile?.email || '';
-  const avatarUrl = profile?.avatar_url || null;
-  const badge = planBadgeMeta(planCode || 'free');
-  const currentPlan = plans.find((p) => p.code === planCode);
-  const isPremium = badge.label !== 'FREE';
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
@@ -179,146 +91,9 @@ export default function SettingsPage() {
       </header>
 
       <main className="px-4 space-y-5 max-w-3xl mx-auto">
-        {/* ===================== PREMIUM PROFILE HEADER ===================== */}
-        {isAuthenticated ? (
-          <section
-            className="relative overflow-hidden rounded-3xl p-6 shadow-lg text-primary-foreground"
-            style={{
-              backgroundImage:
-                'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 55%, hsl(var(--balance-end)) 100%)',
-            }}
-          >
-            {/* Glow accents */}
-            <div className="absolute -top-16 -left-10 w-52 h-52 rounded-full bg-white/15 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-20 right-1/3 w-48 h-48 rounded-full bg-black/10 blur-3xl pointer-events-none" />
-
-            {/* VIP subtle sheen animation */}
-            {badge.label === 'VIP' && (
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div
-                  className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/15 to-transparent animate-vip-sheen"
-                  style={{ animationDuration: '4s' }}
-                />
-              </div>
-            )}
-
-            {/* Fox watermark — changes color with theme (uses primary token via mask) */}
-            <div
-              aria-hidden
-              className="absolute -right-6 bottom-0 sm:right-4 sm:bottom-6 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-90"
-              style={{
-                backgroundColor: 'hsl(var(--primary-foreground))',
-                WebkitMaskImage: `url(${foxMask.url})`,
-                maskImage: `url(${foxMask.url})`,
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                maskPosition: 'center',
-                WebkitMaskSize: 'contain',
-                maskSize: 'contain',
-                filter: 'drop-shadow(0 4px 12px hsl(0 0% 0% / 0.25))',
-                mixBlendMode: 'soft-light',
-              }}
-            />
-            {/* Second, tinted fox layer for stronger theme accent */}
-            <div
-              aria-hidden
-              className="absolute -right-6 bottom-0 sm:right-4 sm:bottom-6 w-40 h-40 sm:w-48 sm:h-48 pointer-events-none opacity-40"
-              style={{
-                backgroundColor: 'hsl(var(--primary))',
-                WebkitMaskImage: `url(${foxMask.url})`,
-                maskImage: `url(${foxMask.url})`,
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                maskPosition: 'center',
-                WebkitMaskSize: 'contain',
-                maskSize: 'contain',
-              }}
-            />
-
-            <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:pr-32">
-              {/* Avatar */}
-              <div className="relative">
-                <Avatar className="w-24 h-24 ring-4 ring-white/40 cursor-pointer touch-scale" onClick={handleAvatarClick}>
-                  {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-orange-500 text-primary-foreground font-bold text-2xl">
-                    {displayName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <button
-                  onClick={handleAvatarClick}
-                  disabled={isUploadingAvatar}
-                  aria-label="Alterar foto"
-                  className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-background text-foreground shadow-lg ring-2 ring-primary/40 flex items-center justify-center touch-scale"
-                >
-                  {isUploadingAvatar
-                    ? <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    : <Camera size={16} />}
-                </button>
-                <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleAvatarUpload} className="hidden" />
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0 text-center sm:text-left">
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
-                  <h2 className="text-xl font-bold truncate drop-shadow-sm">{displayName}</h2>
-                  <button
-                    onClick={() => navigate('/plans')}
-                    className={cn(
-                      'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide touch-scale shadow-md',
-                      badge.className
-                    )}
-                  >
-                    <span>{badge.icon}</span>
-                    <span>{badge.label}</span>
-                  </button>
-                </div>
-                <p className="text-sm truncate text-primary-foreground/85">{displayEmail}</p>
-                <p className="text-xs mt-1 truncate text-primary-foreground/75">
-                  {currentPlan ? `Plano ${currentPlan.name}` : badge.label === 'FREE' ? 'Plano Gratuito' : `Plano ${badge.label}`}
-                </p>
-                {isPremium && subscription?.started_at && (
-                  <p className="text-[11px] mt-0.5 truncate text-primary-foreground/70">
-                    {badge.label === 'VIP' ? 'VIP' : 'Premium'} desde {format(parseISO(subscription.started_at), "dd/MM/yyyy", { locale: ptBR })}
-                  </p>
-                )}
-
-                <div className="flex flex-wrap gap-2 mt-4 justify-center sm:justify-start">
-                  <button
-                    onClick={() => navigate('/plans')}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold touch-scale bg-white text-primary hover:bg-white/90 shadow-md"
-                  >
-                    <Crown size={16} /> Gerenciar Plano
-                  </button>
-                  {avatarUrl && (
-                    <button
-                      onClick={handleRemoveAvatar}
-                      disabled={isRemovingAvatar}
-                      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium touch-scale bg-white/15 text-primary-foreground hover:bg-white/25 backdrop-blur"
-                    >
-                      <X size={14} /> Remover foto
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : (
-          <section className="card-finance">
-            <h2 className="font-semibold mb-4 flex items-center gap-2"><User size={18} /> Conta</h2>
-            <p className="text-sm text-muted-foreground mb-3">Crie uma conta para sincronizar seus dados na nuvem.</p>
-            <button
-              onClick={() => navigate('/auth')}
-              className="w-full py-3 rounded-xl gradient-balance text-primary-foreground font-medium touch-scale"
-            >
-              Entrar ou criar conta
-            </button>
-          </section>
-        )}
-
         {/* ===================== VIP redeem ===================== */}
         {isAuthenticated && <VipRedeemInput />}
+
 
         {/* ===================== INSTALL APP ===================== */}
         <section className="card-finance gradient-balance text-primary-foreground">
@@ -557,32 +332,6 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* ===================== SAIR ===================== */}
-        {isAuthenticated && (
-          <section className="card-finance">
-            {showConfirmLogout ? (
-              <div className="space-y-3">
-                <div className="text-center">
-                  <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-destructive/10 flex items-center justify-center">
-                    <LogOut size={22} className="text-destructive" />
-                  </div>
-                  <p className="font-semibold">Tem certeza que deseja sair?</p>
-                  <p className="text-xs text-muted-foreground">Você precisará entrar novamente para acessar sua conta.</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setShowConfirmLogout(false)} className="flex-1 py-3 rounded-xl bg-secondary font-medium touch-scale">
-                    Cancelar
-                  </button>
-                  <button onClick={handleLogout} className="flex-1 py-3 rounded-xl bg-destructive text-destructive-foreground font-medium touch-scale">
-                    Sair
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <Row icon={<LogOut size={18} />} label="Sair da conta" danger onClick={() => setShowConfirmLogout(true)} trailing={<LogOut size={18} className="text-destructive" />} />
-            )}
-          </section>
-        )}
       </main>
     </div>
   );
