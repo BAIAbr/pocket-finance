@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Check, ArrowDownLeft, ArrowUpRight, Plus, Settings, Users } from 'lucide-react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useFamilyContext } from '@/contexts/FamilyContext';
@@ -12,15 +12,16 @@ import { MoneyInput } from '@/components/ui/money-input';
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialType?: 'income' | 'expense';
 }
 
-export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProps) {
+export function AddTransactionModal({ isOpen, onClose, initialType = 'expense' }: AddTransactionModalProps) {
   const { categories, addTransaction, addCategory } = useFinanceContext();
   const { family, shareTransaction, viewContext } = useFamilyContext();
   const navigate = useNavigate();
   
   const isInFamilyMode = viewContext === 'family';
-  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const [type, setType] = useState<'income' | 'expense'>(initialType);
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
@@ -31,6 +32,10 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
   const [shareWithFamily, setShareWithFamily] = useState(isInFamilyMode);
 
   const filteredCategories = categories.filter(c => c.type === type);
+
+  useEffect(() => {
+    if (isOpen) setType(initialType);
+  }, [isOpen, initialType]);
 
   const handleSubmit = async () => {
     if (!amount || !categoryId || isSubmitting) return;

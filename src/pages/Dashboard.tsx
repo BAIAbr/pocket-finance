@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { BalanceCard } from '@/components/BalanceCard';
 import { TransactionList } from '@/components/TransactionList';
 import { MiniChart } from '@/components/MiniChart';
-import { FloatingActionButton } from '@/components/FloatingActionButton';
-import { AddTransactionModal } from '@/components/AddTransactionModal';
+import { QuickActionsFab } from '@/components/QuickActionsFab';
 import { WeeklySummaryCard } from '@/components/WeeklySummaryCard';
 import { FamilyDashboard } from '@/components/FamilyDashboard';
 import { QuickPiggyDeposit } from '@/components/QuickPiggyDeposit';
@@ -15,7 +13,6 @@ import { useStreak } from '@/hooks/useStreak';
 import { useWeeklySummary } from '@/hooks/useWeeklySummary';
 
 export default function Dashboard() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { transactions, currentMonthStats, categories, isFamily, piggyBanks, formatCurrency, _personalFinance } = useEffectiveFinance();
   const { user } = useAuth();
   const { currentStreak } = useStreak(user?.id ?? null);
@@ -97,8 +94,7 @@ export default function Dashboard() {
       </main>
 
 
-      <FloatingActionButton onClick={() => setIsModalOpen(true)} />
-      <AddTransactionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <QuickActionsFab />
     </div>
   );
 }
