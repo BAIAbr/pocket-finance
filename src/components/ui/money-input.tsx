@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 export interface MoneyInputProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'onChange' | 'type' | 'inputMode' | 'pattern'
+    'value' | 'onChange' | 'type' | 'inputMode' | 'pattern' | 'minLength' | 'maxLength'
   > {
   /** Decimal value in the base currency (e.g. reais). Accepts number or numeric string. */
   value: string | number | null | undefined;
@@ -82,8 +82,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
       <input
         ref={ref}
         type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
+        inputMode="decimal"
         autoComplete="off"
         disabled={disabled}
         placeholder={placeholderText}
