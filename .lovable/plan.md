@@ -1,83 +1,71 @@
+# Central de Investimentos
 
-# Fase 1 — Planejamento Financeiro Inteligente
+Módulo novo, 100% incremental. Nenhum dado ou funcionalidade existente será alterada.
 
-Sem IA, sem APIs pagas, sem consumo de créditos. Todos os cálculos rodam no cliente com os dados já existentes no Supabase (transações, cofrinhos, metas). Nada do que existe hoje é removido.
+## 1. Banco de dados (migração aditiva)
 
-## O que será construído
+Novas tabelas em `public` (com GRANTs + RLS por `auth.uid()`):
 
-### 1. Banco de dados (1 migração)
-Nova tabela `public.financial_goals` (independente das `savings_goals` para não misturar semântica):
-- `user_id`, `family_id` (nullable), `title`, `goal_type` (casa/carro/viagem/faculdade/notebook/casamento/reserva/empresa/custom)
-- `icon`, `color`
-- `target_amount`, `initial_amount`, `monthly_contribution`
-- `target_date` (nullable), `cdi_percentage` (default 100), `custom_annual_rate` (nullable)
-- `category_id` (nullable), `piggy_bank_id` (nullable) — conta usada
-- `is_primary` (bool, apenas 1 por usuário/família)
-- `is_completed`, `created_at`, `updated_at`
-- RLS: dono OU membro da família dona; GRANTs corretos para `authenticated` e `service_role`; trigger `updated_at`.
+- `investment_assets` — cadastro de ativos na carteira do usuário
+  - `id`, `user_id`, `ticker`, `type` (`fii`|`stock`|`etf`|`fixed_income`), `name`, `segment`, `created_at`
+- `investment_transactions` — aportes (compras) e vendas
+  - `id`, `user_id`, `asset_id`, `kind` (`buy`|`sell`), `quantity`, `unit_price`, `total`, `date`, `notes`, `created_at`
+- `investment_dividends` — proventos recebidos
+  - `id`, `user_id`, `asset_id`, `amount`, `pay_date`, `com_date`, `type` (`dividend`|`jcp`|`rendimento`), `created_at`
+- `market_quotes_cache` — cache de cotações/DY/último provento por ticker (compartilhado)
+  - `ticker` PK, `price`, `last_dividend`, `dividend_yield`, `segment`, `name`, `liquidity`, `com_date`, `pay_date`, `patrimonial_value`, `updated_at`
 
-### 2. Rota e navegação
-- Nova rota `/planning` protegida por `PlanGate feature="planning"`.
-- `planCapabilities.ts`: adicionar capacidade `planning` (Premium).
-- **BottomNav (mobile)**: substituir "IA" por "Planejamento" (ícone `TrendingUp`). IA continua acessível pelo card do Dashboard e Sidebar.
-- **DesktopSidebar**: adicionar "Planejamento" abaixo de "Metas".
+RLS: `user_id = auth.uid()` para as três primeiras; `market_quotes_cache` leitura para `authenticated`, escrita apenas via edge function (service_role).
 
-### 3. Página `/planning`
-Layout centralizado, mobile-first, seguindo tokens do design system (nada de cores hardcoded).
+## 2. Edge function `market-quote`
 
-**Painel superior (cards):**
-- Patrimônio Atual (soma cofrinhos + saldo do período)
-- Economia Mensal Média (últimos 3–6 meses de transações)
-- Receita/Despesa média
-- Reserva Financeira (saldo cofrinhos vs. despesa média × 6)
-- Capacidade de Investimento (economia média − aportes já em curso)
-- Previsão Financeira (projeção 12m com aporte médio)
+- Entrada: `{ ticker }` ou `{ tickers: [] }`
+- Retorna dados do cache se `updated_at` < 15min, senão tenta buscar em provedor (BRAPI público como default, arquitetura preparada para trocar por provedor pago via `MARKET_DATA_PROVIDER` + `MARKET_DATA_API_KEY`).
+- Nunca usa valores fixos hardcoded; se o provedor falhar, retorna `{ available: false }` e a UI mostra campos vazios com aviso "dados indisponíveis".
 
-**Lista de Objetivos** com CRUD (criar, editar, arquivar, marcar como principal).
+## 3. Frontend
 
-**Simulador (drawer/modal ao criar/editar objetivo):**
-- Seleção de tipo (grid com ícones)
-- Campos: valor desejado, inicial, aporte mensal, prazo OU data alvo, rentabilidade (100/105/110/120/130% CDI ou taxa customizada), conta (piggy bank), categoria
-- Painel de resultados em tempo real (recalcula em cada onChange):
-  - Tempo necessário para atingir o alvo com aporte atual
-  - Valor acumulado no prazo escolhido
-  - Total investido vs. total rendido
-  - Rentabilidade efetiva no período
-  - Data prevista de conclusão
-  - Diferença até a meta
-- Sugestões automáticas (regras, sem IA): "Aportando R$X você conclui em Y meses"; "Aumentando o aporte em 40% conclui Z meses antes".
+Rota nova `/investments` (com `PlanGate feature="investments"`). Adicionada:
+- No `MoreSheet` (item Investimentos → agora navega, sem "em breve")
+- No `DesktopSidebar` abaixo de Planejamento
+- Novo card `InvestmentsSummaryCard` no Dashboard (patrimônio, dividendos do mês, rentabilidade, botão "Abrir Carteira")
 
-**Evolução Patrimonial:**
-- Gráfico (Recharts) com projeções 1a / 3a / 5a / 10a usando patrimônio atual + aporte médio + rendimento CDI escolhido no objetivo principal.
+Estrutura de páginas dentro de `src/pages/Investments/`:
+- `index.tsx` — layout com header + tabs internas (Carteira, FIIs, Ações, ETFs, Renda Fixa, Simulador, Histórico)
+- `Overview.tsx` — cards: Patrimônio, Valorização, Dividendos Mensais/Anuais, Rentabilidade, Melhor/Pior ativo
+- `Wallet.tsx` — lista de ativos com preço médio, patrimônio, lucro/prejuízo, rentabilidade, dividendos recebidos; botão "Novo Aporte" e "Adicionar Ativo"
+- `AssetsByType.tsx` (reutilizada para FIIs/Ações/ETFs/Renda Fixa filtrando `type`)
+- `Simulator.tsx` — busca ticker → puxa preço via `market-quote` → calcula cotas, valor utilizado, saldo restante; e simulador de projeção (aporte mensal × anos, com toggle "reinvestir dividendos")
+- `History.tsx` — todas as compras/aportes/dividendos com filtros ano/mês/ativo
 
-**Alertas Inteligentes** (regras puras):
-- Meta atrasada (progresso < esperado pela data)
-- Reserva baixa (< 3× despesa média)
-- Economia acima da média (> 20% da média histórica no mês corrente)
-- Gastos elevados (> 120% da média)
-- Capacidade de investimento aumentou (> 15% vs. média)
+Componentes:
+- `AssetSearchInput` — busca ticker (debounced, chama `market-quote`)
+- `AddAssetModal` / `NewContributionModal` / `RegisterDividendModal`
+- `AssetCard`, `PortfolioChart` (pizza/alocação), `DividendsChart` (barras mês/ano), `PatrimonyChart` (linha)
 
-### 4. Card no Dashboard
-Novo componente `PlanningSummaryCard` mostrando: objetivo principal, % concluído, próximo aporte (`monthly_contribution`), tempo restante. Botão "Abrir Planejamento" → `/planning`. Aparece após o `WeeklySummaryCard`.
+## 4. Cálculos (locais, `src/lib/investments/calculations.ts`)
 
-### 5. Cálculos (helpers)
-- `src/lib/planning/calculations.ts`
-  - `simulateGoal({ initial, monthly, annualRate, targetAmount, months })` → série mensal com principal/aporte/rendimento/saldo
-  - `monthsToReach(target, initial, monthly, annualRate)`
-  - `projectPatrimony(currentBalance, monthlyContribution, annualRate, years)`
-  - Reutiliza `cdiPercentageToAnnualRate` do `useCdiYield.ts`.
-- `src/hooks/usePlanningStats.ts` — agrega estatísticas históricas a partir de `useEffectiveFinance`.
-- `src/hooks/useFinancialGoals.ts` — CRUD Supabase.
+- Preço médio ponderado após cada aporte
+- Patrimônio = Σ quantidade × preço atual (do cache)
+- Rentabilidade = (patrimônio − investido) / investido
+- DY carteira = dividendos 12m / patrimônio
+- Projeção com juros compostos + opção reinvestir dividendos (usa DY médio dos ativos ou DY informado)
 
-### 6. Verificação
-- `tsgo` para typecheck.
-- Playwright headless: abrir `/planning`, criar objetivo, verificar simulação em tempo real e card no Dashboard.
-- Nada é removido; IA, Cofrinhos, Metas, Transações, Family Mode continuam iguais.
+## 5. Design
 
-## Fora de escopo (nesta fase)
-- Módulo Scanner OCR (Fase 2 — Tesseract.js client-side).
-- Edição das regras de classificação (vem com o Scanner).
+Segue o design system do Finango (tokens semânticos, `bg-card`, `text-primary`, glass, tabular-nums, gráficos Recharts com cores do tema). Mobile-first, cards arredondados, animações Framer Motion sutis.
 
-## Design
-- Cores/tipografia via tokens semânticos existentes (`--primary`, `--card`, etc.). Nada hardcoded.
-- Cards arredondados (`rounded-2xl`), sombras suaves, microanimações `animate-fade-in` já usadas no app. Consistente com Dashboard atual.
+## 6. Compatibilidade
+
+- Nenhuma tabela existente é alterada.
+- Rotas/menus existentes preservados; apenas adicionamos entradas novas.
+- Feature-flag `investments` no `planCapabilities` (liberada para todos os planos por padrão; podemos restringir ao Premium depois se quiser).
+
+## Detalhes técnicos
+
+- Provedor default: BRAPI (`https://brapi.dev/api/quote/{TICKER}`) — sem API key para uso básico. Estrutura permite trocar por Alpha Vantage/HG Brasil só mudando o adaptador.
+- Cache 15 min em `market_quotes_cache` para reduzir chamadas e latência.
+- React Query para todas as leituras (`staleTime: 60_000`).
+- Realtime opcional (não incluído nesta fase) para atualizações automáticas.
+
+Confirma para eu implementar? Se quiser posso restringir Investimentos ao plano Premium desde o início — só avisar.
