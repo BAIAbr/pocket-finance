@@ -20,6 +20,7 @@ export function InstallmentFormModal({ isOpen, onClose, onSubmit }: Props) {
   const [cardName, setCardName] = useState('');
   const [firstDue, setFirstDue] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [notes, setNotes] = useState('');
+  const [impactsBalance, setImpactsBalance] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const expenseCats = (categories as any[]).filter(c => c.type === 'expense');
@@ -41,11 +42,12 @@ export function InstallmentFormModal({ isOpen, onClose, onSubmit }: Props) {
       first_due_date: firstDue,
       card_name: cardName.trim() || null,
       notes: notes.trim() || null,
+      impacts_balance: impactsBalance,
     });
     setSubmitting(false);
     if (ok) {
       setName(''); setTotal(''); setCount('12'); setCategoryId('');
-      setCardName(''); setNotes('');
+      setCardName(''); setNotes(''); setImpactsBalance(true);
       onClose();
     }
   };
