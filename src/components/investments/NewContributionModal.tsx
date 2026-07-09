@@ -16,7 +16,9 @@ interface Props {
 
 export function NewContributionModal({ open, onClose, assets, currentPrice, onSubmit, preselectedAssetId }: Props) {
   const [assetId, setAssetId] = useState(preselectedAssetId ?? assets[0]?.id ?? '');
+  const [mode, setMode] = useState<'qty' | 'value'>('qty');
   const [quantity, setQuantity] = useState('');
+  const [totalValue, setTotalValue] = useState(0);
   const [price, setPrice] = useState(0);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [saving, setSaving] = useState(false);
@@ -26,15 +28,18 @@ export function NewContributionModal({ open, onClose, assets, currentPrice, onSu
   const selected = assets.find((a) => a.id === assetId);
   const suggestion = selected && currentPrice ? currentPrice(selected.ticker) : null;
 
+  const computedQty = mode === 'value' && price > 0 ? Math.floor(totalValue / price) : 0;
+  const computedRemaining = mode === 'value' && price > 0 ? totalValue - computedQty * price : 0;
+
   const submit = async () => {
-    const q = parseFloat(quantity.replace(',', '.')) || 0;
+    const q = mode === 'qty' ? (parseFloat(quantity.replace(',', '.')) || 0) : computedQty;
     if (!assetId || q <= 0 || price <= 0) return toast.error('Preencha todos os campos');
     setSaving(true);
     try {
       await onSubmit({ asset_id: assetId, quantity: q, unit_price: price, date });
       toast.success('Aporte registrado');
       onClose();
-      setQuantity(''); setPrice(0);
+      setQuantity(''); setPrice(0); setTotalValue(0);
     } catch (e: any) {
       toast.error('Erro', { description: e.message });
     } finally {
