@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { BalanceCard } from '@/components/BalanceCard';
 import { TransactionList } from '@/components/TransactionList';
 import { MiniChart } from '@/components/MiniChart';
-import { FloatingActionButton } from '@/components/FloatingActionButton';
-import { AddTransactionModal } from '@/components/AddTransactionModal';
+import { QuickActionsFab } from '@/components/QuickActionsFab';
 import { WeeklySummaryCard } from '@/components/WeeklySummaryCard';
 import { FamilyDashboard } from '@/components/FamilyDashboard';
 import { QuickPiggyDeposit } from '@/components/QuickPiggyDeposit';
