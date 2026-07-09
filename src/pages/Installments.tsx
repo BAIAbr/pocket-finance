@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, CreditCard, Check, Trash2, ChevronDown, ChevronUp, Calendar, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Plus, CreditCard, Check, Trash2, ChevronDown, ChevronUp, Calendar, RotateCcw, EyeOff, Wallet } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useInstallments, InstallmentPurchaseWithItems } from '@/hooks/useInstallments';
@@ -11,11 +11,18 @@ import { cn } from '@/lib/utils';
 
 export default function InstallmentsPage() {
   const navigate = useNavigate();
-  const { purchases, isLoading, create, remove, markPaid, markUnpaid } = useInstallments();
+  const { purchases, isLoading, create, remove, markPaid, markUnpaid, setImpactsBalance } = useInstallments();
   const { settings, getCategoryById } = useFinanceContext();
   const [showForm, setShowForm] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [onlyImpacting, setOnlyImpacting] = useState(false);
+  const [confirmToggle, setConfirmToggle] = useState<{ purchase: InstallmentPurchaseWithItems; next: boolean } | null>(null);
+
+  const visiblePurchases = useMemo(
+    () => onlyImpacting ? purchases.filter(p => p.impacts_balance) : purchases,
+    [purchases, onlyImpacting]
+  );
 
   const fmt = (v: number) =>
     `${settings.currencySymbol} ${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
