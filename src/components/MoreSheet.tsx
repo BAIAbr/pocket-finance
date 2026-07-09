@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useAuth } from '@/contexts/AuthContext';
-import foxLogo from '@/assets/finango-fox.png';
+import foxLogo from '@/assets/finango-fox.png.asset.json';
 
 interface MoreSheetProps {
   open: boolean;
