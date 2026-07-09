@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 export interface MoneyInputProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    'value' | 'onChange' | 'type' | 'inputMode' | 'pattern'
+    'value' | 'onChange' | 'type' | 'inputMode' | 'pattern' | 'minLength' | 'maxLength'
   > {
   /** Decimal value in the base currency (e.g. reais). Accepts number or numeric string. */
   value: string | number | null | undefined;
