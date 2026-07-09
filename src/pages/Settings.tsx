@@ -1,40 +1,25 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useTheme, COLOR_SCHEMES } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { usePlanAccess } from '@/hooks/usePlanAccess';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
-  Moon, Sun, Trash2, Info, LogOut, User, Cloud, Camera, Download, Mail,
+  Moon, Sun, Trash2, Info, User, Cloud, Download, Mail,
   ShieldCheck, Bell, BellOff, Palette, Check, CalendarClock, CreditCard,
-  Shield, Crown, Sparkles, ChevronRight, Instagram, HelpCircle, X, Star,
+  Shield, Crown, Sparkles, ChevronRight, Instagram,
 } from 'lucide-react';
 import { FamilySettings } from '@/components/FamilySettings';
 import { VipRedeemInput } from '@/components/VipRedeemInput';
 import { PlanGate } from '@/components/PlanGate';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import finangoLogo from '@/assets/finango-logo.png.asset.json';
-import foxMask from '@/assets/finango-fox-mask.png.asset.json';
 
 const INSTAGRAM_URL = 'https://instagram.com/finango.finance';
 const INSTAGRAM_HANDLE = '@finango.finance';
 const SUPPORT_EMAIL = 'suporte@finango.online';
-
-function planBadgeMeta(code: string) {
-  const c = (code || 'free').toLowerCase();
-  if (c.includes('vip')) return { label: 'VIP', icon: '👑', className: 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black' };
-  if (c.includes('premium') || c.includes('pro') || c.includes('plus')) return { label: 'PREMIUM', icon: '💎', className: 'bg-gradient-to-r from-primary to-orange-400 text-primary-foreground' };
-  if (c.includes('family') || c.includes('familia')) return { label: 'FAMÍLIA', icon: '👨‍👩‍👧', className: 'bg-gradient-to-r from-primary to-orange-400 text-primary-foreground' };
-  return { label: 'FREE', icon: '🟢', className: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/30' };
-}
 
 interface RowProps {
   icon: React.ReactNode;
@@ -71,25 +56,15 @@ function Row({ icon, label, description, onClick, danger, highlight, trailing }:
 }
 
 export default function SettingsPage() {
-  const { settings, setSettings, clearAllData, profile, updateProfile } = useFinanceContext();
+  const { clearAllData } = useFinanceContext();
   const { theme, toggleTheme, colorScheme, setColorScheme } = useTheme();
-  const { isAuthenticated, signOut, profile: authProfile, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { isAdmin } = useAdminCheck(user?.id);
-  const { planCode } = usePlanAccess();
-  const { plans, subscription } = useSubscription(user?.id);
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, isLoading: pushLoading, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } = usePushNotifications(user?.id);
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const [showConfirmLogout, setShowConfirmLogout] = useState(false);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleLogout = async () => {
-    await signOut();
-    toast.success('Até logo!');
-    navigate('/auth');
-  };
+
 
   const handleAvatarClick = () => fileInputRef.current?.click();
 
