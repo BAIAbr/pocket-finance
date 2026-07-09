@@ -17,6 +17,7 @@ export interface InstallmentPurchase {
   first_due_date: string;
   card_name: string | null;
   notes: string | null;
+  impacts_balance: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -31,6 +32,7 @@ export interface InstallmentItem {
   is_paid: boolean;
   paid_at: string | null;
   transaction_id: string | null;
+  impacts_balance: boolean;
 }
 
 export interface InstallmentPurchaseWithItems extends InstallmentPurchase {
@@ -46,6 +48,7 @@ export interface InstallmentInput {
   card_name?: string | null;
   notes?: string | null;
   family_id?: string | null;
+  impacts_balance?: boolean;
 }
 
 /** Split total into N installments, distributing rounding remainder to the first parcel. */
