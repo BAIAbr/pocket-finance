@@ -94,8 +94,7 @@ export default function Dashboard() {
       </main>
 
 
-      <FloatingActionButton onClick={() => setIsModalOpen(true)} />
-      <AddTransactionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <QuickActionsFab />
     </div>
   );
 }
