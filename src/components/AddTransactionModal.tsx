@@ -33,6 +33,10 @@ export function AddTransactionModal({ isOpen, onClose, initialType = 'expense' }
 
   const filteredCategories = categories.filter(c => c.type === type);
 
+  useEffect(() => {
+    if (isOpen) setType(initialType);
+  }, [isOpen, initialType]);
+
   const handleSubmit = async () => {
     if (!amount || !categoryId || isSubmitting) return;
 
