@@ -12,15 +12,16 @@ import { MoneyInput } from '@/components/ui/money-input';
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialType?: 'income' | 'expense';
 }
 
-export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProps) {
+export function AddTransactionModal({ isOpen, onClose, initialType = 'expense' }: AddTransactionModalProps) {
   const { categories, addTransaction, addCategory } = useFinanceContext();
   const { family, shareTransaction, viewContext } = useFamilyContext();
   const navigate = useNavigate();
   
   const isInFamilyMode = viewContext === 'family';
-  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const [type, setType] = useState<'income' | 'expense'>(initialType);
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
