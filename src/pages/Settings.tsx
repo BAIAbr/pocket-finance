@@ -420,32 +420,6 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* ===================== SAIR ===================== */}
-        {isAuthenticated && (
-          <section className="card-finance">
-            {showConfirmLogout ? (
-              <div className="space-y-3">
-                <div className="text-center">
-                  <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-destructive/10 flex items-center justify-center">
-                    <LogOut size={22} className="text-destructive" />
-                  </div>
-                  <p className="font-semibold">Tem certeza que deseja sair?</p>
-                  <p className="text-xs text-muted-foreground">Você precisará entrar novamente para acessar sua conta.</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setShowConfirmLogout(false)} className="flex-1 py-3 rounded-xl bg-secondary font-medium touch-scale">
-                    Cancelar
-                  </button>
-                  <button onClick={handleLogout} className="flex-1 py-3 rounded-xl bg-destructive text-destructive-foreground font-medium touch-scale">
-                    Sair
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <Row icon={<LogOut size={18} />} label="Sair da conta" danger onClick={() => setShowConfirmLogout(true)} trailing={<LogOut size={18} className="text-destructive" />} />
-            )}
-          </section>
-        )}
       </main>
     </div>
   );
