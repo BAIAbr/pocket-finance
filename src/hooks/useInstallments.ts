@@ -98,6 +98,7 @@ export function useInstallments() {
   const create = useCallback(async (input: InstallmentInput) => {
     if (!user?.id) return null;
     const familyId = input.family_id ?? (viewContext === 'family' && family ? family.id : null);
+    const impactsBalance = input.impacts_balance ?? true;
     const { data: purchase, error } = await (supabase as any)
       .from('installment_purchases')
       .insert({
@@ -110,6 +111,7 @@ export function useInstallments() {
         first_due_date: input.first_due_date,
         card_name: input.card_name ?? null,
         notes: input.notes ?? null,
+        impacts_balance: impactsBalance,
       })
       .select()
       .single();
@@ -124,6 +126,7 @@ export function useInstallments() {
       amount: amt,
       due_date: format(addMonths(startDate, idx), 'yyyy-MM-dd'),
       is_paid: false,
+      impacts_balance: impactsBalance,
     }));
     const { data: created, error: itemsErr } = await (supabase as any)
       .from('installment_items')
@@ -152,33 +155,40 @@ export function useInstallments() {
 
   const markPaid = useCallback(async (purchase: InstallmentPurchase, item: InstallmentItem) => {
     if (item.is_paid) return true;
-    if (!purchase.category_id) {
-      toast.error('Defina uma categoria na compra antes de marcar como paga');
-      return false;
+    let txId: string | null = null;
+    if (purchase.impacts_balance) {
+      if (!purchase.category_id) {
+        toast.error('Defina uma categoria na compra antes de marcar como paga');
+        return false;
+      }
+      const desc = `${purchase.name} (${item.installment_number}/${purchase.installments_count})`;
+      const tx = await addTransaction({
+        type: 'expense',
+        amount: Number(item.amount),
+        category_id: purchase.category_id,
+        description: desc,
+        date: format(new Date(), 'yyyy-MM-dd'),
+      });
+      if (!tx) return false;
+      txId = (tx as any).id;
     }
-    const desc = `${purchase.name} (${item.installment_number}/${purchase.installments_count})`;
-    const tx = await addTransaction({
-      type: 'expense',
-      amount: Number(item.amount),
-      category_id: purchase.category_id,
-      description: desc,
-      date: format(new Date(), 'yyyy-MM-dd'),
-    });
-    if (!tx) return false;
     const { error } = await (supabase as any)
       .from('installment_items')
-      .update({ is_paid: true, paid_at: new Date().toISOString(), transaction_id: (tx as any).id })
+      .update({ is_paid: true, paid_at: new Date().toISOString(), transaction_id: txId })
       .eq('id', item.id);
     if (error) { toast.error('Erro ao atualizar parcela'); return false; }
     setPurchases(prev => prev.map(p => p.id !== purchase.id ? p : {
       ...p,
-      items: p.items.map(i => i.id === item.id ? { ...i, is_paid: true, paid_at: new Date().toISOString(), transaction_id: (tx as any).id } : i),
+      items: p.items.map(i => i.id === item.id ? { ...i, is_paid: true, paid_at: new Date().toISOString(), transaction_id: txId } : i),
     }));
     toast.success(`Parcela ${item.installment_number} marcada como paga`);
     return true;
   }, [addTransaction]);
 
   const markUnpaid = useCallback(async (item: InstallmentItem) => {
+    if (item.transaction_id) {
+      try { await deleteTransaction(item.transaction_id); } catch {}
+    }
     const { error } = await (supabase as any)
       .from('installment_items')
       .update({ is_paid: false, paid_at: null, transaction_id: null })
@@ -189,7 +199,56 @@ export function useInstallments() {
       items: p.items.map(i => i.id === item.id ? { ...i, is_paid: false, paid_at: null, transaction_id: null } : i),
     })));
     return true;
-  }, []);
+  }, [deleteTransaction]);
 
-  return { purchases, isLoading, create, remove, markPaid, markUnpaid, reload: load };
+  const setImpactsBalance = useCallback(async (purchase: InstallmentPurchaseWithItems, newValue: boolean) => {
+    if (purchase.impacts_balance === newValue) return true;
+    // true -> false: remove existing transactions from balance (keep items marked paid)
+    if (!newValue) {
+      for (const it of purchase.items) {
+        if (it.transaction_id) {
+          try { await deleteTransaction(it.transaction_id); } catch {}
+        }
+      }
+      await (supabase as any).from('installment_items')
+        .update({ transaction_id: null, impacts_balance: false })
+        .eq('purchase_id', purchase.id);
+    } else {
+      // false -> true: create transactions retroactively for already-paid items
+      if (!purchase.category_id) {
+        toast.error('Defina uma categoria antes de recalcular');
+        return false;
+      }
+      for (const it of purchase.items) {
+        if (it.is_paid && !it.transaction_id) {
+          const desc = `${purchase.name} (${it.installment_number}/${purchase.installments_count})`;
+          const tx = await addTransaction({
+            type: 'expense',
+            amount: Number(it.amount),
+            category_id: purchase.category_id,
+            description: desc,
+            date: it.paid_at ? it.paid_at.slice(0, 10) : format(new Date(), 'yyyy-MM-dd'),
+          });
+          if (tx) {
+            await (supabase as any).from('installment_items')
+              .update({ transaction_id: (tx as any).id })
+              .eq('id', it.id);
+          }
+        }
+      }
+      await (supabase as any).from('installment_items')
+        .update({ impacts_balance: true })
+        .eq('purchase_id', purchase.id);
+    }
+    const { error } = await (supabase as any)
+      .from('installment_purchases')
+      .update({ impacts_balance: newValue })
+      .eq('id', purchase.id);
+    if (error) { toast.error('Erro ao atualizar'); return false; }
+    toast.success(newValue ? 'Saldo recalculado com esta compra' : 'Compra removida do saldo disponível');
+    await load();
+    return true;
+  }, [addTransaction, deleteTransaction, load]);
+
+  return { purchases, isLoading, create, remove, markPaid, markUnpaid, setImpactsBalance, reload: load };
 }
