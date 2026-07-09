@@ -85,7 +85,7 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
     {
       title: 'Conta',
       items: [
-        { icon: User, label: 'Perfil', description: 'Sua conta e preferências', action: go('/settings') },
+        { icon: User, label: 'Perfil', description: 'Sua conta e preferências', action: go('/profile') },
         { icon: SettingsIcon, label: 'Configurações', description: 'Ajustes do aplicativo', action: go('/settings') },
         { icon: HelpCircle, label: 'Ajuda', description: 'Fale com o suporte', action: () => { haptic(); onClose(); window.location.href = 'mailto:suporte@finango.online'; } },
       ],
