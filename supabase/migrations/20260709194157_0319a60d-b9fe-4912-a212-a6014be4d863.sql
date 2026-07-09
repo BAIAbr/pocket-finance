@@ -1,0 +1,2 @@
+ALTER TABLE public.installment_purchases ADD COLUMN IF NOT EXISTS impacts_balance boolean NOT NULL DEFAULT true;
+ALTER TABLE public.installment_items ADD COLUMN IF NOT EXISTS impacts_balance boolean NOT NULL DEFAULT true;
