@@ -64,7 +64,7 @@ function splitAmount(total: number, n: number): number[] {
 export function useInstallments() {
   const { user } = useAuth();
   const { family, viewContext } = useFamilyContext();
-  const { addTransaction } = useFinanceContext();
+  const { addTransaction, deleteTransaction } = useFinanceContext();
   const [purchases, setPurchases] = useState<InstallmentPurchaseWithItems[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
