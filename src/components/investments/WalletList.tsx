@@ -1,7 +1,17 @@
-import { TrendingUp, TrendingDown, Trash2, Plus, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, Trash2, Plus, DollarSign, Circle } from 'lucide-react';
 import { formatBRL } from '@/lib/currency';
 import { InvestmentAsset, QuoteCache } from '@/hooks/useInvestments';
 import { AssetMetrics } from '@/lib/investments/calculations';
+
+function quoteStatus(quote?: QuoteCache): { label: string; tone: 'live' | 'stale' | 'manual' } {
+  if (!quote || quote.price == null) return { label: 'Cadastro Manual', tone: 'manual' };
+  const diff = Date.now() - new Date(quote.updated_at).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return { label: 'Atualizado agora', tone: 'live' };
+  if (min < 60) return { label: `Atualizado há ${min} min`, tone: min < 20 ? 'live' : 'stale' };
+  const h = Math.floor(min / 60);
+  return { label: `Atualizado há ${h}h`, tone: 'stale' };
+}
 
 interface Props {
   data: { asset: InvestmentAsset; quote?: QuoteCache; metrics: AssetMetrics }[];
@@ -36,6 +46,16 @@ export function WalletList({ data, onDelete, onContribute, onDividend }: Props) 
                   {asset.segment && <span className="text-[10px] text-muted-foreground">· {asset.segment}</span>}
                 </div>
                 {asset.name && <p className="text-xs text-muted-foreground truncate mt-0.5">{asset.name}</p>}
+                {(() => {
+                  const s = quoteStatus(quote);
+                  const color = s.tone === 'live' ? 'text-emerald-500' : s.tone === 'stale' ? 'text-amber-500' : 'text-muted-foreground';
+                  return (
+                    <div className={`mt-1 flex items-center gap-1 text-[10px] font-medium ${color}`}>
+                      <Circle size={7} className="fill-current" />
+                      {s.label}
+                    </div>
+                  );
+                })()}
               </div>
               <button onClick={() => onDelete(asset.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
                 <Trash2 size={14} />

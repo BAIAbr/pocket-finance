@@ -10,8 +10,9 @@ import { NewContributionModal } from '@/components/investments/NewContributionMo
 import { RegisterDividendModal } from '@/components/investments/RegisterDividendModal';
 import { SimulatorPanel } from '@/components/investments/SimulatorPanel';
 import { InvestmentCharts } from '@/components/investments/InvestmentCharts';
+import { DividendsPanel } from '@/components/investments/DividendsPanel';
 
-type Tab = 'overview' | 'wallet' | 'fii' | 'stock' | 'etf' | 'fixed_income' | 'simulator' | 'history';
+type Tab = 'overview' | 'wallet' | 'fii' | 'stock' | 'etf' | 'fixed_income' | 'dividends' | 'simulator' | 'history';
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: 'overview', label: 'Visão geral', icon: PieChart },
@@ -20,6 +21,7 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: 'stock', label: 'Ações', icon: TrendingUp },
   { id: 'etf', label: 'ETFs', icon: TrendingUp },
   { id: 'fixed_income', label: 'Renda Fixa', icon: TrendingUp },
+  { id: 'dividends', label: 'Dividendos', icon: DollarSign },
   { id: 'simulator', label: 'Simulador', icon: Calculator },
   { id: 'history', label: 'Histórico', icon: HistoryIcon },
 ];
@@ -60,8 +62,8 @@ export default function Investments() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none" />
         <div className="relative flex items-start justify-between gap-3">
           <div>
-            <p className="text-muted-foreground text-sm font-medium">Central de</p>
-            <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Investimentos</h1>
+            <p className="text-muted-foreground text-sm font-medium">Carteira Inteligente</p>
+            <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Finango Invest</h1>
           </div>
           <button
             onClick={() => inv.refreshQuotes()}
@@ -124,7 +126,7 @@ export default function Investments() {
         </div>
 
         {/* Actions */}
-        {tab !== 'simulator' && tab !== 'history' && (
+        {tab !== 'simulator' && tab !== 'history' && tab !== 'dividends' && (
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => { setAddType(tab === 'wallet' || tab === 'overview' ? 'fii' : (tab as AssetType)); setAddOpen(true); }}
@@ -169,6 +171,16 @@ export default function Investments() {
           )}
 
           {tab === 'simulator' && <SimulatorPanel />}
+
+          {tab === 'dividends' && (
+            <DividendsPanel
+              dividends={inv.dividends}
+              assets={inv.assets}
+              monthly={p.monthlyDividends}
+              yearly={p.yearlyDividends}
+              portfolioDy={p.portfolioDy}
+            />
+          )}
 
           {tab === 'history' && <HistoryPanel inv={inv} />}
         </motion.div>
