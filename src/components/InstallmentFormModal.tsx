@@ -121,6 +121,26 @@ export function InstallmentFormModal({ isOpen, onClose, onSubmit }: Props) {
               className="w-full mt-1 px-4 py-3 bg-secondary rounded-xl outline-none focus:ring-2 focus:ring-primary resize-none" />
           </div>
 
+          <div className="p-3 rounded-xl bg-secondary/60 border border-border">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Atualizar saldo disponível automaticamente</p>
+                <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                  Desative esta opção ao cadastrar compras antigas ou já pagas anteriormente. As parcelas serão registradas apenas para histórico e estatísticas, sem alterar o saldo atual.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={impactsBalance}
+                onClick={() => setImpactsBalance(v => !v)}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${impactsBalance ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${impactsBalance ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
+          </div>
+
           <button type="submit" disabled={submitting}
             className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-60">
             {submitting ? 'Gerando parcelas...' : 'Gerar parcelas'}
