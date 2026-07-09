@@ -18,7 +18,7 @@ import { useFinancialGoals } from '@/hooks/useFinancialGoals';
 import { useInstallments } from '@/hooks/useInstallments';
 import { useRecurring } from '@/hooks/useRecurring';
 import { cn } from '@/lib/utils';
-import { formatCurrency } from '@/lib/currency';
+import { formatBRL as formatCurrency } from '@/lib/currency';
 import foxMask from '@/assets/finango-fox-mask.png.asset.json';
 
 function initialsOf(name: string) {
