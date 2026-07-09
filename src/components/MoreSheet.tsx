@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { useAuth } from '@/contexts/AuthContext';
-import foxLogo from '@/assets/finango-fox.png';
+import foxLogo from '@/assets/finango-fox.png.asset.json';
 
 interface MoreSheetProps {
   open: boolean;
@@ -85,7 +85,7 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
     {
       title: 'Conta',
       items: [
-        { icon: User, label: 'Perfil', description: 'Sua conta e preferências', action: go('/settings') },
+        { icon: User, label: 'Perfil', description: 'Sua conta e preferências', action: go('/profile') },
         { icon: SettingsIcon, label: 'Configurações', description: 'Ajustes do aplicativo', action: go('/settings') },
         { icon: HelpCircle, label: 'Ajuda', description: 'Fale com o suporte', action: () => { haptic(); onClose(); window.location.href = 'mailto:suporte@finango.online'; } },
       ],
@@ -140,7 +140,7 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
             <div className="overflow-y-auto px-4 pb-6">
               {/* Profile Header Card */}
               <motion.button
-                onClick={go('/settings')}
+                onClick={go('/profile')}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
@@ -209,7 +209,7 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
               >
                 <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
                 <img
-                  src={foxLogo}
+                  src={foxLogo.url}
                   alt=""
                   aria-hidden="true"
                   className="absolute -right-4 -bottom-4 w-24 h-24 opacity-[0.08] pointer-events-none select-none"
