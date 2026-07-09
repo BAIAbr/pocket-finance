@@ -243,6 +243,34 @@ export default function InstallmentsPage() {
           </div>
         </div>
       )}
+      {confirmToggle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-2xl p-5 max-w-sm w-full">
+            <h3 className="font-semibold mb-1">
+              {confirmToggle.next
+                ? 'Deseja recalcular o saldo disponível considerando esta compra?'
+                : 'Deseja remover o impacto desta compra do saldo disponível?'}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {confirmToggle.next
+                ? 'Serão criadas transações de despesa para as parcelas já pagas, atualizando o saldo atual.'
+                : 'As transações vinculadas às parcelas serão removidas do caixa. A compra continuará visível para histórico.'}
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmToggle(null)}
+                className="flex-1 py-2.5 rounded-xl bg-secondary font-medium">Não</button>
+              <button onClick={async () => {
+                const t = confirmToggle;
+                setConfirmToggle(null);
+                await setImpactsBalance(t.purchase, t.next);
+              }}
+                className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium">
+                {confirmToggle.next ? 'Sim, recalcular' : 'Sim, remover'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
