@@ -27,7 +27,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const { user, profile, signOut, refreshProfile } = useAuth();
   const { planCode } = usePlanAccess();
-  const { userXP } = useMissions();
+  const { userXP } = useMissionContext();
   const isPaid = planCode !== 'free';
 
   const [uploading, setUploading] = useState(false);
