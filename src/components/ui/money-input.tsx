@@ -82,8 +82,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
       <input
         ref={ref}
         type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
+        inputMode="decimal"
         autoComplete="off"
         disabled={disabled}
         placeholder={placeholderText}
