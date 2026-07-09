@@ -82,6 +82,10 @@ export default function Dashboard() {
             </div>
 
             <div className="animate-fade-in stagger-2">
+              <InvestmentsSummaryCard />
+            </div>
+
+            <div className="animate-fade-in stagger-2">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-semibold text-lg">
                   {isFamily ? 'Transações Compartilhadas' : 'Últimas Transações'}
