@@ -70,12 +70,30 @@ export function NewContributionModal({ open, onClose, assets, currentPrice, onSu
           ))}
         </select>
 
+        <div className="flex gap-2 mb-3">
+          <button type="button" onClick={() => setMode('qty')}
+            className={`flex-1 py-2 rounded-xl text-xs font-semibold ${mode === 'qty' ? 'bg-primary text-primary-foreground' : 'bg-secondary/50 text-muted-foreground'}`}>
+            Por quantidade
+          </button>
+          <button type="button" onClick={() => setMode('value')}
+            className={`flex-1 py-2 rounded-xl text-xs font-semibold ${mode === 'value' ? 'bg-primary text-primary-foreground' : 'bg-secondary/50 text-muted-foreground'}`}>
+            Por valor
+          </button>
+        </div>
+
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label className="text-xs text-muted-foreground">Quantidade</label>
-            <input inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)}
-              className="w-full mt-1 px-3 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm font-semibold tabular-nums" placeholder="0" />
-          </div>
+          {mode === 'qty' ? (
+            <div>
+              <label className="text-xs text-muted-foreground">Quantidade</label>
+              <input inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)}
+                className="w-full mt-1 px-3 py-2.5 rounded-xl bg-secondary/50 border border-border text-sm font-semibold tabular-nums" placeholder="0" />
+            </div>
+          ) : (
+            <div>
+              <label className="text-xs text-muted-foreground">Valor disponível</label>
+              <CurrencyInput value={totalValue} onChange={setTotalValue} />
+            </div>
+          )}
           <div>
             <label className="text-xs text-muted-foreground">Preço unitário</label>
             <CurrencyInput value={price} onChange={setPrice} />
@@ -86,6 +104,15 @@ export function NewContributionModal({ open, onClose, assets, currentPrice, onSu
             )}
           </div>
         </div>
+
+        {mode === 'value' && price > 0 && totalValue > 0 && (
+          <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 mb-3 text-xs">
+            <div className="flex justify-between"><span className="text-muted-foreground">Cotas possíveis</span><span className="font-bold tabular-nums">{computedQty}</span></div>
+            <div className="flex justify-between mt-1"><span className="text-muted-foreground">Usado</span><span className="font-bold tabular-nums">{(computedQty * price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+            <div className="flex justify-between mt-1"><span className="text-muted-foreground">Saldo restante</span><span className="font-bold tabular-nums">{computedRemaining.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+          </div>
+        )}
+
 
         <label className="text-xs text-muted-foreground">Data</label>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
