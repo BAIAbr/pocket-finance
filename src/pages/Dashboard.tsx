@@ -7,6 +7,7 @@ import { FamilyDashboard } from '@/components/FamilyDashboard';
 import { QuickPiggyDeposit } from '@/components/QuickPiggyDeposit';
 import { UpcomingBillsCard } from '@/components/UpcomingBillsCard';
 import { PlanningSummaryCard } from '@/components/planning/PlanningSummaryCard';
+import { InvestmentsSummaryCard } from '@/components/investments/InvestmentsSummaryCard';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStreak } from '@/hooks/useStreak';

@@ -8,6 +8,7 @@ const navItems = [
   { path: '/ai-insights', icon: Brain, label: 'IA' },
   { path: '/savings', icon: Target, label: 'Metas' },
   { path: '/planning', icon: TrendingUp, label: 'Planejamento' },
+  { path: '/investments', icon: TrendingUp, label: 'Investimentos' },
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
 

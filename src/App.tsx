@@ -25,6 +25,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import FinancialHistory from "./pages/FinancialHistory";
 
 import Recurring from "./pages/Recurring";
+import Investments from "./pages/Investments";
 
 import Installments from "./pages/Installments";
 import Plans from "./pages/Plans";
@@ -60,6 +61,7 @@ const App = () => (
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/history" element={<FinancialHistory />} />
                   <Route path="/recurring" element={<PlanGate feature="recurring"><Recurring /></PlanGate>} />
+                  <Route path="/investments" element={<PlanGate feature="investments"><Investments /></PlanGate>} />
                   
                   <Route path="/installments" element={<PlanGate feature="installments"><Installments /></PlanGate>} />
                   <Route path="/plans" element={<Plans />} />
