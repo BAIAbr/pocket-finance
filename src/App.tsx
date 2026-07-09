@@ -60,6 +60,7 @@ const App = () => (
                   <Route path="/savings" element={<Savings />} />
                   <Route path="/planning" element={<PlanGate feature="planning"><Planning /></PlanGate>} />
                   <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/profile" element={<Profile />} />
                   <Route path="/history" element={<FinancialHistory />} />
                   <Route path="/recurring" element={<PlanGate feature="recurring"><Recurring /></PlanGate>} />
                   <Route path="/investments" element={<PlanGate feature="investments"><Investments /></PlanGate>} />
