@@ -32,6 +32,7 @@ import Plans from "./pages/Plans";
 import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
 import VipRedeem from "./pages/VipRedeem";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
