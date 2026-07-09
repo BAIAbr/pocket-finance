@@ -20,6 +20,7 @@ export function InstallmentFormModal({ isOpen, onClose, onSubmit }: Props) {
   const [cardName, setCardName] = useState('');
   const [firstDue, setFirstDue] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [notes, setNotes] = useState('');
+  const [impactsBalance, setImpactsBalance] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const expenseCats = (categories as any[]).filter(c => c.type === 'expense');
@@ -41,11 +42,12 @@ export function InstallmentFormModal({ isOpen, onClose, onSubmit }: Props) {
       first_due_date: firstDue,
       card_name: cardName.trim() || null,
       notes: notes.trim() || null,
+      impacts_balance: impactsBalance,
     });
     setSubmitting(false);
     if (ok) {
       setName(''); setTotal(''); setCount('12'); setCategoryId('');
-      setCardName(''); setNotes('');
+      setCardName(''); setNotes(''); setImpactsBalance(true);
       onClose();
     }
   };
@@ -117,6 +119,26 @@ export function InstallmentFormModal({ isOpen, onClose, onSubmit }: Props) {
             <label className="text-xs text-muted-foreground font-medium">Notas (opcional)</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} maxLength={300} rows={2}
               className="w-full mt-1 px-4 py-3 bg-secondary rounded-xl outline-none focus:ring-2 focus:ring-primary resize-none" />
+          </div>
+
+          <div className="p-3 rounded-xl bg-secondary/60 border border-border">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Atualizar saldo disponível automaticamente</p>
+                <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                  Desative esta opção ao cadastrar compras antigas ou já pagas anteriormente. As parcelas serão registradas apenas para histórico e estatísticas, sem alterar o saldo atual.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={impactsBalance}
+                onClick={() => setImpactsBalance(v => !v)}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${impactsBalance ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${impactsBalance ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
           </div>
 
           <button type="submit" disabled={submitting}

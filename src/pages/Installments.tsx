@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, CreditCard, Check, Trash2, ChevronDown, ChevronUp, Calendar, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Plus, CreditCard, Check, Trash2, ChevronDown, ChevronUp, Calendar, RotateCcw, EyeOff, Wallet } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useInstallments, InstallmentPurchaseWithItems } from '@/hooks/useInstallments';
@@ -11,11 +11,18 @@ import { cn } from '@/lib/utils';
 
 export default function InstallmentsPage() {
   const navigate = useNavigate();
-  const { purchases, isLoading, create, remove, markPaid, markUnpaid } = useInstallments();
+  const { purchases, isLoading, create, remove, markPaid, markUnpaid, setImpactsBalance } = useInstallments();
   const { settings, getCategoryById } = useFinanceContext();
   const [showForm, setShowForm] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [onlyImpacting, setOnlyImpacting] = useState(false);
+  const [confirmToggle, setConfirmToggle] = useState<{ purchase: InstallmentPurchaseWithItems; next: boolean } | null>(null);
+
+  const visiblePurchases = useMemo(
+    () => onlyImpacting ? purchases.filter(p => p.impacts_balance) : purchases,
+    [purchases, onlyImpacting]
+  );
 
   const fmt = (v: number) =>
     `${settings.currencySymbol} ${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -75,9 +82,22 @@ export default function InstallmentsPage() {
         </div>
 
         {/* List */}
+        {/* Filter */}
+        {purchases.length > 0 && (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={onlyImpacting}
+              onChange={e => setOnlyImpacting(e.target.checked)}
+              className="accent-primary w-4 h-4"
+            />
+            Mostrar apenas lançamentos que impactam o saldo
+          </label>
+        )}
+
         {isLoading ? (
           <div className="card-finance text-center py-8 text-sm text-muted-foreground">Carregando...</div>
-        ) : purchases.length === 0 ? (
+        ) : visiblePurchases.length === 0 ? (
           <div className="card-finance text-center py-10">
             <CreditCard size={28} className="text-muted-foreground mx-auto mb-2" />
             <p className="font-medium">Nenhuma compra parcelada</p>
@@ -89,21 +109,26 @@ export default function InstallmentsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {purchases.map(p => {
+            {visiblePurchases.map(p => {
               const { paid, total, pct } = progressOf(p);
               const isOpen = !!expanded[p.id];
               const cat = p.category_id ? getCategoryById(p.category_id) : null;
               const nextItem = p.items.find(i => !i.is_paid);
               const nextDays = nextItem ? daysUntil(nextItem.due_date) : null;
               return (
-                <div key={p.id} className="card-finance !p-4">
+                <div key={p.id} className={cn('card-finance !p-4', !p.impacts_balance && 'border border-dashed border-muted-foreground/30')}>
                   <div className="flex items-start justify-between gap-3">
                     <button onClick={() => setExpanded(s => ({ ...s, [p.id]: !s[p.id] }))} className="flex-1 text-left min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <p className="font-semibold truncate">{p.name}</p>
                         {p.card_name && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground truncate max-w-[100px]">
                             {p.card_name}
+                          </span>
+                        )}
+                        {!p.impacts_balance && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                            <EyeOff size={9} /> Sem impacto no saldo
                           </span>
                         )}
                       </div>
@@ -113,6 +138,13 @@ export default function InstallmentsPage() {
                       </p>
                     </button>
                     <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setConfirmToggle({ purchase: p, next: !p.impacts_balance })}
+                        title={p.impacts_balance ? 'Remover impacto no saldo' : 'Passar a impactar o saldo'}
+                        className="p-2 rounded-lg hover:bg-secondary touch-scale text-muted-foreground"
+                      >
+                        <Wallet size={14} />
+                      </button>
                       <button onClick={() => setExpanded(s => ({ ...s, [p.id]: !s[p.id] }))}
                         className="p-2 rounded-lg hover:bg-secondary touch-scale">
                         {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -123,6 +155,7 @@ export default function InstallmentsPage() {
                       </button>
                     </div>
                   </div>
+
 
                   <div className="mt-3">
                     <div className="flex items-center justify-between text-[11px] mb-1">
@@ -206,6 +239,34 @@ export default function InstallmentsPage() {
                 className="flex-1 py-2.5 rounded-xl bg-secondary font-medium">Cancelar</button>
               <button onClick={async () => { await remove(confirmDelete); setConfirmDelete(null); }}
                 className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium">Excluir</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {confirmToggle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-2xl p-5 max-w-sm w-full">
+            <h3 className="font-semibold mb-1">
+              {confirmToggle.next
+                ? 'Deseja recalcular o saldo disponível considerando esta compra?'
+                : 'Deseja remover o impacto desta compra do saldo disponível?'}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {confirmToggle.next
+                ? 'Serão criadas transações de despesa para as parcelas já pagas, atualizando o saldo atual.'
+                : 'As transações vinculadas às parcelas serão removidas do caixa. A compra continuará visível para histórico.'}
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmToggle(null)}
+                className="flex-1 py-2.5 rounded-xl bg-secondary font-medium">Não</button>
+              <button onClick={async () => {
+                const t = confirmToggle;
+                setConfirmToggle(null);
+                await setImpactsBalance(t.purchase, t.next);
+              }}
+                className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium">
+                {confirmToggle.next ? 'Sim, recalcular' : 'Sim, remover'}
+              </button>
             </div>
           </div>
         </div>

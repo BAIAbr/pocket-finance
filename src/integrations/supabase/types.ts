@@ -321,6 +321,7 @@ export type Database = {
           created_at: string
           due_date: string
           id: string
+          impacts_balance: boolean
           installment_number: number
           is_paid: boolean
           paid_at: string | null
@@ -334,6 +335,7 @@ export type Database = {
           created_at?: string
           due_date: string
           id?: string
+          impacts_balance?: boolean
           installment_number: number
           is_paid?: boolean
           paid_at?: string | null
@@ -347,6 +349,7 @@ export type Database = {
           created_at?: string
           due_date?: string
           id?: string
+          impacts_balance?: boolean
           installment_number?: number
           is_paid?: boolean
           paid_at?: string | null
@@ -380,6 +383,7 @@ export type Database = {
           family_id: string | null
           first_due_date: string
           id: string
+          impacts_balance: boolean
           installments_count: number
           name: string
           notes: string | null
@@ -394,6 +398,7 @@ export type Database = {
           family_id?: string | null
           first_due_date: string
           id?: string
+          impacts_balance?: boolean
           installments_count: number
           name: string
           notes?: string | null
@@ -408,6 +413,7 @@ export type Database = {
           family_id?: string | null
           first_due_date?: string
           id?: string
+          impacts_balance?: boolean
           installments_count?: number
           name?: string
           notes?: string | null
