@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Check, ArrowDownLeft, ArrowUpRight, Plus, Settings, Users } from 'lucide-react';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useFamilyContext } from '@/contexts/FamilyContext';
