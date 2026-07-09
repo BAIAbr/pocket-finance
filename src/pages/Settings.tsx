@@ -66,63 +66,6 @@ export default function SettingsPage() {
 
 
 
-  const handleAvatarClick = () => fileInputRef.current?.click();
-
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-    if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) {
-      toast.error('Formato inválido. Use PNG, JPG ou WEBP.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('A imagem deve ter no máximo 5MB');
-      return;
-    }
-    setIsUploadingAvatar(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
-      try {
-        const { data: files } = await supabase.storage.from('avatars').list(user.id);
-        if (files && files.length > 0) {
-          await supabase.storage.from('avatars').remove(files.map((f) => `${user.id}/${f.name}`));
-        }
-      } catch {}
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
-      await updateProfile({ avatar_url: `${publicUrl}?t=${Date.now()}` });
-      toast.success('Foto de perfil atualizada!');
-    } catch (error) {
-      console.error(error);
-      toast.error('Erro ao enviar foto');
-    } finally {
-      setIsUploadingAvatar(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleRemoveAvatar = async () => {
-    if (!user) return;
-    setIsRemovingAvatar(true);
-    try {
-      try {
-        const { data: files } = await supabase.storage.from('avatars').list(user.id);
-        if (files && files.length > 0) {
-          await supabase.storage.from('avatars').remove(files.map((f) => `${user.id}/${f.name}`));
-        }
-      } catch {}
-      await updateProfile({ avatar_url: null });
-      toast.success('Foto removida');
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao remover foto');
-    } finally {
-      setIsRemovingAvatar(false);
-    }
-  };
-
   const handleInstallApp = () => {
     const deferredPrompt = (window as any).deferredPrompt;
     if (deferredPrompt) {
@@ -140,12 +83,6 @@ export default function SettingsPage() {
     }
   };
 
-  const displayName = profile?.name || authProfile?.email?.split('@')[0] || 'Usuário';
-  const displayEmail = profile?.email || authProfile?.email || '';
-  const avatarUrl = profile?.avatar_url || null;
-  const badge = planBadgeMeta(planCode || 'free');
-  const currentPlan = plans.find((p) => p.code === planCode);
-  const isPremium = badge.label !== 'FREE';
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
