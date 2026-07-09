@@ -13,7 +13,6 @@ import { useStreak } from '@/hooks/useStreak';
 import { useWeeklySummary } from '@/hooks/useWeeklySummary';
 
 export default function Dashboard() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { transactions, currentMonthStats, categories, isFamily, piggyBanks, formatCurrency, _personalFinance } = useEffectiveFinance();
   const { user } = useAuth();
   const { currentStreak } = useStreak(user?.id ?? null);
