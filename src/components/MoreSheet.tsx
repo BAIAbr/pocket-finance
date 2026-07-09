@@ -209,7 +209,7 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
               >
                 <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
                 <img
-                  src={foxLogo}
+                  src={foxLogo.url}
                   alt=""
                   aria-hidden="true"
                   className="absolute -right-4 -bottom-4 w-24 h-24 opacity-[0.08] pointer-events-none select-none"
