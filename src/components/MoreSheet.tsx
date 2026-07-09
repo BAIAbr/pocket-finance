@@ -41,7 +41,7 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
   };
 
   const items: Item[] = [
-    { icon: TrendingUp, label: 'Investimentos', description: 'Acompanhe rendimentos e carteira', premium: true, badge: 'Novo', action: soon('Investimentos') },
+    { icon: TrendingUp, label: 'Investimentos', description: 'Acompanhe rendimentos e carteira', badge: 'Novo', action: go('/investments') },
     { icon: Bot, label: 'Finango IA', description: 'Copiloto financeiro inteligente', premium: true, action: go('/ai-insights') },
     { icon: Camera, label: 'Scanner Inteligente', description: 'Leia notas fiscais com a câmera', premium: true, action: soon('Scanner Inteligente') },
     { icon: FileDown, label: 'Importar Extratos', description: 'Importe CSV/OFX do seu banco', premium: true, action: soon('Importar Extratos') },

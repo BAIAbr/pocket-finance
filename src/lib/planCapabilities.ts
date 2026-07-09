@@ -1,6 +1,4 @@
 // Machine-readable capabilities per plan code.
-// The subscription_plans table stores price/name/description/features (display).
-// Capabilities (feature gates) live here so they stay stable and type-safe.
 
 export type PlanFeature =
   | 'ai'
@@ -10,10 +8,11 @@ export type PlanFeature =
   | 'push'
   | 'customCdi'
   | 'advancedExport'
-  | 'planning';
+  | 'planning'
+  | 'investments';
 
 export interface PlanCapabilities {
-  maxPiggyBanks: number; // -1 = unlimited
+  maxPiggyBanks: number;
   features: Record<PlanFeature, boolean>;
 }
 
@@ -29,6 +28,7 @@ export const PLAN_CAPABILITIES: Record<string, PlanCapabilities> = {
       customCdi: false,
       advancedExport: false,
       planning: false,
+      investments: true,
     },
   },
   pro: {
@@ -42,6 +42,7 @@ export const PLAN_CAPABILITIES: Record<string, PlanCapabilities> = {
       customCdi: false,
       advancedExport: false,
       planning: true,
+      investments: true,
     },
   },
   premium: {
@@ -55,6 +56,7 @@ export const PLAN_CAPABILITIES: Record<string, PlanCapabilities> = {
       customCdi: true,
       advancedExport: true,
       planning: true,
+      investments: true,
     },
   },
 };
@@ -68,6 +70,7 @@ export const FEATURE_LABELS: Record<PlanFeature, string> = {
   customCdi: 'Rendimento CDI Personalizado',
   advancedExport: 'Exportação Avançada',
   planning: 'Planejamento Financeiro Inteligente',
+  investments: 'Central de Investimentos',
 };
 
 export function getCapabilities(planCode: string | undefined): PlanCapabilities {

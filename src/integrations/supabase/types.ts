@@ -432,6 +432,175 @@ export type Database = {
           },
         ]
       }
+      investment_assets: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+          segment: string | null
+          ticker: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          segment?: string | null
+          ticker: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          segment?: string | null
+          ticker?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      investment_dividends: {
+        Row: {
+          amount: number
+          asset_id: string
+          com_date: string | null
+          created_at: string
+          id: string
+          pay_date: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          asset_id: string
+          com_date?: string | null
+          created_at?: string
+          id?: string
+          pay_date: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          asset_id?: string
+          com_date?: string | null
+          created_at?: string
+          id?: string
+          pay_date?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_dividends_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "investment_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investment_transactions: {
+        Row: {
+          asset_id: string
+          created_at: string
+          date: string
+          id: string
+          kind: string
+          notes: string | null
+          quantity: number
+          total: number
+          unit_price: number
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          date?: string
+          id?: string
+          kind: string
+          notes?: string | null
+          quantity: number
+          total: number
+          unit_price: number
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          kind?: string
+          notes?: string | null
+          quantity?: number
+          total?: number
+          unit_price?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_transactions_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "investment_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_quotes_cache: {
+        Row: {
+          com_date: string | null
+          dividend_yield: number | null
+          last_dividend: number | null
+          liquidity: number | null
+          name: string | null
+          patrimonial_value: number | null
+          pay_date: string | null
+          price: number | null
+          provider: string | null
+          raw: Json | null
+          segment: string | null
+          ticker: string
+          updated_at: string
+        }
+        Insert: {
+          com_date?: string | null
+          dividend_yield?: number | null
+          last_dividend?: number | null
+          liquidity?: number | null
+          name?: string | null
+          patrimonial_value?: number | null
+          pay_date?: string | null
+          price?: number | null
+          provider?: string | null
+          raw?: Json | null
+          segment?: string | null
+          ticker: string
+          updated_at?: string
+        }
+        Update: {
+          com_date?: string | null
+          dividend_yield?: number | null
+          last_dividend?: number | null
+          liquidity?: number | null
+          name?: string | null
+          patrimonial_value?: number | null
+          pay_date?: string | null
+          price?: number | null
+          provider?: string | null
+          raw?: Json | null
+          segment?: string | null
+          ticker?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       missions: {
         Row: {
           category: string
