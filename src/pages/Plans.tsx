@@ -40,30 +40,52 @@ export default function PlansPage() {
   const isLive = mpEnv?.mode === 'live';
 
 
+  const currentPlan = plans.find(p => p.code === currentPlanCode);
+  const currentPrice = currentPlan?.price_monthly ?? 0;
+  const isPaidUser = currentPlanCode !== 'free';
+
   const handleSelect = async (code: string) => {
     if (code === currentPlanCode) return;
     setBusy(code);
     setCheckoutNotice(null);
     try {
+      const targetPlan = plans.find(p => p.code === code);
+      const targetPrice = targetPlan?.price_monthly ?? 0;
+
+      // FREE → cancel/downgrade
       if (code === 'free') {
-        // Downgrade — cancela no MP e retorna ao gratuito
-        const { data, error } = await supabase.functions.invoke('cancel-subscription', { body: {} });
+        const { data, error } = await supabase.functions.invoke('downgrade-plan', {
+          body: { plan_code: 'free', immediate: true },
+        });
         if (error) throw error;
-        if ((data as any)?.error) throw new Error((data as any).error);
+        if ((data as any)?.error) throw new Error((data as any).message ?? (data as any).error);
         toast.success('Plano atualizado para Gratuito');
-      } else {
-        // Pré-flight: bloqueia se o e-mail do pagador é o mesmo do recebedor
+        window.location.reload();
+        return;
+      }
+
+      // Paid → Paid: use upgrade or downgrade edge functions
+      if (isPaidUser && targetPrice < currentPrice) {
+        const { data, error } = await supabase.functions.invoke('downgrade-plan', {
+          body: { plan_code: code, immediate: false },
+        });
+        if (error) throw error;
+        if ((data as any)?.error) throw new Error((data as any).message ?? (data as any).error);
+        toast.success((data as any)?.message ?? 'Downgrade agendado para o fim do ciclo.');
+        return;
+      }
+
+      if (isPaidUser && targetPrice > currentPrice) {
         if (emailMatchesCollector) {
           setCheckoutNotice(
             isTest
-              ? 'Você está no ambiente de teste. Use o e-mail de um comprador de teste do Mercado Pago — diferente da conta vendedora.'
-              : 'O e-mail informado é da mesma conta que recebe os pagamentos. Use outra conta Mercado Pago real para pagar.',
+              ? 'Use o e-mail de um comprador de teste do Mercado Pago — diferente da conta vendedora.'
+              : 'O e-mail informado é da conta que recebe pagamentos. Use outra conta Mercado Pago.',
           );
           toast.error('Informe outro e-mail de pagador');
           return;
         }
-        // Cria assinatura recorrente no Mercado Pago e redireciona pro checkout
-        const { data, error } = await supabase.functions.invoke('create-subscription', {
+        const { data, error } = await supabase.functions.invoke('upgrade-plan', {
           body: {
             plan_code: code,
             back_url: window.location.origin,
@@ -71,23 +93,47 @@ export default function PlansPage() {
           },
         });
         if (error) throw error;
-        if ((data as any)?.ok === false && (data as any)?.error === 'payer_collector_mode_mismatch') {
-          const message = (data as any)?.message ?? 'Informe um e-mail de pagador diferente para continuar.';
-          setCheckoutNotice(message);
-          toast.error('Mercado Pago recusou o pagador informado');
-          return;
-        }
-        if ((data as any)?.error) throw new Error((data as any)?.message ?? (data as any).error);
+        if ((data as any)?.error) throw new Error((data as any).message ?? (data as any).error);
         const checkoutUrl = (data as any)?.checkout_url;
-        if (!checkoutUrl) throw new Error('Não foi possível iniciar o checkout.');
+        if (!checkoutUrl) throw new Error('Não foi possível iniciar o upgrade.');
         toast.success('Redirecionando para o pagamento…');
         window.location.href = checkoutUrl;
         return;
       }
+
+      // Free → Paid: usual create-subscription flow
+      if (emailMatchesCollector) {
+        setCheckoutNotice(
+          isTest
+            ? 'Você está no ambiente de teste. Use o e-mail de um comprador de teste do Mercado Pago — diferente da conta vendedora.'
+            : 'O e-mail informado é da mesma conta que recebe os pagamentos. Use outra conta Mercado Pago real para pagar.',
+        );
+        toast.error('Informe outro e-mail de pagador');
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke('create-subscription', {
+        body: {
+          plan_code: code,
+          back_url: window.location.origin,
+          payer_email: payerEmail.trim() || undefined,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.ok === false && (data as any)?.error === 'payer_collector_mode_mismatch') {
+        const message = (data as any)?.message ?? 'Informe um e-mail de pagador diferente para continuar.';
+        setCheckoutNotice(message);
+        toast.error('Mercado Pago recusou o pagador informado');
+        return;
+      }
+      if ((data as any)?.error) throw new Error((data as any)?.message ?? (data as any).error);
+      const checkoutUrl = (data as any)?.checkout_url;
+      if (!checkoutUrl) throw new Error('Não foi possível iniciar o checkout.');
+      toast.success('Redirecionando para o pagamento…');
+      window.location.href = checkoutUrl;
     } catch (e: any) {
       const message = e?.message ?? 'Erro ao atualizar plano';
       if (message.includes('Both payer and collector must be real or test users')) {
-        setCheckoutNotice('Informe um e-mail de pagador compatível com o ambiente do Mercado Pago: comprador de teste para token TEST ou conta real diferente da vendedora para token de produção.');
+        setCheckoutNotice('Informe um e-mail de pagador compatível com o ambiente do Mercado Pago.');
         toast.error('Informe outro e-mail de pagador');
       } else {
         toast.error(message);
@@ -248,6 +294,12 @@ export default function PlansPage() {
                     <Loader2 className="w-4 h-4 animate-spin mx-auto" />
                   ) : isCurrent ? (
                     <span className="inline-flex items-center gap-1.5"><Check size={16} /> Plano atual</span>
+                  ) : plan.code === 'free' ? (
+                    'Voltar ao Gratuito'
+                  ) : isPaidUser && plan.price_monthly > currentPrice ? (
+                    'Fazer upgrade'
+                  ) : isPaidUser && plan.price_monthly < currentPrice ? (
+                    'Fazer downgrade'
                   ) : (
                     'Selecionar'
                   )}
