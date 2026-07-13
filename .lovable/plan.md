@@ -1,112 +1,80 @@
-# 📥 Importador Inteligente + Exportação/Backup — Plano
+# 📑 Central de Documentos Finango — Plano de Implementação
 
-Implementação 100% nativa (Lovable + Supabase + bibliotecas open source). Nada existente será removido; a construção é incremental.
+Vou construir um CMS interno para documentos institucionais e um Changelog público, tudo administrável pelo painel admin, sem tocar em nada existente.
 
-## 1. Banco de dados (migração)
+## Escopo
 
-Novas tabelas em `public` (com GRANTs, RLS por `auth.uid()`, timestamps + trigger `update_updated_at_column`):
+**Documentos institucionais** (Política de Privacidade, Termos de Uso, Política de Cookies, Sobre) + **Changelog** (Novidades) — todos criados/editados via admin, publicados em rotas públicas.
 
-- `import_history` — id, user_id, family_id?, file_name, file_type (ofx|csv|xlsx), bank_detected, records_total, records_imported, income_total, expense_total, status (pending|processing|success|error|partial), error_message, raw_summary jsonb, created_at, updated_at.
-- `import_rules` — id, user_id, pattern text (uppercase normalizado), category_id, match_type (contains|equals|regex), hits int default 0, created_at, updated_at, UNIQUE(user_id, pattern).
-- `imported_transactions_map` — id, transaction_id FK transactions, import_id FK import_history, external_hash text (para dedup), UNIQUE(user_id, external_hash).
+## Banco de dados (incremental, novas tabelas)
 
-Adicionar coluna `import_id uuid` (nullable) em `transactions` para rastreabilidade. Coluna `source text default 'manual'` para diferenciar (`manual|ofx|csv|xlsx|recurring`).
+- `documents` — id, slug único, tipo (`policy` | `terms` | `cookies` | `about` | `changelog` | `custom`), titulo, subtitulo, conteudo (JSONB do editor), icon, cover_image, status (`published` | `draft` | `archived`), versao, seo_title, seo_description, seo_image, autor (uuid), published_at, timestamps.
+- `document_versions` — histórico completo (document_id, versao, conteudo snapshot, autor, resumo_alteracao, created_at).
+- `changelog_entries` — versao, titulo, descricao (JSONB), categoria (enum: novidade/melhoria/correcao/seguranca/performance/premium/planejamento/investimentos/cartoes/ia), icon, image, tags[], published_at, is_highlight, status.
+- `changelog_views` — user_id + entry_id (para remover destaque após visualização).
 
-Realtime já cobre `transactions`; adicionar `import_history` à publication.
+RLS: `SELECT` público em linhas `published`; `INSERT/UPDATE/DELETE` apenas admin (via `has_role`). GRANTs completos + trigger de auto-versionamento em `documents` (INSERT em `document_versions` a cada UPDATE).
 
-## 2. Regras de categorização (semente)
+## Editor rico (admin)
 
-Arquivo `src/lib/import/categoryRules.ts` — dicionário estático (~150 regras: UBER/99/IFOOD/BURGER/MCDONALDS/NETFLIX/SPOTIFY/DISNEY/PRIME/GOOGLE PLAY/APPLE/AMAZON/MERCADO LIVRE/SHOPEE/POSTO/SHELL/IPIRANGA/FARMACIA/DROGA/PAGUEMENOS/MERCADO/CARREFOUR/EXTRA/PIX/TED/DOC/BOLETO/etc). Cada regra referencia uma categoria default por `name` (resolvida em runtime contra `categories` do usuário; se não existir, usa "Outros" do tipo correto).
+Uso `@tiptap/react` + extensões: StarterKit, Underline, Link, Image, Table, TaskList, CodeBlockLowlight, Placeholder, TextAlign, Highlight, Blockquote, HorizontalRule, Headings H1-H6. Toolbar flutuante estilo Notion. Callouts/alertas via nó customizado.
 
-Aprendizado: quando o usuário altera categoria numa linha do preview, cria/atualiza `import_rules` para aquele padrão normalizado (>=3 chars, ignorando números e códigos de transação).
+Salvamento automático com debounce 800ms → indicador "Salvando... / ✓ Salvo". Cada save cria uma versão nova via trigger. Painel lateral com histórico de versões e botão "Restaurar".
 
-## 3. Parsers (client-side, open source)
+## Painel Administrativo
 
-- OFX: parser próprio simples (regex de `<STMTTRN>…</STMTTRN>` — suficiente para OFX 1.x/2.x brasileiros; extrai `DTPOSTED`, `TRNAMT`, `MEMO`, `NAME`, `FITID`, `BANKID`).
-- CSV: `papaparse` (já elegível). Detecta cabeçalho, mapeia colunas (data/descrição/valor) via heurística + UI de mapeamento manual.
-- XLSX: `xlsx` (SheetJS community). Mesma heurística/mapeamento.
+Nova aba em `AdminDashboard.tsx`: **📑 Documentos**
+- Lista de documentos (busca, filtro por tipo/status)
+- Botão "Novo documento"
+- Editor em tela cheia com: título, subtítulo, ícone (emoji picker), imagem de capa (upload no bucket `document-assets`), corpo (Tiptap), painel lateral com SEO, status, versões
+- Aba secundária **🚀 Changelog** — CRUD de entradas com categoria, tags, versão, destaque.
 
-Dedup hash: `sha256(user_id + date + amount + normalize(description))` calculado em JS (`crypto.subtle`). Comparado contra `imported_transactions_map.external_hash`.
+## Rotas públicas (novas, não conflitam)
 
-## 4. Fluxo/UX
+- `/politica-de-privacidade`
+- `/termos-de-uso`
+- `/politica-de-cookies`
+- `/sobre`
+- `/novidades` (lista de changelog com filtros por versão/categoria/ano/busca)
+- `/documentos/:slug` (fallback genérico para documentos customizados)
 
-Rota nova `/settings/import` (assistente) + `/settings/import/history`.
+Cada página renderiza o JSON do Tiptap com o mesmo schema (componente `DocumentRenderer`). Meta tags via `react-helmet-async` (instalar), canonical + OG. Sumário (TOC) gerado automaticamente a partir dos headings, com scroll suave. Botões: Baixar PDF (jsPDF já instalado), Imprimir, Copiar link, Compartilhar (Web Share API).
 
-Wizard em 5 passos com animações (framer-motion já usado):
+## Home — destaque de novidade
 
-1. **Escolha o tipo** — cards OFX / CSV / XLSX.
-2. **Upload** — dropzone; valida extensão, tamanho (<10MB), integridade (parser tenta ler).
-3. **Detecção** — mostra banco/conta/período/qtd. Se CSV/XLSX e mapeamento ambíguo, exibe UI para escolher colunas.
-4. **Preview** — tabela editável (categoria via combobox, descrição, tipo, incluir/excluir linha). Marca duplicados com badge; ação em massa Ignorar/Substituir/Importar. Resumo lateral (receitas, despesas, saldo, dedup, categorias).
-5. **Importação** — barra de progresso (chunks de 50 linhas via `for…of` + `await`), atualiza `import_history` em tempo real. Ao final, toast + link para o dashboard. Salva regras aprendidas.
+Card discreto no Dashboard quando existir `changelog_entries.is_highlight = true` que o usuário ainda não visualizou. Ao clicar em "Ver Novidades" → registra em `changelog_views` e some.
 
-Processamento é assíncrono no cliente com `requestIdleCallback` fallback `setTimeout(0)` entre chunks para não travar UI. Grande volume (>500 linhas) mostra "processando em segundo plano" e permite navegar (mantido em contexto `ImportContext`).
+## Toast de atualização
 
-## 5. Histórico de importações
+Ao logar, se houver changelog com versão > última vista → toast "🔔 O Finango foi atualizado!".
 
-Página lista `import_history` com filtros. Ações:
-- Ver detalhes (linhas importadas via `imported_transactions_map`).
-- Excluir importação → rollback opcional (apaga transações vinculadas a esse `import_id`, com confirmação dupla).
-- Re-download: arquivo original NÃO é armazenado (privacidade + custo). Em vez disso, exporta as transações daquele import como CSV/JSON.
+## Acessibilidade / UX
 
-## 6. Exportação (funcional)
+Controles de fonte (A- / A+) e alto contraste na página pública (persistido em localStorage). Navegação teclado nativa via Tiptap. Tema claro/escuro herda do ThemeContext.
 
-Em `DataSettings.tsx` substituir "Em breve" por implementações reais:
-- **CSV**: `papaparse.unparse`.
-- **Excel**: `xlsx` (SheetJS).
-- **PDF**: `jspdf` + `jspdf-autotable` (tabela simples com resumo).
-- **JSON**: já funciona (mantém).
+## Seed inicial
 
-Todos exportam transações + metas + categorias + planejamento + investimentos + preferências (dependendo do escopo escolhido).
+Migração cria as 5 primeiras entradas em `documents` (Política, Termos, Cookies, Sobre) + 1 entrada de Changelog exemplo (v2.1.0 Dashboard Personalizável), todas com conteúdo padrão editável — nada hardcoded no front.
 
-## 7. Backup / Restauração
+## Segurança
 
-- Backup: JSON completo (transactions, goals, categories, planning, investments, installments, recurring, savings, preferences). Já parcialmente implementado — expandir.
-- Restauração: novo modal com upload → validação de schema (versão + shape) → resumo → escolha "Substituir" (apaga e insere) ou "Mesclar" (dedup por id). Nunca apaga sem confirmação explícita.
+- RLS admin-only para escrita
+- Log em `security_events` a cada publicação/restauração
+- Bucket `document-assets` privado com policy: read público apenas para arquivos referenciados em documentos publicados; write só admin
 
-## 8. Login Google / Apple
+## Pacotes a instalar
 
-- Google: página `SubscriptionSettings` ou nova subseção "Contas conectadas" mostra e-mail vinculado (via `supabase.auth.getUser().identities`), botões Vincular/Desvincular/Trocar (`supabase.auth.linkIdentity` / `unlinkIdentity`).
-- Apple: detecta se provider Apple está habilitado no projeto (chamando `supabase.auth.signInWithOAuth({provider:'apple'})` em modo "check"). Se admin → alerta "Provider Apple não configurado no backend". Nunca "Em breve".
+`@tiptap/react @tiptap/starter-kit @tiptap/extension-*` (underline, link, image, table, task-list, code-block-lowlight, placeholder, text-align, highlight), `lowlight`, `react-helmet-async`.
 
-## 9. Assinatura
+## Fora de escopo (preservado, sem alteração)
 
-Aprimorar `SubscriptionSettings.tsx` já existente: mostra plano atual, código VIP ativo (se houver via `vip_redemptions`), benefícios, expiração, histórico de redenções. Arquitetura para gateway fica como TODO documentado no código.
+Dashboard, Perfil, Planejamento, Metas, IA, Investimentos, Parcelamentos, Auth, Family, categorias existentes, importador. Nenhum arquivo dessas áreas será tocado.
 
-## 10. Segurança e validação
+## Detalhes técnicos
 
-- Whitelist de MIME + extensão + tamanho.
-- Sanitização de strings (`DOMPurify` ou normalização simples via regex).
-- Log em `security_events` para cada import (user_id, action='import', file_type, records).
-- RLS garantindo isolamento por usuário/família.
+- Conteúdo armazenado como JSON do Tiptap (não HTML) para segurança e portabilidade; PDF/renderização usa serializer próprio.
+- Auto-save: `useEffect` + debounce + `upsert` no Supabase; trigger PL/pgSQL cuida do versionamento (evita corrida).
+- Realtime: `documents` publica em `supabase_realtime` para que edições apareçam ao vivo em outras abas admin.
+- Busca full-text: coluna `tsvector` gerada + índice GIN sobre título/subtítulo/plaintext do conteúdo.
 
-## 11. Testes
-
-- Vitest: parser OFX, parser CSV mapping, dedup hash, aplicação de regras.
-- Playwright manual: fluxo OFX pequeno de exemplo → verifica dashboard atualiza.
-
-## 12. Rotas e navegação
-
-- Adicionar em `App.tsx`: `/settings/import`, `/settings/import/history`, `/settings/connected-accounts`.
-- Em `DataSettings.tsx`: linkar "Importar dados" → `/settings/import`; "Restaurar backup" abre modal; exportações passam a funcionar.
-
-## 13. Dependências
-
-Adicionar via `bun add`: `papaparse`, `@types/papaparse`, `xlsx`, `jspdf`, `jspdf-autotable`. Todas open source, sem custo.
-
-## 14. Escopo NÃO alterado
-
-Perfil, Dashboard, Planejamento, Metas, Investimentos, IA, Categorias, Cartões, Famílias, Missões — não são modificados; apenas passam a receber dados via as novas importações.
-
-## Ordem de entrega
-
-1. Migração (tabelas + RLS + GRANTs + coluna em transactions).
-2. Deps + parsers + regras estáticas + hash dedup (utils).
-3. Contexto `ImportContext` + wizard UI + rotas.
-4. Histórico de importações.
-5. Exportações reais (CSV/XLSX/PDF).
-6. Restauração de backup.
-7. Contas conectadas (Google/Apple).
-8. Testes Vitest dos parsers.
-
-Confirma que devo prosseguir com essa implementação completa?
+Confirma que devo prosseguir com essa implementação?
