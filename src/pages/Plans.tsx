@@ -294,6 +294,12 @@ export default function PlansPage() {
                     <Loader2 className="w-4 h-4 animate-spin mx-auto" />
                   ) : isCurrent ? (
                     <span className="inline-flex items-center gap-1.5"><Check size={16} /> Plano atual</span>
+                  ) : plan.code === 'free' ? (
+                    'Voltar ao Gratuito'
+                  ) : isPaidUser && plan.price_monthly > currentPrice ? (
+                    'Fazer upgrade'
+                  ) : isPaidUser && plan.price_monthly < currentPrice ? (
+                    'Fazer downgrade'
                   ) : (
                     'Selecionar'
                   )}
