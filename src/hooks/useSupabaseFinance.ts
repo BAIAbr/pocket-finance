@@ -902,5 +902,6 @@ export function useSupabaseFinance(userId: string | null) {
     formatCurrency,
     setSettings,
     clearAllData,
+    refresh,
   };
 }
