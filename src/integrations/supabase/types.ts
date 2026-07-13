@@ -142,6 +142,105 @@ export type Database = {
           },
         ]
       }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          created_at: string
+          discount_applied: number | null
+          id: string
+          plan_code: string | null
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          created_at?: string
+          discount_applied?: number | null
+          id?: string
+          plan_code?: string | null
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          created_at?: string
+          discount_applied?: number | null
+          id?: string
+          plan_code?: string | null
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          active: boolean
+          applies_to_plan_codes: string[]
+          code: string
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          free_days: number
+          id: string
+          max_uses: number | null
+          metadata: Json
+          starts_at: string | null
+          updated_at: string
+          uses_count: number
+        }
+        Insert: {
+          active?: boolean
+          applies_to_plan_codes?: string[]
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_type: string
+          discount_value?: number
+          expires_at?: string | null
+          free_days?: number
+          id?: string
+          max_uses?: number | null
+          metadata?: Json
+          starts_at?: string | null
+          updated_at?: string
+          uses_count?: number
+        }
+        Update: {
+          active?: boolean
+          applies_to_plan_codes?: string[]
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          free_days?: number
+          id?: string
+          max_uses?: number | null
+          metadata?: Json
+          starts_at?: string | null
+          updated_at?: string
+          uses_count?: number
+        }
+        Relationships: []
+      }
       document_versions: {
         Row: {
           autor: string | null
@@ -1080,6 +1179,7 @@ export type Database = {
           amount: number
           created_at: string
           currency: string
+          external_reference: string | null
           id: string
           paid_at: string | null
           payment_method: string | null
@@ -1088,6 +1188,7 @@ export type Database = {
           provider_payment_id: string | null
           provider_subscription_id: string | null
           raw: Json
+          receipt_url: string | null
           status: string
           status_detail: string | null
           subscription_id: string | null
@@ -1098,6 +1199,7 @@ export type Database = {
           amount?: number
           created_at?: string
           currency?: string
+          external_reference?: string | null
           id?: string
           paid_at?: string | null
           payment_method?: string | null
@@ -1106,6 +1208,7 @@ export type Database = {
           provider_payment_id?: string | null
           provider_subscription_id?: string | null
           raw?: Json
+          receipt_url?: string | null
           status?: string
           status_detail?: string | null
           subscription_id?: string | null
@@ -1116,6 +1219,7 @@ export type Database = {
           amount?: number
           created_at?: string
           currency?: string
+          external_reference?: string | null
           id?: string
           paid_at?: string | null
           payment_method?: string | null
@@ -1124,6 +1228,7 @@ export type Database = {
           provider_payment_id?: string | null
           provider_subscription_id?: string | null
           raw?: Json
+          receipt_url?: string | null
           status?: string
           status_detail?: string | null
           subscription_id?: string | null
@@ -1737,44 +1842,118 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_logs: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          plan_code: string | null
+          source: string
+          subscription_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          plan_code?: string | null
+          source?: string
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          plan_code?: string | null
+          source?: string
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_logs_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
+          available_until: string | null
+          billing_cycle: string
           code: string
           created_at: string
+          currency: string
           description: string | null
           features: Json
           id: string
           is_active: boolean
           is_highlighted: boolean
+          is_lifetime: boolean
+          lifetime_price: number | null
+          max_seats: number | null
+          metadata: Json
           name: string
           price_monthly: number
+          price_yearly: number | null
+          seats_taken: number
+          slug: string | null
           sort_order: number
+          trial_days: number
           updated_at: string
         }
         Insert: {
+          available_until?: string | null
+          billing_cycle?: string
           code: string
           created_at?: string
+          currency?: string
           description?: string | null
           features?: Json
           id?: string
           is_active?: boolean
           is_highlighted?: boolean
+          is_lifetime?: boolean
+          lifetime_price?: number | null
+          max_seats?: number | null
+          metadata?: Json
           name: string
           price_monthly?: number
+          price_yearly?: number | null
+          seats_taken?: number
+          slug?: string | null
           sort_order?: number
+          trial_days?: number
           updated_at?: string
         }
         Update: {
+          available_until?: string | null
+          billing_cycle?: string
           code?: string
           created_at?: string
+          currency?: string
           description?: string | null
           features?: Json
           id?: string
           is_active?: boolean
           is_highlighted?: boolean
+          is_lifetime?: boolean
+          lifetime_price?: number | null
+          max_seats?: number | null
+          metadata?: Json
           name?: string
           price_monthly?: number
+          price_yearly?: number | null
+          seats_taken?: number
+          slug?: string | null
           sort_order?: number
+          trial_days?: number
           updated_at?: string
         }
         Relationships: []
@@ -2136,8 +2315,13 @@ export type Database = {
       }
       user_subscriptions: {
         Row: {
+          amount: number | null
+          cancel_at_period_end: boolean
           cancelled_at: string | null
+          coupon_code: string | null
           created_at: string
+          currency: string
+          deleted_at: string | null
           expires_at: string | null
           id: string
           metadata: Json
@@ -2148,12 +2332,19 @@ export type Database = {
           provider_subscription_id: string | null
           started_at: string
           status: string
+          trial: boolean
+          trial_ends_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          amount?: number | null
+          cancel_at_period_end?: boolean
           cancelled_at?: string | null
+          coupon_code?: string | null
           created_at?: string
+          currency?: string
+          deleted_at?: string | null
           expires_at?: string | null
           id?: string
           metadata?: Json
@@ -2164,12 +2355,19 @@ export type Database = {
           provider_subscription_id?: string | null
           started_at?: string
           status?: string
+          trial?: boolean
+          trial_ends_at?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          amount?: number | null
+          cancel_at_period_end?: boolean
           cancelled_at?: string | null
+          coupon_code?: string | null
           created_at?: string
+          currency?: string
+          deleted_at?: string | null
           expires_at?: string | null
           id?: string
           metadata?: Json
@@ -2180,6 +2378,8 @@ export type Database = {
           provider_subscription_id?: string | null
           started_at?: string
           status?: string
+          trial?: boolean
+          trial_ends_at?: string | null
           updated_at?: string
           user_id?: string
         }
