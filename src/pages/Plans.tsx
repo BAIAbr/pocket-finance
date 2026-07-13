@@ -1,11 +1,20 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
-import { AlertTriangle, Check, Crown, Sparkles, Loader2, ArrowLeft, Mail } from 'lucide-react';
+import { AlertTriangle, Check, Crown, Sparkles, Loader2, ArrowLeft, Mail, FlaskConical, ShieldCheck, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+
+type MpEnv = {
+  mode: 'test' | 'live' | 'unknown';
+  configured: boolean;
+  collector_email: string | null;
+  collector_nickname?: string | null;
+  site_id?: string | null;
+  error?: string;
+};
 
 export default function PlansPage() {
   const { user } = useAuth();
@@ -14,6 +23,22 @@ export default function PlansPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [payerEmail, setPayerEmail] = useState('');
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
+  const [mpEnv, setMpEnv] = useState<MpEnv | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    supabase.functions.invoke('mp-environment', { body: {} }).then(({ data }) => {
+      if (alive && data) setMpEnv(data as MpEnv);
+    }).catch(() => { /* silent */ });
+    return () => { alive = false; };
+  }, []);
+
+  const effectivePayer = (payerEmail.trim() || user?.email || '').toLowerCase();
+  const collector = (mpEnv?.collector_email ?? '').toLowerCase();
+  const emailMatchesCollector = Boolean(collector && effectivePayer && collector === effectivePayer);
+  const isTest = mpEnv?.mode === 'test';
+  const isLive = mpEnv?.mode === 'live';
+
 
   const handleSelect = async (code: string) => {
     if (code === currentPlanCode) return;
@@ -27,6 +52,16 @@ export default function PlansPage() {
         if ((data as any)?.error) throw new Error((data as any).error);
         toast.success('Plano atualizado para Gratuito');
       } else {
+        // Pré-flight: bloqueia se o e-mail do pagador é o mesmo do recebedor
+        if (emailMatchesCollector) {
+          setCheckoutNotice(
+            isTest
+              ? 'Você está no ambiente de teste. Use o e-mail de um comprador de teste do Mercado Pago — diferente da conta vendedora.'
+              : 'O e-mail informado é da mesma conta que recebe os pagamentos. Use outra conta Mercado Pago real para pagar.',
+          );
+          toast.error('Informe outro e-mail de pagador');
+          return;
+        }
         // Cria assinatura recorrente no Mercado Pago e redireciona pro checkout
         const { data, error } = await supabase.functions.invoke('create-subscription', {
           body: {
@@ -90,9 +125,25 @@ export default function PlansPage() {
         </div>
 
         <div className="mb-6 rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
-          <label htmlFor="payer-email" className="text-sm font-semibold flex items-center gap-2 mb-2">
-            <Mail size={16} className="text-primary" /> E-mail do pagador no Mercado Pago
-          </label>
+          <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+            <label htmlFor="payer-email" className="text-sm font-semibold flex items-center gap-2">
+              <Mail size={16} className="text-primary" /> E-mail do pagador no Mercado Pago
+            </label>
+            {mpEnv?.configured && (
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide border',
+                  isTest && 'bg-amber-500/15 text-amber-600 border-amber-500/30',
+                  isLive && 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
+                  !isTest && !isLive && 'bg-muted text-muted-foreground border-border',
+                )}
+                title={mpEnv.collector_email ? `Recebedor: ${mpEnv.collector_email}` : undefined}
+              >
+                {isTest ? <FlaskConical size={12} /> : isLive ? <ShieldCheck size={12} /> : <Info size={12} />}
+                {isTest ? 'Sandbox (teste)' : isLive ? 'Produção' : 'Desconhecido'}
+              </span>
+            )}
+          </div>
           <input
             id="payer-email"
             type="email"
@@ -104,8 +155,21 @@ export default function PlansPage() {
             className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
           <p className="mt-2 text-xs text-muted-foreground">
-            Se deixar em branco, usaremos o e-mail da sua conta Finango. Em testes, use o comprador de teste do Mercado Pago.
+            {isTest
+              ? 'Ambiente de teste detectado. Use o e-mail de um comprador de teste criado no painel do Mercado Pago — não use o e-mail da conta vendedora.'
+              : isLive
+              ? 'Ambiente de produção. Use uma conta Mercado Pago real diferente da conta vendedora para pagar.'
+              : 'Se deixar em branco, usaremos o e-mail da sua conta Finango.'}
           </p>
+          {emailMatchesCollector && (
+            <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+              <span>
+                Este e-mail é o mesmo do recebedor no Mercado Pago. O MP não permite pagar para si mesmo — informe outro e-mail
+                {isTest ? ' (comprador de teste)' : ' (conta real diferente)'}.
+              </span>
+            </div>
+          )}
           {checkoutNotice && (
             <div className="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" />
@@ -113,6 +177,7 @@ export default function PlansPage() {
             </div>
           )}
         </div>
+
 
         <div className="grid gap-4 lg:grid-cols-3">
           {plans.map((plan) => {
