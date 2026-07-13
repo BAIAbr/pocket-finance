@@ -22,10 +22,10 @@ export function VipRedeemInput() {
     <section className="card-finance">
       <h2 className="font-semibold mb-1 flex items-center gap-2">
         <Crown size={18} className="text-primary" />
-        Resgatar código VIP
+        Tem um código VIP? <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
       </h2>
       <p className="text-xs text-muted-foreground mb-3">
-        Se o link não funcionar, digite o código aqui.
+        Alternativa gratuita ao pagamento — se você recebeu um código promocional, ative aqui.
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <div className="relative flex-1">
