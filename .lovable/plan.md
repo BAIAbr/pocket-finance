@@ -1,94 +1,112 @@
-# Central de Ajustes Premium — Plano de Implementação
+# 📥 Importador Inteligente + Exportação/Backup — Plano
 
-Implementação incremental, sem quebrar nada existente. Todas as preferências passam a viver no banco (por usuário) com fallback em localStorage, salvamento automático (debounce) e sincronização entre dispositivos via Realtime.
+Implementação 100% nativa (Lovable + Supabase + bibliotecas open source). Nada existente será removido; a construção é incremental.
 
-## 1. Banco de dados
+## 1. Banco de dados (migração)
 
-Nova tabela `public.user_preferences` (1 linha por usuário):
+Novas tabelas em `public` (com GRANTs, RLS por `auth.uid()`, timestamps + trigger `update_updated_at_column`):
 
-- `user_id uuid PK references auth.users(id) on delete cascade`
-- `theme_mode text` (light/dark/auto)
-- `primary_color text` (hex ou token do esquema)
-- `density text` (compact/comfortable/spacious)
-- `animations text` (on/reduced/off)
-- `dashboard_layout jsonb` (order, hidden, preset, sizes)
-- `menu_layout jsonb` (bottomHidden, sidebarHidden, order)
-- `notifications jsonb` (todos os toggles)
-- `regional jsonb` (language, currency, dateFormat, weekStart, timezone, numberFormat)
-- `labs jsonb` (feature flags beta)
-- `created_at`, `updated_at` (trigger `update_updated_at_column`)
+- `import_history` — id, user_id, family_id?, file_name, file_type (ofx|csv|xlsx), bank_detected, records_total, records_imported, income_total, expense_total, status (pending|processing|success|error|partial), error_message, raw_summary jsonb, created_at, updated_at.
+- `import_rules` — id, user_id, pattern text (uppercase normalizado), category_id, match_type (contains|equals|regex), hits int default 0, created_at, updated_at, UNIQUE(user_id, pattern).
+- `imported_transactions_map` — id, transaction_id FK transactions, import_id FK import_history, external_hash text (para dedup), UNIQUE(user_id, external_hash).
 
-GRANTs para `authenticated` + `service_role`, RLS: usuário só lê/escreve a própria linha.
+Adicionar coluna `import_id uuid` (nullable) em `transactions` para rastreabilidade. Coluna `source text default 'manual'` para diferenciar (`manual|ofx|csv|xlsx|recurring`).
 
-Trigger em `handle_new_user` para criar linha padrão no signup + upsert idempotente no primeiro load para usuários existentes.
+Realtime já cobre `transactions`; adicionar `import_history` à publication.
 
-Adicionar `spacious` como valor válido em `density` (hoje só há compact/comfortable).
+## 2. Regras de categorização (semente)
 
-## 2. Contexto e hook
+Arquivo `src/lib/import/categoryRules.ts` — dicionário estático (~150 regras: UBER/99/IFOOD/BURGER/MCDONALDS/NETFLIX/SPOTIFY/DISNEY/PRIME/GOOGLE PLAY/APPLE/AMAZON/MERCADO LIVRE/SHOPEE/POSTO/SHELL/IPIRANGA/FARMACIA/DROGA/PAGUEMENOS/MERCADO/CARREFOUR/EXTRA/PIX/TED/DOC/BOLETO/etc). Cada regra referencia uma categoria default por `name` (resolvida em runtime contra `categories` do usuário; se não existir, usa "Outros" do tipo correto).
 
-Refatorar `UserPreferencesContext`:
+Aprendizado: quando o usuário altera categoria numa linha do preview, cria/atualiza `import_rules` para aquele padrão normalizado (>=3 chars, ignorando números e códigos de transação).
 
-- Carregar do Supabase no mount (com fallback localStorage enquanto carrega).
-- Debounce 400ms para gravar `upsert` em `user_preferences`.
-- Assinar Realtime em `user_preferences` filtrando por `user_id` para refletir mudanças de outros dispositivos.
-- Manter API atual (`density`, `animations`, `notifications`, `labs`, `dashboardLayout`, `menu`, `regional`, `themeMode`) + novos: `primaryColor`, adicionar `spacious`.
-- Fallback defensivo preservado (HMR).
+## 3. Parsers (client-side, open source)
 
-## 3. Aplicação global das preferências
+- OFX: parser próprio simples (regex de `<STMTTRN>…</STMTTRN>` — suficiente para OFX 1.x/2.x brasileiros; extrai `DTPOSTED`, `TRNAMT`, `MEMO`, `NAME`, `FITID`, `BANKID`).
+- CSV: `papaparse` (já elegível). Detecta cabeçalho, mapeia colunas (data/descrição/valor) via heurística + UI de mapeamento manual.
+- XLSX: `xlsx` (SheetJS community). Mesma heurística/mapeamento.
 
-- **Tema**: já aplicado via `ThemeContext` — plugar `themeMode` do banco no boot.
-- **Cor principal**: injetar CSS var `--primary` (HSL) dinamicamente no `:root` a partir de `primary_color`.
-- **Density**: já usa classes `density-*` — adicionar `density-spacious` em `index.css` (paddings/gaps).
-- **Animações**: classes `anim-*` já existem — reforçar CSS para `anim-off` e `anim-reduced`.
-- **Menu**: `BottomNav` e `DesktopSidebar` passam a filtrar/reordenar itens conforme `menu`.
-- **Dashboard**: `Dashboard.tsx` já lê `dashboardLayout` — validar presets Essencial/Investidor/Planejamento/Empresarial/Personalizado.
-- **Regional**: helper `formatCurrency`/`formatDate` respeitam `regional` (hoje pt-BR fixo — adicionar leitura do contexto onde aplicável, sem trocar cálculos financeiros).
+Dedup hash: `sha256(user_id + date + amount + normalize(description))` calculado em JS (`crypto.subtle`). Comparado contra `imported_transactions_map.external_hash`.
 
-## 4. Sub-telas de Ajustes
+## 4. Fluxo/UX
 
-Todas em `/settings/*`, header padronizado, cards, auto-save, animações 200–300ms.
+Rota nova `/settings/import` (assistente) + `/settings/import/history`.
 
-- **AppearanceSettings** — tema, cor principal (paleta + picker), densidade (3 opções), animações, reset layout.
-- **DashboardCustomize** (nova) — drag-and-drop (dnd-kit já no bundle? senão usar setas), toggles show/hide, presets, tamanhos (sm/md/lg por card).
-- **MenuSettings** (nova) — ocultar/reordenar itens de BottomNav e Sidebar.
-- **NotificationSettings** — mantém push + toggles, cada switch faz upsert.
-- **SecuritySettings** (nova) — alterar senha (Supabase `updateUser`), 2FA (Supabase MFA `enroll`/`challenge`/`verify`), sessões ativas (usar `user_sessions` já existente), logout global (`signOut({ scope: 'global' })`), PIN local (armazenado hash em localStorage — nativo web não tem biometria universal, expor `PublicKeyCredential` quando `available`).
-- **SubscriptionSettings** — já existe, plugar dados reais de `useSubscription`.
-- **ConnectedAccounts** (nova aba) — placeholders "Em breve" para Google/Apple/Open Finance/OFX/CSV, mantendo estrutura.
-- **DataSettings** — export PDF (jspdf), Excel (xlsx via SheetJS ou papaparse+xlsx), CSV, backup JSON completo (já existe), restaurar backup (upload + validate + upserts respeitando RLS).
-- **PreferenceSettings** — já existe, ligar ao banco.
-- **LabsSettings** — feature flags no banco.
-- **HelpSettings** — FAQ (accordion), formulário sugestão/bug → `notifications_log` ou nova `feedback` (usar tabela `security_events` não — criar `user_feedback` simples? Fora do escopo mínimo: mailto + link Instagram/site).
-- **AboutSettings** — versão do package.json, build hash (Vite `import.meta.env`), última atualização (git via env), links.
+Wizard em 5 passos com animações (framer-motion já usado):
 
-## 5. Auto-save UX
+1. **Escolha o tipo** — cards OFX / CSV / XLSX.
+2. **Upload** — dropzone; valida extensão, tamanho (<10MB), integridade (parser tenta ler).
+3. **Detecção** — mostra banco/conta/período/qtd. Se CSV/XLSX e mapeamento ambíguo, exibe UI para escolher colunas.
+4. **Preview** — tabela editável (categoria via combobox, descrição, tipo, incluir/excluir linha). Marca duplicados com badge; ação em massa Ignorar/Substituir/Importar. Resumo lateral (receitas, despesas, saldo, dedup, categorias).
+5. **Importação** — barra de progresso (chunks de 50 linhas via `for…of` + `await`), atualiza `import_history` em tempo real. Ao final, toast + link para o dashboard. Salva regras aprendidas.
 
-- Toast discreto "Salvo" após cada upsert bem-sucedido (throttle).
-- Indicador de "salvando…" no header da sub-tela quando debounce está pendente.
-- Erros mostram toast + rollback local.
+Processamento é assíncrono no cliente com `requestIdleCallback` fallback `setTimeout(0)` entre chunks para não travar UI. Grande volume (>500 linhas) mostra "processando em segundo plano" e permite navegar (mantido em contexto `ImportContext`).
 
-## 6. Rotas
+## 5. Histórico de importações
 
-Adicionar em `App.tsx`:
-- `/settings/dashboard`
-- `/settings/menu`
-- `/settings/security`
-- `/settings/connected-accounts`
+Página lista `import_history` com filtros. Ações:
+- Ver detalhes (linhas importadas via `imported_transactions_map`).
+- Excluir importação → rollback opcional (apaga transações vinculadas a esse `import_id`, com confirmação dupla).
+- Re-download: arquivo original NÃO é armazenado (privacidade + custo). Em vez disso, exporta as transações daquele import como CSV/JSON.
 
-## 7. Testes/validação
+## 6. Exportação (funcional)
 
-- Verificar build sem erros.
-- Playwright: alterar tema/cor/densidade, recarregar, confirmar persistência via mock do Supabase local.
-- Confirmar mobile 375px sem overflow horizontal.
+Em `DataSettings.tsx` substituir "Em breve" por implementações reais:
+- **CSV**: `papaparse.unparse`.
+- **Excel**: `xlsx` (SheetJS).
+- **PDF**: `jspdf` + `jspdf-autotable` (tabela simples com resumo).
+- **JSON**: já funciona (mantém).
 
-## Detalhes técnicos
+Todos exportam transações + metas + categorias + planejamento + investimentos + preferências (dependendo do escopo escolhido).
 
-**Não** alterar `src/integrations/supabase/{client,types}.ts` manualmente — types serão regenerados após migração.
+## 7. Backup / Restauração
 
-**Realtime**: `ALTER PUBLICATION supabase_realtime ADD TABLE public.user_preferences;`
+- Backup: JSON completo (transactions, goals, categories, planning, investments, installments, recurring, savings, preferences). Já parcialmente implementado — expandir.
+- Restauração: novo modal com upload → validação de schema (versão + shape) → resumo → escolha "Substituir" (apaga e insere) ou "Mesclar" (dedup por id). Nunca apaga sem confirmação explícita.
 
-**Cor principal → CSS var**: converter hex→HSL em JS e setar `document.documentElement.style.setProperty('--primary', 'H S% L%')`. Persistir em `theme_settings` NÃO — usar `user_preferences.primary_color` (individual, não afeta o tema global do admin).
+## 8. Login Google / Apple
 
-**Densidade `spacious`**: adicionar utilitário Tailwind via `index.css` — `.density-spacious .card-finance { @apply p-6 gap-6; }` etc.
+- Google: página `SubscriptionSettings` ou nova subseção "Contas conectadas" mostra e-mail vinculado (via `supabase.auth.getUser().identities`), botões Vincular/Desvincular/Trocar (`supabase.auth.linkIdentity` / `unlinkIdentity`).
+- Apple: detecta se provider Apple está habilitado no projeto (chamando `supabase.auth.signInWithOAuth({provider:'apple'})` em modo "check"). Se admin → alerta "Provider Apple não configurado no backend". Nunca "Em breve".
 
-**Nada será removido.** Perfil, Família, Missões, Investimentos, IA e Planejamento permanecem intactos.
+## 9. Assinatura
+
+Aprimorar `SubscriptionSettings.tsx` já existente: mostra plano atual, código VIP ativo (se houver via `vip_redemptions`), benefícios, expiração, histórico de redenções. Arquitetura para gateway fica como TODO documentado no código.
+
+## 10. Segurança e validação
+
+- Whitelist de MIME + extensão + tamanho.
+- Sanitização de strings (`DOMPurify` ou normalização simples via regex).
+- Log em `security_events` para cada import (user_id, action='import', file_type, records).
+- RLS garantindo isolamento por usuário/família.
+
+## 11. Testes
+
+- Vitest: parser OFX, parser CSV mapping, dedup hash, aplicação de regras.
+- Playwright manual: fluxo OFX pequeno de exemplo → verifica dashboard atualiza.
+
+## 12. Rotas e navegação
+
+- Adicionar em `App.tsx`: `/settings/import`, `/settings/import/history`, `/settings/connected-accounts`.
+- Em `DataSettings.tsx`: linkar "Importar dados" → `/settings/import`; "Restaurar backup" abre modal; exportações passam a funcionar.
+
+## 13. Dependências
+
+Adicionar via `bun add`: `papaparse`, `@types/papaparse`, `xlsx`, `jspdf`, `jspdf-autotable`. Todas open source, sem custo.
+
+## 14. Escopo NÃO alterado
+
+Perfil, Dashboard, Planejamento, Metas, Investimentos, IA, Categorias, Cartões, Famílias, Missões — não são modificados; apenas passam a receber dados via as novas importações.
+
+## Ordem de entrega
+
+1. Migração (tabelas + RLS + GRANTs + coluna em transactions).
+2. Deps + parsers + regras estáticas + hash dedup (utils).
+3. Contexto `ImportContext` + wizard UI + rotas.
+4. Histórico de importações.
+5. Exportações reais (CSV/XLSX/PDF).
+6. Restauração de backup.
+7. Contas conectadas (Google/Apple).
+8. Testes Vitest dos parsers.
+
+Confirma que devo prosseguir com essa implementação completa?
