@@ -20,7 +20,10 @@ const getMercadoPagoMode = () => {
 
 const isPayerCollectorModeError = (detail: any) => {
   const message = String(detail?.message ?? detail?.error ?? '').toLowerCase();
-  return message.includes('both payer and collector must be real or test users');
+  return (
+    message.includes('both payer and collector must be real or test users') ||
+    message.includes('collector') && message.includes('payer')
+  );
 };
 
 Deno.serve(async (req) => {
@@ -41,15 +44,33 @@ Deno.serve(async (req) => {
   const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(token);
   if (claimsErr || !claimsData?.claims) return json(401, { error: 'unauthorized' });
   const userId = claimsData.claims.sub as string;
-  const email = (claimsData.claims.email as string) ?? undefined;
+  const claimsEmail = (claimsData.claims.email as string) ?? undefined;
 
-  let body: { plan_code?: string; back_url?: string; payer_email?: string };
+  // ✅ Fonte da verdade: auth.users.email (via service role, ignora RLS)
+  let authUserEmail: string | undefined;
+  try {
+    const { data: userRow, error: userErr } = await admin.auth.admin.getUserById(userId);
+    if (userErr) console.error('[create-subscription] getUserById error', userErr);
+    authUserEmail = userRow?.user?.email ?? undefined;
+  } catch (e) {
+    console.error('[create-subscription] getUserById exception', e);
+  }
+
+  let body: { plan_code?: string; back_url?: string };
   try { body = await req.json(); } catch { return json(400, { error: 'invalid_json' }); }
   const planCode = (body.plan_code ?? '').trim();
   if (!planCode || planCode === 'free') return json(400, { error: 'invalid_plan' });
 
-  const payerEmail = isValidEmail(body.payer_email) ? body.payer_email!.trim().toLowerCase() : email;
-  if (!isValidEmail(payerEmail)) return json(400, { error: 'invalid_payer_email', message: 'Informe um e-mail válido para continuar.' });
+  // ⚠️ payer_email SEMPRE vem de auth.users.email (fallback: claim JWT). Nunca aceita input do cliente,
+  // variável de ambiente ou e-mail do admin/vendedor.
+  const payerEmail = (authUserEmail ?? claimsEmail ?? '').trim().toLowerCase();
+  if (!isValidEmail(payerEmail)) {
+    console.error('[create-subscription] invalid payer email', { userId, authUserEmail, claimsEmail });
+    return json(400, {
+      error: 'invalid_payer_email',
+      message: 'Sua conta não possui um e-mail válido cadastrado. Atualize seu perfil e tente novamente.',
+    });
+  }
 
   const { data: plan } = await admin
     .from('subscription_plans')
@@ -65,7 +86,6 @@ Deno.serve(async (req) => {
   const backUrl = `${origin}/#/settings/subscription`;
   const externalRef = `${userId}:${planCode}:${Date.now()}`;
 
-  // Mercado Pago "preapproval" = assinatura recorrente
   const preapprovalPayload = {
     reason: `Finango ${plan.name}`,
     external_reference: externalRef,
@@ -80,6 +100,20 @@ Deno.serve(async (req) => {
     status: 'pending',
   };
 
+  // 🔎 Logs completos (Access Token nunca é logado)
+  const mpMode = getMercadoPagoMode();
+  console.log('[create-subscription] preparing MP preapproval', {
+    mp_mode: mpMode,
+    user_id: userId,
+    auth_user_email: authUserEmail,
+    claims_email: claimsEmail,
+    payer_email: payerEmail,
+    external_reference: externalRef,
+    plan_code: planCode,
+    amount,
+    request_body: { ...preapprovalPayload, __access_token: '[REDACTED]' },
+  });
+
   const mpRes = await fetch('https://api.mercadopago.com/preapproval', {
     method: 'POST',
     headers: {
@@ -88,24 +122,32 @@ Deno.serve(async (req) => {
     },
     body: JSON.stringify(preapprovalPayload),
   });
-  const mpData = await mpRes.json();
+  const mpData = await mpRes.json().catch(() => ({}));
+
+  console.log('[create-subscription] MP response', {
+    http_status: mpRes.status,
+    ok: mpRes.ok,
+    mp_mode: mpMode,
+    payer_email_sent: payerEmail,
+    external_reference: externalRef,
+    response_body: mpData,
+  });
+
   if (!mpRes.ok) {
-    console.error('MP preapproval error', mpData);
     if (isPayerCollectorModeError(mpData)) {
-      const mode = getMercadoPagoMode();
       return json(200, {
         ok: false,
         error: 'payer_collector_mode_mismatch',
-        mode,
-        message: mode === 'test'
-          ? 'O Mercado Pago exige que assinaturas de teste usem um comprador de teste. Informe o e-mail da conta compradora de teste criada no Mercado Pago.'
-          : 'O Mercado Pago exige que o pagador seja uma conta real diferente da conta vendedora. Informe outro e-mail de pagador para continuar.',
+        mode: mpMode,
+        payer_email: payerEmail,
+        message: mpMode === 'test'
+          ? 'Este Access Token é de TESTE. O e-mail da sua conta precisa ser de um usuário de teste do Mercado Pago (criado em https://www.mercadopago.com.br/developers/panel/test-users) e diferente da conta vendedora de teste.'
+          : 'O Mercado Pago rejeitou o pagador: verifique se sua conta Finango não usa o mesmo e-mail da conta vendedora do Mercado Pago.',
       });
     }
-    return json(502, { error: 'mp_error', detail: mpData });
+    return json(502, { error: 'mp_error', http_status: mpRes.status, detail: mpData });
   }
 
-  // Registra assinatura como "pending" — webhook confirmará quando o pagamento for aprovado
   await admin.from('user_subscriptions').upsert(
     {
       user_id: userId,
@@ -124,5 +166,7 @@ Deno.serve(async (req) => {
     ok: true,
     checkout_url: mpData.init_point ?? mpData.sandbox_init_point,
     preapproval_id: mpData.id,
+    payer_email: payerEmail,
+    mp_mode: mpMode,
   });
 });
