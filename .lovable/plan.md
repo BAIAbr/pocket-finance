@@ -1,130 +1,94 @@
+# Central de Ajustes Premium — Plano de Implementação
 
-# Central de Configurações Premium
+Implementação incremental, sem quebrar nada existente. Todas as preferências passam a viver no banco (por usuário) com fallback em localStorage, salvamento automático (debounce) e sincronização entre dispositivos via Realtime.
 
-Transforma `Ajustes` numa Central com categorias em cards, cada uma abrindo uma sub-tela dedicada. Nenhum dado, tabela ou funcionalidade existente é removido — só reorganizado e expandido. Perfil continua separado. Sem botão "Salvar": tudo persiste automaticamente (backend quando existe, localStorage quando é preferência local).
+## 1. Banco de dados
 
-## Estrutura da nova `Settings.tsx`
+Nova tabela `public.user_preferences` (1 linha por usuário):
 
-Página hub com header curto ("Configurações") + grid de cards clicáveis:
+- `user_id uuid PK references auth.users(id) on delete cascade`
+- `theme_mode text` (light/dark/auto)
+- `primary_color text` (hex ou token do esquema)
+- `density text` (compact/comfortable/spacious)
+- `animations text` (on/reduced/off)
+- `dashboard_layout jsonb` (order, hidden, preset, sizes)
+- `menu_layout jsonb` (bottomHidden, sidebarHidden, order)
+- `notifications jsonb` (todos os toggles)
+- `regional jsonb` (language, currency, dateFormat, weekStart, timezone, numberFormat)
+- `labs jsonb` (feature flags beta)
+- `created_at`, `updated_at` (trigger `update_updated_at_column`)
 
-```text
-┌─────────────────────────────────────────┐
-│  🎨 Personalização                       │  → /settings/appearance
-│  🔔 Notificações                         │  → /settings/notifications
-│  🔒 Segurança                            │  → /security (já existe)
-│  💳 Assinatura e Contas                  │  → /settings/subscription
-│  📤 Importar e Exportar                  │  → /settings/data
-│  🌎 Preferências                         │  → /settings/preferences
-│  🧪 Laboratório Finango                  │  → /settings/labs
-│  ❓ Ajuda e Suporte                       │  → /settings/help
-│  ℹ️  Sobre                                │  → /settings/about
-└─────────────────────────────────────────┘
-```
+GRANTs para `authenticated` + `service_role`, RLS: usuário só lê/escreve a própria linha.
 
-Desktop: 2 colunas. Mobile: 1 coluna. Cards com ícone colorido, título, descrição, chevron, `touch-scale`, hover elevado.
+Trigger em `handle_new_user` para criar linha padrão no signup + upsert idempotente no primeiro load para usuários existentes.
 
-Elementos já hoje na tela (VIP redeem, Family settings, Admin panel) migram para dentro das sub-telas apropriadas — nada é apagado.
+Adicionar `spacious` como valor válido em `density` (hoje só há compact/comfortable).
 
-## Sub-telas (novas rotas)
+## 2. Contexto e hook
 
-Cada sub-tela usa header com botão voltar + título + descrição, corpo em cards, mesmo estilo visual.
+Refatorar `UserPreferencesContext`:
 
-### 1. `/settings/appearance` — Personalização
-Seções (accordions ou cards empilhados):
-- **Dashboard**: reaproveita `AppearanceContext` (novo, ver abaixo). Toggle mostrar/ocultar cards do Dashboard (balance, weekly summary, upcoming bills, missions, mini chart, quick deposit), reordenar (drag simples com setas ↑↓), tamanho (compact/comfortable), botão "Restaurar layout", presets: Essencial / Investidor / Planejamento / Empresarial / Personalizado. Salva em localStorage.
-- **Tema**: Claro / Escuro / Automático (segue `prefers-color-scheme`). Reusa `ThemeContext`, adiciona modo `auto`.
-- **Cor Principal**: reusa `COLOR_SCHEMES` existente (já suportado). Renderiza as opções aqui em vez de na home.
-- **Layout**: Compacto / Confortável (aplica classe global via `AppearanceContext` que ajusta padding/gap).
-- **Animações**: Ativar / Desativar / Reduzir. Aplica classe `no-anim` / `reduced-anim` no `<html>`.
-- **Menu**: reordenar itens da BottomNav e Sidebar, ocultar itens opcionais (IA, Cofrinho, etc. — sem quebrar rotas). Persistência local.
+- Carregar do Supabase no mount (com fallback localStorage enquanto carrega).
+- Debounce 400ms para gravar `upsert` em `user_preferences`.
+- Assinar Realtime em `user_preferences` filtrando por `user_id` para refletir mudanças de outros dispositivos.
+- Manter API atual (`density`, `animations`, `notifications`, `labs`, `dashboardLayout`, `menu`, `regional`, `themeMode`) + novos: `primaryColor`, adicionar `spacious`.
+- Fallback defensivo preservado (HMR).
 
-### 2. `/settings/notifications` — Notificações
-Card de push (mantém `usePushNotifications` atual). Abaixo, lista de toggles por categoria salvos em `notification_preferences` (localStorage + coluna `preferences jsonb` opcional em `profiles` — mas para este escopo fica localStorage para evitar migração):
-Receitas, Despesas, Metas, Planejamento, Investimentos, Cartões, Assinaturas, Contas a vencer, Resumo Semanal, Resumo Mensal, Novidades, Atualizações. Cada toggle aplica imediatamente.
+## 3. Aplicação global das preferências
 
-### 3. `/settings/subscription` — Assinatura e Contas
-Duas abas (Tabs shadcn):
-- **Plano Finango**: mostra plano atual (`useSubscription`), benefícios, CTA Upgrade (`/plans`), placeholders visuais para renovação, método de pagamento, histórico e cancelar (com toast "em breve").
-- **Contas Conectadas**: cards para Google, Apple, Open Finance, Bancos, Importar OFX, Importar CSV, "Adicionar conta", "Gerenciar conexões" — todos como placeholders com badge "Em breve", preparando estrutura.
+- **Tema**: já aplicado via `ThemeContext` — plugar `themeMode` do banco no boot.
+- **Cor principal**: injetar CSS var `--primary` (HSL) dinamicamente no `:root` a partir de `primary_color`.
+- **Density**: já usa classes `density-*` — adicionar `density-spacious` em `index.css` (paddings/gaps).
+- **Animações**: classes `anim-*` já existem — reforçar CSS para `anim-off` e `anim-reduced`.
+- **Menu**: `BottomNav` e `DesktopSidebar` passam a filtrar/reordenar itens conforme `menu`.
+- **Dashboard**: `Dashboard.tsx` já lê `dashboardLayout` — validar presets Essencial/Investidor/Planejamento/Empresarial/Personalizado.
+- **Regional**: helper `formatCurrency`/`formatDate` respeitam `regional` (hoje pt-BR fixo — adicionar leitura do contexto onde aplicável, sem trocar cálculos financeiros).
 
-### 4. `/settings/data` — Importar e Exportar
-Cards: Exportar PDF, Excel, CSV, Backup (JSON), Restaurar Backup, Importar dados. Reaproveita a lógica de export JSON já existente no Profile para Backup; demais itens abrem toast "em breve" mas ficam prontos com handlers isolados.
+## 4. Sub-telas de Ajustes
 
-### 5. `/settings/preferences` — Preferências
-Selects: Idioma (pt-BR default), Moeda (BRL/USD/EUR — só rótulo, sem alterar cálculos), Formato de data, Primeiro dia da semana, Fuso horário, Formato numérico. Persistência localStorage via `AppearanceContext`.
+Todas em `/settings/*`, header padronizado, cards, auto-save, animações 200–300ms.
 
-### 6. `/settings/labs` — Laboratório Finango
-Lista de flags experimentais (toggles): Novo Dashboard, Novo Planejamento, Radar Financeiro, Saúde Financeira, Assistente da Raposa. Salvas em localStorage (`finango.labs.*`). Sem efeito colateral por enquanto — só a estrutura de flags.
+- **AppearanceSettings** — tema, cor principal (paleta + picker), densidade (3 opções), animações, reset layout.
+- **DashboardCustomize** (nova) — drag-and-drop (dnd-kit já no bundle? senão usar setas), toggles show/hide, presets, tamanhos (sm/md/lg por card).
+- **MenuSettings** (nova) — ocultar/reordenar itens de BottomNav e Sidebar.
+- **NotificationSettings** — mantém push + toggles, cada switch faz upsert.
+- **SecuritySettings** (nova) — alterar senha (Supabase `updateUser`), 2FA (Supabase MFA `enroll`/`challenge`/`verify`), sessões ativas (usar `user_sessions` já existente), logout global (`signOut({ scope: 'global' })`), PIN local (armazenado hash em localStorage — nativo web não tem biometria universal, expor `PublicKeyCredential` quando `available`).
+- **SubscriptionSettings** — já existe, plugar dados reais de `useSubscription`.
+- **ConnectedAccounts** (nova aba) — placeholders "Em breve" para Google/Apple/Open Finance/OFX/CSV, mantendo estrutura.
+- **DataSettings** — export PDF (jspdf), Excel (xlsx via SheetJS ou papaparse+xlsx), CSV, backup JSON completo (já existe), restaurar backup (upload + validate + upserts respeitando RLS).
+- **PreferenceSettings** — já existe, ligar ao banco.
+- **LabsSettings** — feature flags no banco.
+- **HelpSettings** — FAQ (accordion), formulário sugestão/bug → `notifications_log` ou nova `feedback` (usar tabela `security_events` não — criar `user_feedback` simples? Fora do escopo mínimo: mailto + link Instagram/site).
+- **AboutSettings** — versão do package.json, build hash (Vite `import.meta.env`), última atualização (git via env), links.
 
-### 7. `/settings/help` — Ajuda e Suporte
-Cards linkados: Central de Ajuda, FAQ, Falar com suporte (mailto), Reportar problema (mailto com assunto), Enviar sugestão (mailto), Avaliar app, Contato (Instagram + email já existentes).
+## 5. Auto-save UX
 
-### 8. `/settings/about` — Sobre
-Versão, changelog (lista estática curta), Política de Privacidade, Termos de Uso, Licenças, Instagram, Site oficial.
+- Toast discreto "Salvo" após cada upsert bem-sucedido (throttle).
+- Indicador de "salvando…" no header da sub-tela quando debounce está pendente.
+- Erros mostram toast + rollback local.
 
-## Contexto novo: `AppearanceContext`
+## 6. Rotas
 
-Arquivo `src/contexts/AppearanceContext.tsx` (já existe segundo a listagem — será estendido, não recriado). Estende para armazenar:
-- `density`: 'compact' | 'comfortable'
-- `animations`: 'on' | 'reduced' | 'off'
-- `dashboardLayout`: { order: string[], hidden: string[], preset: string }
-- `menuOrder`: { bottom: string[], sidebar: string[], hidden: string[] }
-- `themeMode`: 'light' | 'dark' | 'auto' (auto adiciona listener `matchMedia`)
-- `notificationPrefs`: Record<string, boolean>
-- `labs`: Record<string, boolean>
-- `preferences`: { language, currency, dateFormat, weekStart, timezone, numberFormat }
+Adicionar em `App.tsx`:
+- `/settings/dashboard`
+- `/settings/menu`
+- `/settings/security`
+- `/settings/connected-accounts`
 
-Tudo persistido em localStorage, aplicado via classes no `<html>` (`density-compact`, `anim-off`, etc.) e consumido por componentes do Dashboard/Nav quando fizer sentido — sem quebrar quem não consome.
+## 7. Testes/validação
 
-## Alterações mínimas em componentes existentes
-
-- `Dashboard.tsx`: envolve cada seção em wrapper que respeita `dashboardLayout.hidden`/`order` do contexto. Se contexto ausente ou vazio → comportamento atual. **Sem remover cards existentes.**
-- `BottomNav.tsx` / `DesktopSidebar.tsx`: leem `menuOrder` para reordenar/ocultar; fallback = comportamento atual.
-- `App.tsx`: adiciona 8 rotas de sub-tela.
-- `Settings.tsx`: reescrito como hub (VIP redeem move para `/settings/subscription`, Family para `/settings/preferences` ou fica em `/settings/appearance`? → melhor: nova sub-tela **não** listada acima, mantém Family no hub como card extra "👨‍👩‍👧 Família" que abre modal atual — evita quebrar UX).
-
-Family fica como card próprio no hub (`FamilySettings` inline expansível) para não perder acesso.
-
-## Compatibilidade
-
-- Zero migrations de banco.
-- Zero remoção de arquivos.
-- Fallbacks defensivos em todo consumidor do `AppearanceContext` (se prefs undefined → default atual).
-- Perfil, Dashboard, Metas, Cofrinho, Investimentos, IA, Cartões: intocados no comportamento; apenas leitura opcional de preferências visuais.
-
-## Arquivos a criar
-
-- `src/pages/settings/AppearanceSettings.tsx`
-- `src/pages/settings/NotificationSettings.tsx`
-- `src/pages/settings/SubscriptionSettings.tsx`
-- `src/pages/settings/DataSettings.tsx`
-- `src/pages/settings/PreferenceSettings.tsx`
-- `src/pages/settings/LabsSettings.tsx`
-- `src/pages/settings/HelpSettings.tsx`
-- `src/pages/settings/AboutSettings.tsx`
-- `src/components/settings/SettingsCategoryCard.tsx`
-- `src/components/settings/SettingsSubPageHeader.tsx`
-- `src/components/settings/SettingRow.tsx` (linha com ícone/título/descrição/trailing)
-
-## Arquivos a modificar
-
-- `src/pages/Settings.tsx` → hub
-- `src/contexts/AppearanceContext.tsx` → estender
-- `src/App.tsx` → rotas
-- `src/index.css` → classes `density-*`, `anim-off`, `anim-reduced`
-
-## Fora do escopo (declarado explicitamente)
-
-- Nenhuma alteração em edge functions.
-- Nenhuma alteração de RLS/tabelas.
-- Nenhuma mudança em lógica financeira, IA, planejamento, investimentos.
-- Integrações reais Google/Apple/Open Finance/OFX ficam como placeholders "Em breve" com estrutura pronta.
+- Verificar build sem erros.
+- Playwright: alterar tema/cor/densidade, recarregar, confirmar persistência via mock do Supabase local.
+- Confirmar mobile 375px sem overflow horizontal.
 
 ## Detalhes técnicos
 
-- Todos os toggles usam `Switch` do shadcn.
-- Grid do hub: `grid grid-cols-1 md:grid-cols-2 gap-3`.
-- Cards: `card-finance` + `hover:scale-[1.01] active:scale-[0.99] transition-transform`.
-- Sub-telas usam `useNavigate(-1)` para voltar.
-- Animações via `framer-motion` (`motion.div` com `layout` e `initial/animate`), respeitando flag `animations` do contexto.
-- Persistência via `useLocalStorage` já existente.
+**Não** alterar `src/integrations/supabase/{client,types}.ts` manualmente — types serão regenerados após migração.
+
+**Realtime**: `ALTER PUBLICATION supabase_realtime ADD TABLE public.user_preferences;`
+
+**Cor principal → CSS var**: converter hex→HSL em JS e setar `document.documentElement.style.setProperty('--primary', 'H S% L%')`. Persistir em `theme_settings` NÃO — usar `user_preferences.primary_color` (individual, não afeta o tema global do admin).
+
+**Densidade `spacious`**: adicionar utilitário Tailwind via `index.css` — `.density-spacious .card-finance { @apply p-6 gap-6; }` etc.
+
+**Nada será removido.** Perfil, Família, Missões, Investimentos, IA e Planejamento permanecem intactos.
