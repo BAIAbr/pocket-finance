@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function PlansPage() {
   const { user } = useAuth();
@@ -16,14 +17,31 @@ export default function PlansPage() {
     if (code === currentPlanCode) return;
     setBusy(code);
     try {
-      await selectPlan(code);
-      toast.success(code === 'free' ? 'Plano atualizado para Gratuito' : 'Plano selecionado! Ative para começar.');
+      if (code === 'free') {
+        // Downgrade — cancela no MP e retorna ao gratuito
+        const { data, error } = await supabase.functions.invoke('cancel-subscription', { body: {} });
+        if (error) throw error;
+        if ((data as any)?.error) throw new Error((data as any).error);
+        toast.success('Plano atualizado para Gratuito');
+      } else {
+        // Cria assinatura recorrente no Mercado Pago e redireciona pro checkout
+        const { data, error } = await supabase.functions.invoke('create-subscription', {
+          body: { plan_code: code, back_url: window.location.origin },
+        });
+        if (error) throw error;
+        const checkoutUrl = (data as any)?.checkout_url;
+        if (!checkoutUrl) throw new Error('Não foi possível iniciar o checkout.');
+        toast.success('Redirecionando para o pagamento…');
+        window.location.href = checkoutUrl;
+        return;
+      }
     } catch (e: any) {
-      toast.error(e.message ?? 'Erro ao atualizar plano');
+      toast.error(e?.message ?? 'Erro ao atualizar plano');
     } finally {
       setBusy(null);
     }
   };
+
 
   if (loading) {
     return (
