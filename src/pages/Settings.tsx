@@ -1,296 +1,178 @@
 import { useState } from 'react';
-import { useFinanceContext } from '@/contexts/FinanceContext';
-import { useTheme, COLOR_SCHEMES } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useFinanceContext } from '@/contexts/FinanceContext';
 import { useNavigate } from 'react-router-dom';
 import {
-  Moon, Sun, Trash2, Info, User, Cloud, Download, Mail,
-  ShieldCheck, Bell, BellOff, Palette, Check, CalendarClock, CreditCard,
-  Shield, Crown, Sparkles, ChevronRight, Instagram,
+  Palette, Bell, Shield, CreditCard, Download, Globe, FlaskConical,
+  HelpCircle, Info, Users, ShieldCheck, Trash2, ChevronRight,
 } from 'lucide-react';
+import { SettingsCategoryCard } from '@/components/settings/SettingsCategoryCard';
 import { FamilySettings } from '@/components/FamilySettings';
-import { VipRedeemInput } from '@/components/VipRedeemInput';
 import { PlanGate } from '@/components/PlanGate';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import finangoLogo from '@/assets/finango-logo.png.asset.json';
 
-const INSTAGRAM_URL = 'https://instagram.com/finango.finance';
-const INSTAGRAM_HANDLE = '@finango.finance';
-const SUPPORT_EMAIL = 'suporte@finango.online';
-
-interface RowProps {
+interface Category {
+  id: string;
+  title: string;
+  description: string;
   icon: React.ReactNode;
-  label: string;
-  description?: string;
-  onClick?: () => void;
-  danger?: boolean;
-  highlight?: boolean;
-  trailing?: React.ReactNode;
-}
-function Row({ icon, label, description, onClick, danger, highlight, trailing }: RowProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'w-full flex items-center gap-3 p-3 rounded-xl transition-all touch-scale text-left',
-        highlight ? 'bg-primary/10 hover:bg-primary/15' : 'hover:bg-secondary/60',
-        danger && 'text-destructive hover:bg-destructive/10'
-      )}
-    >
-      <div className={cn(
-        'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
-        danger ? 'bg-destructive/10 text-destructive' : highlight ? 'bg-primary/15 text-primary' : 'bg-secondary text-foreground'
-      )}>
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium truncate">{label}</p>
-        {description && <p className="text-xs text-muted-foreground truncate">{description}</p>}
-      </div>
-      {trailing ?? <ChevronRight size={18} className="text-muted-foreground shrink-0" />}
-    </button>
-  );
+  onClick: () => void;
+  accentClass: string;
 }
 
 export default function SettingsPage() {
-  const { clearAllData } = useFinanceContext();
-  const { theme, toggleTheme, colorScheme, setColorScheme } = useTheme();
-  const { isAuthenticated, user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { isAdmin } = useAdminCheck(user?.id);
-  const { isSupported: pushSupported, isSubscribed: pushSubscribed, isLoading: pushLoading, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } = usePushNotifications(user?.id);
+  const { clearAllData } = useFinanceContext();
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const [showFamily, setShowFamily] = useState(false);
 
-
-
-  const handleInstallApp = () => {
-    const deferredPrompt = (window as any).deferredPrompt;
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult: any) => {
-        if (choiceResult.outcome === 'accepted') toast.success('App instalado com sucesso!');
-        (window as any).deferredPrompt = null;
-      });
-    } else {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isAndroid = /Android/.test(navigator.userAgent);
-      if (isIOS) toast.info('Toque em compartilhar e "Adicionar à Tela de Início"', { duration: 5000 });
-      else if (isAndroid) toast.info('Menu do navegador → "Instalar aplicativo"', { duration: 5000 });
-      else toast.info('Clique no ícone de instalação na barra de endereço', { duration: 5000 });
-    }
-  };
-
+  const categories: Category[] = [
+    {
+      id: 'appearance',
+      title: 'Personalização',
+      description: 'Customize a aparência e a organização do Finango.',
+      icon: <Palette size={26} />,
+      onClick: () => navigate('/settings/appearance'),
+      accentClass: 'bg-primary/15 text-primary',
+    },
+    {
+      id: 'notifications',
+      title: 'Notificações',
+      description: 'Push, resumos e categorias.',
+      icon: <Bell size={26} />,
+      onClick: () => navigate('/settings/notifications'),
+      accentClass: 'bg-warning/15 text-warning',
+    },
+    {
+      id: 'security',
+      title: 'Segurança',
+      description: 'Senha, 2FA, sessões e dispositivos.',
+      icon: <Shield size={26} />,
+      onClick: () => navigate('/security'),
+      accentClass: 'bg-success/15 text-success',
+    },
+    {
+      id: 'subscription',
+      title: 'Assinatura e Contas',
+      description: 'Plano Finango, pagamentos e conexões.',
+      icon: <CreditCard size={26} />,
+      onClick: () => navigate('/settings/subscription'),
+      accentClass: 'bg-primary/15 text-primary',
+    },
+    {
+      id: 'data',
+      title: 'Importar e Exportar',
+      description: 'Backup, PDF, Excel, CSV e migrações.',
+      icon: <Download size={26} />,
+      onClick: () => navigate('/settings/data'),
+      accentClass: 'bg-secondary text-foreground',
+    },
+    {
+      id: 'preferences',
+      title: 'Preferências',
+      description: 'Idioma, moeda, formato de data e fuso.',
+      icon: <Globe size={26} />,
+      onClick: () => navigate('/settings/preferences'),
+      accentClass: 'bg-secondary text-foreground',
+    },
+    {
+      id: 'labs',
+      title: 'Laboratório Finango',
+      description: 'Recursos experimentais em teste.',
+      icon: <FlaskConical size={26} />,
+      onClick: () => navigate('/settings/labs'),
+      accentClass: 'bg-primary/15 text-primary',
+    },
+    {
+      id: 'help',
+      title: 'Ajuda e Suporte',
+      description: 'Central de ajuda, contato e feedback.',
+      icon: <HelpCircle size={26} />,
+      onClick: () => navigate('/settings/help'),
+      accentClass: 'bg-secondary text-foreground',
+    },
+    {
+      id: 'about',
+      title: 'Sobre',
+      description: 'Versão, changelog, políticas e licenças.',
+      icon: <Info size={26} />,
+      onClick: () => navigate('/settings/about'),
+      accentClass: 'bg-secondary text-foreground',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
-      <header className="px-4 pt-6 pb-4 max-w-3xl mx-auto">
+      <header className="px-4 pt-6 pb-4 max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold">Configurações</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Central de configuração completa do seu Finango.
+        </p>
       </header>
 
-      <main className="px-4 space-y-5 max-w-3xl mx-auto">
-        {/* ===================== VIP redeem ===================== */}
-        {isAuthenticated && <VipRedeemInput />}
-
-
-        {/* ===================== INSTALL APP ===================== */}
-        <section className="card-finance gradient-balance text-primary-foreground">
-          <button onClick={handleInstallApp} className="w-full flex items-center justify-between touch-scale">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-primary-foreground/20 flex items-center justify-center">
-                <Download size={24} />
-              </div>
-              <div className="text-left">
-                <p className="font-semibold text-lg">Baixar Aplicativo</p>
-                <p className="text-sm text-primary-foreground/80">Instale no seu celular</p>
-              </div>
-            </div>
-            <ChevronRight size={20} />
-          </button>
+      <main className="px-4 space-y-5 max-w-4xl mx-auto">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {categories.map(c => (
+            <SettingsCategoryCard
+              key={c.id}
+              icon={c.icon}
+              title={c.title}
+              description={c.description}
+              accentClass={c.accentClass}
+              onClick={c.onClick}
+            />
+          ))}
         </section>
 
-        {/* ===================== PREFERÊNCIAS ===================== */}
-        <section className="card-finance">
-          <h2 className="font-semibold mb-4 flex items-center gap-2">
-            <Sparkles size={18} /> Preferências
-          </h2>
-
-          {/* Theme toggle */}
-          <button onClick={toggleTheme} className="w-full flex items-center justify-between py-2 mb-2 touch-scale">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-                {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
-              </div>
-              <div className="text-left">
-                <p className="font-medium">Tema {theme === 'dark' ? 'Escuro' : 'Claro'}</p>
-                <p className="text-xs text-muted-foreground">Toque para alternar</p>
-              </div>
-            </div>
-            <div className={cn(
-              'w-12 h-7 rounded-full flex items-center px-1 transition-all',
-              theme === 'dark' ? 'bg-primary justify-end' : 'bg-secondary justify-start'
-            )}>
-              <div className="w-5 h-5 rounded-full bg-background shadow-md" />
-            </div>
-          </button>
-
-          {/* Color schemes */}
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <Palette size={16} className="text-muted-foreground" />
-              <p className="font-medium text-sm">Tema de cores</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {COLOR_SCHEMES.map((scheme) => (
-                <button
-                  key={scheme.id}
-                  onClick={() => setColorScheme(scheme.id)}
-                  className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl transition-all touch-scale text-left',
-                    colorScheme === scheme.id ? 'bg-primary/15 ring-2 ring-primary' : 'bg-secondary/50 hover:bg-secondary'
-                  )}
-                >
-                  {scheme.id === 'default'
-                    ? <img src={finangoLogo.url} alt="Finango" className="w-6 h-6 object-contain" />
-                    : <span className="text-xl">{scheme.emoji}</span>}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{scheme.name}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{scheme.description}</p>
-                  </div>
-                  {colorScheme === scheme.id && <Check size={16} className="text-primary shrink-0" />}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ===================== NOTIFICAÇÕES ===================== */}
-        {isAuthenticated && pushSupported && (
-          <section className="card-finance">
-            <h2 className="font-semibold mb-3 flex items-center gap-2">
-              <Bell size={18} /> Notificações
-            </h2>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
-                  {pushSubscribed ? <Bell size={18} /> : <BellOff size={18} />}
-                </div>
-                <div>
-                  <p className="font-medium text-sm">Notificações push</p>
-                  <p className="text-xs text-muted-foreground">
-                    {pushSubscribed ? 'Ativadas neste dispositivo' : 'Receba lembretes e resumos'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => (pushSubscribed ? pushUnsubscribe() : pushSubscribe())}
-                disabled={pushLoading}
-                className={cn(
-                  'px-3 py-2 rounded-xl text-sm font-semibold touch-scale',
-                  pushSubscribed ? 'bg-secondary hover:bg-secondary/70' : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                )}
-              >
-                {pushLoading ? '...' : pushSubscribed ? 'Desativar' : 'Ativar'}
-              </button>
-            </div>
-          </section>
-        )}
-
-        {/* ===================== ASSINATURAS & COMPRAS ===================== */}
-        {isAuthenticated && (
-          <section className="card-finance">
-            <h2 className="font-semibold mb-3 flex items-center gap-2">
-              <CreditCard size={18} /> Assinaturas & Compras
-            </h2>
-            <div className="space-y-1.5">
-              <Row icon={<Crown size={18} />} label="Planos & Assinatura" description="Ver benefícios e fazer upgrade" onClick={() => navigate('/plans')} highlight />
-              <Row icon={<CalendarClock size={18} />} label="Assinaturas & Contas" description="Recorrentes mensais" onClick={() => navigate('/recurring')} />
-              <Row icon={<CreditCard size={18} />} label="Compras Parceladas" description="Gerenciar parcelamentos" onClick={() => navigate('/installments')} />
-            </div>
-          </section>
-        )}
-
-        {/* ===================== FAMILY ===================== */}
+        {/* Família */}
         {isAuthenticated && (
           <PlanGate feature="family" inline>
-            <FamilySettings />
+            <section className="card-finance">
+              <button
+                onClick={() => setShowFamily(v => !v)}
+                className="w-full flex items-center gap-3 touch-scale"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-primary/15 text-primary flex items-center justify-center">
+                  <Users size={22} />
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="font-semibold">Família</p>
+                  <p className="text-xs text-muted-foreground">Compartilhe finanças com sua família</p>
+                </div>
+                <ChevronRight
+                  size={20}
+                  className={`text-muted-foreground transition-transform ${showFamily ? 'rotate-90' : ''}`}
+                />
+              </button>
+              {showFamily && (
+                <div className="mt-4 pt-4 border-t border-border animate-fade-in">
+                  <FamilySettings />
+                </div>
+              )}
+            </section>
           </PlanGate>
         )}
 
-        {/* ===================== SEGURANÇA & 2FA ===================== */}
-        {isAuthenticated && (
-          <section className="card-finance">
-            <h2 className="font-semibold mb-3 flex items-center gap-2">
-              <Shield size={18} /> Segurança & 2FA
-            </h2>
-            <Row
-              icon={<Shield size={18} />}
-              label="Segurança da conta"
-              description="Senha, 2FA, sessões e dispositivos"
-              onClick={() => navigate('/security')}
-              highlight
-            />
-          </section>
-        )}
-
-        {/* ===================== CONTATO ===================== */}
-        <section className="card-finance">
-          <h2 className="font-semibold mb-3 flex items-center gap-2">
-            <Mail size={18} /> Contato
-          </h2>
-          <div className="space-y-2">
-            <a
-              href={`mailto:${SUPPORT_EMAIL}`}
-              className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale"
-            >
-              <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
-                <Mail size={18} />
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="font-medium">E-mail de Suporte</p>
-                <p className="text-xs text-muted-foreground truncate">{SUPPORT_EMAIL}</p>
-              </div>
-              <ChevronRight size={18} className="text-muted-foreground" />
-            </a>
-
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-all touch-scale"
-            >
-              <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
-                <Instagram size={18} />
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="font-medium">Instagram Oficial</p>
-                <p className="text-xs text-muted-foreground truncate">{INSTAGRAM_HANDLE}</p>
-              </div>
-              <ChevronRight size={18} className="text-muted-foreground" />
-            </a>
-          </div>
-        </section>
-
-        {/* ===================== ADMIN ===================== */}
+        {/* Admin */}
         {isAuthenticated && isAdmin && (
-          <section className="card-finance">
-            <Row
-              icon={<ShieldCheck size={18} />}
-              label="Painel Administrativo"
-              description="Ferramentas de admin"
-              onClick={() => navigate('/admin')}
-              highlight
-            />
-          </section>
+          <SettingsCategoryCard
+            icon={<ShieldCheck size={26} />}
+            title="Painel Administrativo"
+            description="Ferramentas de admin do Finango."
+            accentClass="bg-primary/15 text-primary"
+            onClick={() => navigate('/admin')}
+            badge="Admin"
+          />
         )}
 
-        {/* ===================== DADOS ===================== */}
+        {/* Zona de perigo */}
         {isAuthenticated && (
-          <section className="card-finance">
-            <h2 className="font-semibold mb-3 flex items-center gap-2">
-              <Trash2 size={18} /> Dados
+          <section className="card-finance border border-destructive/20">
+            <h2 className="font-semibold mb-3 flex items-center gap-2 text-destructive">
+              <Trash2 size={18} /> Zona de perigo
             </h2>
             {showConfirmClear ? (
               <div className="space-y-3">
@@ -298,11 +180,18 @@ export default function SettingsPage() {
                   ⚠️ Isso apagará todas as suas transações e metas. Esta ação não pode ser desfeita.
                 </p>
                 <div className="flex gap-2">
-                  <button onClick={() => setShowConfirmClear(false)} className="flex-1 py-3 rounded-xl bg-secondary font-medium touch-scale">
+                  <button
+                    onClick={() => setShowConfirmClear(false)}
+                    className="flex-1 py-3 rounded-xl bg-secondary font-medium touch-scale"
+                  >
                     Cancelar
                   </button>
                   <button
-                    onClick={async () => { await clearAllData(); setShowConfirmClear(false); }}
+                    onClick={async () => {
+                      await clearAllData();
+                      setShowConfirmClear(false);
+                      toast.success('Dados limpos');
+                    }}
                     className="flex-1 py-3 rounded-xl bg-destructive text-destructive-foreground font-medium touch-scale"
                   >
                     Confirmar
@@ -310,28 +199,21 @@ export default function SettingsPage() {
                 </div>
               </div>
             ) : (
-              <Row icon={<Trash2 size={18} />} label="Limpar todos os dados" danger onClick={() => setShowConfirmClear(true)} />
+              <button
+                onClick={() => setShowConfirmClear(true)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 touch-scale text-destructive text-left"
+              >
+                <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+                  <Trash2 size={18} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium">Limpar todos os dados</p>
+                  <p className="text-xs text-destructive/70">Ação irreversível</p>
+                </div>
+              </button>
             )}
           </section>
         )}
-
-        {/* ===================== SOBRE ===================== */}
-        <section className="card-finance">
-          <h2 className="font-semibold mb-3 flex items-center gap-2">
-            <Info size={18} /> Sobre
-          </h2>
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center justify-between py-1.5">
-              <span className="text-muted-foreground">Versão</span>
-              <span className="font-mono">2.2.0</span>
-            </div>
-            <div className="flex items-center justify-between py-1.5">
-              <span className="text-muted-foreground">Armazenamento</span>
-              <span className="font-mono flex items-center gap-1"><Cloud size={14} className="text-primary" /> Nuvem</span>
-            </div>
-          </div>
-        </section>
-
       </main>
     </div>
   );

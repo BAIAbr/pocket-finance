@@ -393,3 +393,24 @@
     100% { background-position: -200% 0; }
   }
 }
+
+/* Density modes — set by UserPreferencesContext */
+.density-compact .card-finance { padding: 0.75rem; }
+.density-compact .card-finance + .card-finance { margin-top: 0.5rem; }
+.density-comfortable .card-finance { /* default */ }
+
+/* Animation modes */
+.anim-off *,
+.anim-off *::before,
+.anim-off *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+.anim-reduced *,
+.anim-reduced *::before,
+.anim-reduced *::after {
+  animation-duration: 0.15s !important;
+  transition-duration: 0.15s !important;
+}
+
