@@ -110,6 +110,7 @@ export default function SubscriptionSettings() {
       />
 
       <main className="px-4 space-y-5 max-w-3xl mx-auto">
+        <TrialBanner />
         {/* Header card */}
         <motion.section
           initial={{ opacity: 0, y: 8 }}
