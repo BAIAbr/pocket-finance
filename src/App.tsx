@@ -23,6 +23,8 @@ import AppearanceSettings from "./pages/settings/AppearanceSettings";
 import NotificationSettings from "./pages/settings/NotificationSettings";
 import SubscriptionSettings from "./pages/settings/SubscriptionSettings";
 import DataSettings from "./pages/settings/DataSettings";
+import ImportWizard from "./pages/settings/ImportWizard";
+import ImportHistory from "./pages/settings/ImportHistory";
 import PreferenceSettings from "./pages/settings/PreferenceSettings";
 import LabsSettings from "./pages/settings/LabsSettings";
 import HelpSettings from "./pages/settings/HelpSettings";
