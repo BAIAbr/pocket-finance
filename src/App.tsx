@@ -105,6 +105,7 @@ const App = () => (
             </HashRouter>
             </FamilyProvider>
           </FinanceProvider>
+          </FeatureFlagsProvider>
         </UserPreferencesProvider>
         </AuthProvider>
         </AppearanceProvider>
