@@ -238,7 +238,7 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="analytics" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6">
           <TabsTrigger value="analytics" className="gap-1.5">
             <Activity size={14} />
             Analytics
@@ -250,6 +250,14 @@ export default function AdminDashboard() {
           <TabsTrigger value="vip" className="gap-1.5">
             <Crown size={14} />
             VIP
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="gap-1.5">
+            <FileText size={14} />
+            Documentos
+          </TabsTrigger>
+          <TabsTrigger value="changelog" className="gap-1.5">
+            <Sparkles size={14} />
+            Novidades
           </TabsTrigger>
           <TabsTrigger value="appearance" className="gap-1.5">
             <Palette size={14} />
