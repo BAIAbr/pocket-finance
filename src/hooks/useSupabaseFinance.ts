@@ -175,6 +175,18 @@ export function useSupabaseFinance(userId: string | null) {
     loadData();
   }, [userId]);
 
+  const refresh = useCallback(async () => {
+    if (!userId) return;
+    const [tx, cats] = await Promise.all([
+      supabase.from('transactions').select('*').order('date', { ascending: false }),
+      supabase.from('categories').select('*').order('name'),
+    ]);
+    if (tx.data) setTransactions(tx.data as Transaction[]);
+    if (cats.data) setCategories(cats.data as Category[]);
+  }, [userId]);
+
+
+
   // === TRANSACTIONS ===
   const addTransaction = useCallback(async (transaction: {
     type: 'income' | 'expense';
