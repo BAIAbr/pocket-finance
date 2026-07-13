@@ -34,6 +34,10 @@ export interface UserSubscription {
   status: string;
   started_at: string;
   expires_at: string | null;
+  trial?: boolean | null;
+  trial_ends_at?: string | null;
+  cancel_at_period_end?: boolean | null;
+  coupon_code?: string | null;
 }
 
 export function useSubscription(userId: string | undefined) {
