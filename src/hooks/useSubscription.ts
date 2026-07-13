@@ -78,16 +78,37 @@ export function useSubscription(userId: string | undefined) {
     })();
   }, [loadPlans, loadSubscription]);
 
-  const selectPlan = async (planCode: string) => {
+  const selectPlan = async (planCode: string, opts?: { payerEmail?: string; backUrl?: string }) => {
     if (!userId) throw new Error('Não autenticado');
-    if (planCode !== 'free') {
-      throw new Error('Planos pagos exigem verificação de pagamento ou código VIP.');
+
+    if (planCode === 'free') {
+      const { data, error } = await supabase.functions.invoke('cancel-subscription', { body: {} });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).message ?? (data as any).error);
+      await loadSubscription();
+      return { ok: true } as const;
     }
-    const { data, error } = await supabase.functions.invoke('select-plan', { body: { plan_code: planCode } });
+
+    const { data, error } = await supabase.functions.invoke('create-subscription', {
+      body: {
+        plan_code: planCode,
+        back_url: opts?.backUrl ?? (typeof window !== 'undefined' ? window.location.origin : undefined),
+        payer_email: opts?.payerEmail,
+      },
+    });
     if (error) throw error;
-    if ((data as any)?.error) throw new Error((data as any).message ?? (data as any).error);
-    await loadSubscription();
+    if ((data as any)?.ok === false) {
+      throw new Error((data as any)?.message ?? 'Não foi possível iniciar o checkout.');
+    }
+    if ((data as any)?.error) {
+      throw new Error((data as any)?.message ?? (data as any).error);
+    }
+    const checkoutUrl = (data as any)?.checkout_url;
+    if (!checkoutUrl) throw new Error('URL de checkout não recebida.');
+    if (typeof window !== 'undefined') window.location.href = checkoutUrl;
+    return { ok: true, checkoutUrl } as const;
   };
+
 
   const currentPlanCode = subscription?.plan_code ?? 'free';
 
