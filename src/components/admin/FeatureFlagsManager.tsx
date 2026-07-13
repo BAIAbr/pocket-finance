@@ -293,7 +293,7 @@ export default function FeatureFlagsManager() {
   );
 }
 
-function NewLimitButton({ planId, onSave }: { planId: string; onSave: (planId: string, key: string, value: number, description?: string) => Promise<void> }) {
+function NewLimitButton({ planId, onSave }: { planId: string; onSave: (planId: string, key: string, value: number, description?: string) => Promise<unknown> }) {
   const [open, setOpen] = useState(false);
   const [key, setKey] = useState('');
   const [value, setValue] = useState('0');
