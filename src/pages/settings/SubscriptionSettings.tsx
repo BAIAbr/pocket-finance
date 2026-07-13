@@ -326,6 +326,42 @@ export default function SubscriptionSettings() {
           <VipRedeemInput />
         </motion.div>
 
+        {/* Payment history */}
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.2 }}
+          className="card-finance"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Receipt size={16} className="text-primary" />
+            <h2 className="font-semibold">Histórico de pagamentos</h2>
+          </div>
+          {payments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum pagamento registrado ainda.</p>
+          ) : (
+            <ul className="divide-y divide-border/40">
+              {payments.map((p) => (
+                <li key={p.id} className="py-2.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {p.plan_code ? `Plano ${p.plan_code}` : 'Pagamento'} · {formatBRL(Number(p.amount))}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatDatePtBR(p.paid_at ?? p.created_at)}
+                      {p.payment_method ? ` · ${p.payment_method}` : ''}
+                    </p>
+                  </div>
+                  <span className={cn('text-[11px] font-semibold px-2 py-0.5 rounded-full', statusColor(p.status))}>
+                    {statusLabelBr(p.status)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </motion.section>
+
+
         {/* Footer */}
         <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground pt-2">
           <ShieldCheck size={12} />
