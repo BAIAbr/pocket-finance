@@ -7,8 +7,8 @@ interface LogRow {
   id: string;
   event_type: string;
   plan_code: string | null;
-  status: string | null;
-  metadata: any;
+  source: string | null;
+  payload: any;
   created_at: string;
 }
 
@@ -78,14 +78,14 @@ export function SubscriptionLogs() {
             {visible.map((log) => {
               const label = EVENT_LABELS[log.event_type] ?? log.event_type;
               const isOpen = expanded === log.id;
-              const hasMeta = log.metadata && Object.keys(log.metadata).length > 0;
+              const hasPayload = log.payload && Object.keys(log.payload).length > 0;
               return (
                 <li key={log.id} className="py-2.5">
                   <button
-                    onClick={() => hasMeta && setExpanded(isOpen ? null : log.id)}
+                    onClick={() => hasPayload && setExpanded(isOpen ? null : log.id)}
                     className={cn(
                       'w-full flex items-center justify-between gap-3 text-left',
-                      hasMeta && 'hover:opacity-80',
+                      hasPayload && 'hover:opacity-80',
                     )}
                   >
                     <div className="min-w-0 flex-1">
@@ -93,14 +93,14 @@ export function SubscriptionLogs() {
                       <p className="text-[11px] text-muted-foreground">
                         {formatDate(log.created_at)}
                         {log.plan_code ? ` · ${log.plan_code}` : ''}
-                        {log.status ? ` · ${log.status}` : ''}
+                        {log.source ? ` · ${log.source}` : ''}
                       </p>
                     </div>
-                    {hasMeta && (isOpen ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />)}
+                    {hasPayload && (isOpen ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />)}
                   </button>
-                  {isOpen && hasMeta && (
+                  {isOpen && hasPayload && (
                     <pre className="mt-2 p-2 rounded-lg bg-muted text-[10px] font-mono overflow-x-auto whitespace-pre-wrap break-all">
-                      {JSON.stringify(log.metadata, null, 2)}
+                      {JSON.stringify(log.payload, null, 2)}
                     </pre>
                   )}
                 </li>

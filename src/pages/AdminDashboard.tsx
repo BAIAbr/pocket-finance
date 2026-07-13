@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
-import { Loader2, Users, Clock, Activity, TrendingUp, TrendingDown, Download, ArrowLeft, Search, Palette, CreditCard, Crown, FileText, Sparkles, Flag } from 'lucide-react';
+import { Loader2, Users, Clock, Activity, TrendingUp, TrendingDown, Download, ArrowLeft, Search, Palette, CreditCard, Crown, FileText, Sparkles, Flag, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ import VipCodesManager from '@/components/admin/VipCodesManager';
 import DocumentsManager from '@/components/admin/documents/DocumentsManager';
 import ChangelogManager from '@/components/admin/documents/ChangelogManager';
 import FeatureFlagsManager from '@/components/admin/FeatureFlagsManager';
+import SubscriptionsAdminManager from '@/components/admin/SubscriptionsAdminManager';
 
 interface AnalyticsRow {
   user_id: string;
@@ -239,10 +240,14 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="analytics" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-7">
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
           <TabsTrigger value="analytics" className="gap-1.5">
             <Activity size={14} />
             Analytics
+          </TabsTrigger>
+          <TabsTrigger value="subscriptions" className="gap-1.5">
+            <DollarSign size={14} />
+            Assinaturas
           </TabsTrigger>
           <TabsTrigger value="plans" className="gap-1.5">
             <CreditCard size={14} />
@@ -522,6 +527,10 @@ export default function AdminDashboard() {
 
 
 
+
+        <TabsContent value="subscriptions">
+          <SubscriptionsAdminManager />
+        </TabsContent>
 
         <TabsContent value="plans">
           <PlansManager />

@@ -9,7 +9,7 @@ const json = (status: number, body: unknown) =>
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  if (req.method !== 'GET') return json(405, { error: 'method_not_allowed' });
+  if (req.method !== 'GET' && req.method !== 'POST') return json(405, { error: 'method_not_allowed' });
 
   const authHeader = req.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) return json(401, { error: 'unauthorized' });
@@ -27,8 +27,15 @@ Deno.serve(async (req) => {
   const userId = claimsData.claims.sub as string;
 
   const url = new URL(req.url);
-  const scope = url.searchParams.get('scope') ?? 'self';
-  const limit = Math.min(Number(url.searchParams.get('limit') ?? 50), 200);
+  let scope = url.searchParams.get('scope') ?? 'self';
+  let limit = Math.min(Number(url.searchParams.get('limit') ?? 50), 200);
+  if (req.method === 'POST') {
+    try {
+      const body = await req.json();
+      if (body?.scope) scope = String(body.scope);
+      if (body?.limit) limit = Math.min(Number(body.limit), 200);
+    } catch { /* ignore */ }
+  }
 
   // Admins can request all logs
   if (scope === 'all') {
