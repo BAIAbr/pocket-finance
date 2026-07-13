@@ -77,7 +77,9 @@ export default function SubscriptionSettings() {
     if (!user) return;
     setCancelling(true);
     try {
-      await selectPlan('free');
+      const { data, error } = await supabase.functions.invoke('cancel-subscription', { body: {} });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
       toast.success('Assinatura cancelada', { description: 'Você voltou ao plano gratuito.' });
       setConfirmingCancel(false);
       await reload();
@@ -87,6 +89,14 @@ export default function SubscriptionSettings() {
       setCancelling(false);
     }
   };
+
+  const statusColor = (s: string) =>
+    s === 'approved' ? 'bg-success/15 text-success'
+    : s === 'pending' || s === 'in_process' ? 'bg-warning/15 text-warning'
+    : s === 'rejected' || s === 'cancelled' ? 'bg-destructive/15 text-destructive'
+    : 'bg-muted text-muted-foreground';
+  const statusLabelBr = (s: string) =>
+    ({ approved: 'Aprovado', pending: 'Pendente', in_process: 'Em análise', rejected: 'Recusado', cancelled: 'Cancelado', refunded: 'Estornado' } as Record<string, string>)[s] ?? s;
 
   return (
     <div className="min-h-screen bg-background pb-24">
