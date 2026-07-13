@@ -77,6 +77,8 @@ const App = () => (
                   <Route path="/settings/notifications" element={<NotificationSettings />} />
                   <Route path="/settings/subscription" element={<SubscriptionSettings />} />
                   <Route path="/settings/data" element={<DataSettings />} />
+                  <Route path="/settings/import" element={<ImportWizard />} />
+                  <Route path="/settings/import/history" element={<ImportHistory />} />
                   <Route path="/settings/preferences" element={<PreferenceSettings />} />
                   <Route path="/settings/labs" element={<LabsSettings />} />
                   <Route path="/settings/help" element={<HelpSettings />} />
