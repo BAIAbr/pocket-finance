@@ -14,6 +14,17 @@ import { preHydrateTheme } from "./contexts/ThemeContext";
   }
 })();
 
+// On a fresh app launch (new session), if the user landed on /settings,
+// redirect to the home dashboard so the app always opens on Início.
+// This prevents the PWA/browser from restoring the last visited settings page.
+(() => {
+  const redirectFlag = "finango.homeRedirectDone";
+  if (!sessionStorage.getItem(redirectFlag) && window.location.hash === "#/settings") {
+    window.history.replaceState(null, "", "/#/");
+  }
+  sessionStorage.setItem(redirectFlag, "1");
+})();
+
 // Apply saved theme + color scheme synchronously BEFORE React renders,
 // so the Profile header (and rest of the UI) never flashes the default palette.
 preHydrateTheme();
