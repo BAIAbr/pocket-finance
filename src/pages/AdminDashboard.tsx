@@ -22,6 +22,7 @@ import { GenerateResetLinkButton } from '@/components/admin/GenerateResetLinkBut
 import VipCodesManager from '@/components/admin/VipCodesManager';
 import DocumentsManager from '@/components/admin/documents/DocumentsManager';
 import ChangelogManager from '@/components/admin/documents/ChangelogManager';
+import FeatureFlagsManager from '@/components/admin/FeatureFlagsManager';
 
 interface AnalyticsRow {
   user_id: string;
