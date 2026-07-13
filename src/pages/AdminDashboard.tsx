@@ -20,6 +20,8 @@ import PlansManager from '@/components/admin/PlansManager';
 import { AdminSetPasswordButton } from '@/components/admin/AdminSetPasswordButton';
 import { GenerateResetLinkButton } from '@/components/admin/GenerateResetLinkButton';
 import VipCodesManager from '@/components/admin/VipCodesManager';
+import DocumentsManager from '@/components/admin/documents/DocumentsManager';
+import ChangelogManager from '@/components/admin/documents/ChangelogManager';
 
 interface AnalyticsRow {
   user_id: string;
