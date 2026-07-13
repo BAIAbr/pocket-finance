@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppearanceProvider } from "@/contexts/AppearanceContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { FeatureFlagsProvider } from "@/contexts/FeatureFlagsContext";
 import { AppLayout } from "@/components/AppLayout";
 import { PlanGate } from "@/components/PlanGate";
 import Dashboard from "./pages/Dashboard";
