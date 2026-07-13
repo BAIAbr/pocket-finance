@@ -51,6 +51,7 @@ const App = () => (
     <TooltipProvider>
       <ThemeProvider>
         <AppearanceProvider>
+        <UserPreferencesProvider>
         <AuthProvider>
           <FinanceProvider>
             <FamilyProvider>
@@ -70,6 +71,14 @@ const App = () => (
                   <Route path="/savings" element={<Savings />} />
                   <Route path="/planning" element={<PlanGate feature="planning"><Planning /></PlanGate>} />
                   <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/settings/appearance" element={<AppearanceSettings />} />
+                  <Route path="/settings/notifications" element={<NotificationSettings />} />
+                  <Route path="/settings/subscription" element={<SubscriptionSettings />} />
+                  <Route path="/settings/data" element={<DataSettings />} />
+                  <Route path="/settings/preferences" element={<PreferenceSettings />} />
+                  <Route path="/settings/labs" element={<LabsSettings />} />
+                  <Route path="/settings/help" element={<HelpSettings />} />
+                  <Route path="/settings/about" element={<AboutSettings />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/history" element={<FinancialHistory />} />
                   <Route path="/recurring" element={<PlanGate feature="recurring"><Recurring /></PlanGate>} />
@@ -87,8 +96,10 @@ const App = () => (
             </FamilyProvider>
           </FinanceProvider>
         </AuthProvider>
+        </UserPreferencesProvider>
         </AppearanceProvider>
       </ThemeProvider>
+
     </TooltipProvider>
   </QueryClientProvider>
 );
