@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Check, Crown, Sparkles, Loader2, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, Check, Crown, Sparkles, Loader2, ArrowLeft, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -12,10 +12,13 @@ export default function PlansPage() {
   const navigate = useNavigate();
   const { plans, currentPlanCode, loading, selectPlan } = useSubscription(user?.id);
   const [busy, setBusy] = useState<string | null>(null);
+  const [payerEmail, setPayerEmail] = useState('');
+  const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
 
   const handleSelect = async (code: string) => {
     if (code === currentPlanCode) return;
     setBusy(code);
+    setCheckoutNotice(null);
     try {
       if (code === 'free') {
         // Downgrade — cancela no MP e retorna ao gratuito
@@ -26,9 +29,20 @@ export default function PlansPage() {
       } else {
         // Cria assinatura recorrente no Mercado Pago e redireciona pro checkout
         const { data, error } = await supabase.functions.invoke('create-subscription', {
-          body: { plan_code: code, back_url: window.location.origin },
+          body: {
+            plan_code: code,
+            back_url: window.location.origin,
+            payer_email: payerEmail.trim() || undefined,
+          },
         });
         if (error) throw error;
+        if ((data as any)?.ok === false && (data as any)?.error === 'payer_collector_mode_mismatch') {
+          const message = (data as any)?.message ?? 'Informe um e-mail de pagador diferente para continuar.';
+          setCheckoutNotice(message);
+          toast.error('Mercado Pago recusou o pagador informado');
+          return;
+        }
+        if ((data as any)?.error) throw new Error((data as any)?.message ?? (data as any).error);
         const checkoutUrl = (data as any)?.checkout_url;
         if (!checkoutUrl) throw new Error('Não foi possível iniciar o checkout.');
         toast.success('Redirecionando para o pagamento…');
@@ -36,7 +50,13 @@ export default function PlansPage() {
         return;
       }
     } catch (e: any) {
-      toast.error(e?.message ?? 'Erro ao atualizar plano');
+      const message = e?.message ?? 'Erro ao atualizar plano';
+      if (message.includes('Both payer and collector must be real or test users')) {
+        setCheckoutNotice('Informe um e-mail de pagador compatível com o ambiente do Mercado Pago: comprador de teste para token TEST ou conta real diferente da vendedora para token de produção.');
+        toast.error('Informe outro e-mail de pagador');
+      } else {
+        toast.error(message);
+      }
     } finally {
       setBusy(null);
     }
@@ -67,6 +87,31 @@ export default function PlansPage() {
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold mb-2">Escolha o plano ideal</h1>
           <p className="text-muted-foreground">Comece grátis. Evolua quando quiser.</p>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
+          <label htmlFor="payer-email" className="text-sm font-semibold flex items-center gap-2 mb-2">
+            <Mail size={16} className="text-primary" /> E-mail do pagador no Mercado Pago
+          </label>
+          <input
+            id="payer-email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={payerEmail}
+            onChange={(event) => setPayerEmail(event.target.value)}
+            placeholder={user?.email ?? 'comprador@exemplo.com'}
+            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+          />
+          <p className="mt-2 text-xs text-muted-foreground">
+            Se deixar em branco, usaremos o e-mail da sua conta Finango. Em testes, use o comprador de teste do Mercado Pago.
+          </p>
+          {checkoutNotice && (
+            <div className="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+              <span>{checkoutNotice}</span>
+            </div>
+          )}
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
