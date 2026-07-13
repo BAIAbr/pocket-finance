@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CreditCard, Crown, Check, Lock, Sparkles, Calendar, Clock, ArrowRight, ShieldCheck, X,
+  CreditCard, Crown, Check, Lock, Sparkles, Calendar, Clock, ArrowRight, ShieldCheck, X, Receipt,
 } from 'lucide-react';
 import { SettingsSubPageHeader } from '@/components/settings/SettingsSubPageHeader';
 import { VipRedeemInput } from '@/components/VipRedeemInput';
@@ -11,6 +11,18 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { formatBRL } from '@/lib/currency';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+
+interface PaymentRow {
+  id: string;
+  plan_code: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  payment_method: string | null;
+  paid_at: string | null;
+  created_at: string;
+}
 
 function formatDatePtBR(iso: string) {
   try {
