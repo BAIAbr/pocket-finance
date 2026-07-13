@@ -35,6 +35,9 @@ export default function Dashboard() {
       </header>
 
       <main className="px-4 lg:px-8 space-y-5">
+        {/* Novidades destacadas */}
+        <ChangelogHighlight />
+
         {/* Balance is always highlighted at the top */}
         <div className="animate-fade-in">
           <BalanceCard />
