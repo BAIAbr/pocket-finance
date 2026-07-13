@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { SettingsSubPageHeader } from '@/components/settings/SettingsSubPageHeader';
 import { VipRedeemInput } from '@/components/VipRedeemInput';
+import { CouponInput } from '@/components/subscription/CouponInput';
+import { SubscriptionLogs } from '@/components/subscription/SubscriptionLogs';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -317,13 +319,31 @@ export default function SubscriptionSettings() {
           </motion.section>
         )}
 
-        {/* VIP / Coupon */}
+        {/* Coupon */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.13 }}
+        >
+          <CouponInput planCode={currentPlanCode} onApplied={() => reload()} />
+        </motion.div>
+
+        {/* VIP */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.15 }}
         >
           <VipRedeemInput />
+        </motion.div>
+
+        {/* Subscription events log */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.18 }}
+        >
+          <SubscriptionLogs />
         </motion.div>
 
         {/* Payment history */}
