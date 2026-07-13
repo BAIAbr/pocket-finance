@@ -315,6 +315,146 @@ export type Database = {
           },
         ]
       }
+      import_history: {
+        Row: {
+          bank_detected: string | null
+          created_at: string
+          error_message: string | null
+          expense_total: number
+          family_id: string | null
+          file_name: string
+          file_type: string
+          id: string
+          income_total: number
+          raw_summary: Json | null
+          records_duplicated: number
+          records_imported: number
+          records_total: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bank_detected?: string | null
+          created_at?: string
+          error_message?: string | null
+          expense_total?: number
+          family_id?: string | null
+          file_name: string
+          file_type: string
+          id?: string
+          income_total?: number
+          raw_summary?: Json | null
+          records_duplicated?: number
+          records_imported?: number
+          records_total?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bank_detected?: string | null
+          created_at?: string
+          error_message?: string | null
+          expense_total?: number
+          family_id?: string | null
+          file_name?: string
+          file_type?: string
+          id?: string
+          income_total?: number
+          raw_summary?: Json | null
+          records_duplicated?: number
+          records_imported?: number
+          records_total?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      import_rules: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          hits: number
+          id: string
+          match_type: string
+          pattern: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          hits?: number
+          id?: string
+          match_type?: string
+          pattern: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          hits?: number
+          id?: string
+          match_type?: string
+          pattern?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_rules_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      imported_transactions_map: {
+        Row: {
+          created_at: string
+          external_hash: string
+          id: string
+          import_id: string | null
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          external_hash: string
+          id?: string
+          import_id?: string | null
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          external_hash?: string
+          id?: string
+          import_id?: string | null
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "imported_transactions_map_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "import_history"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "imported_transactions_map_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       installment_items: {
         Row: {
           amount: number
@@ -1374,6 +1514,8 @@ export type Database = {
           date: string
           description: string | null
           id: string
+          import_id: string | null
+          source: string
           type: string
           user_id: string
         }
@@ -1384,6 +1526,8 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          import_id?: string | null
+          source?: string
           type: string
           user_id: string
         }
@@ -1394,6 +1538,8 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          import_id?: string | null
+          source?: string
           type?: string
           user_id?: string
         }
@@ -1403,6 +1549,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "import_history"
             referencedColumns: ["id"]
           },
         ]
