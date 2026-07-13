@@ -526,6 +526,14 @@ export default function AdminDashboard() {
           <VipCodesManager />
         </TabsContent>
 
+        <TabsContent value="documents">
+          <DocumentsManager />
+        </TabsContent>
+
+        <TabsContent value="changelog">
+          <ChangelogManager />
+        </TabsContent>
+
         <TabsContent value="appearance">
           <ThemeManager />
         </TabsContent>
