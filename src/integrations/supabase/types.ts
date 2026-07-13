@@ -1075,6 +1075,71 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          paid_at: string | null
+          payment_method: string | null
+          plan_code: string | null
+          provider: string
+          provider_payment_id: string | null
+          provider_subscription_id: string | null
+          raw: Json
+          status: string
+          status_detail: string | null
+          subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          plan_code?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          provider_subscription_id?: string | null
+          raw?: Json
+          status?: string
+          status_detail?: string | null
+          subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          plan_code?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          provider_subscription_id?: string | null
+          raw?: Json
+          status?: string
+          status_detail?: string | null
+          subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       piggy_bank: {
         Row: {
           balance: number
@@ -2071,30 +2136,48 @@ export type Database = {
       }
       user_subscriptions: {
         Row: {
+          cancelled_at: string | null
           created_at: string
           expires_at: string | null
           id: string
+          metadata: Json
+          next_billing_at: string | null
           plan_code: string
+          provider: string | null
+          provider_customer_id: string | null
+          provider_subscription_id: string | null
           started_at: string
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          cancelled_at?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
+          metadata?: Json
+          next_billing_at?: string | null
           plan_code?: string
+          provider?: string | null
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
           started_at?: string
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          cancelled_at?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
+          metadata?: Json
+          next_billing_at?: string | null
           plan_code?: string
+          provider?: string | null
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
           started_at?: string
           status?: string
           updated_at?: string
