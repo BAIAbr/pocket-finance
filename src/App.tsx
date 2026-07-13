@@ -44,6 +44,8 @@ import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
 import VipRedeem from "./pages/VipRedeem";
 import Profile from "./pages/Profile";
+import PublicDocument from "./pages/PublicDocument";
+import Changelog from "./pages/Changelog";
 
 
 const queryClient = new QueryClient();
