@@ -7,6 +7,7 @@ import { SettingsSubPageHeader } from '@/components/settings/SettingsSubPageHead
 import { VipRedeemInput } from '@/components/VipRedeemInput';
 import { CouponInput } from '@/components/subscription/CouponInput';
 import { SubscriptionLogs } from '@/components/subscription/SubscriptionLogs';
+import { TrialBanner } from '@/components/subscription/TrialBanner';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
