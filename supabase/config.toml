@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.payment-webhook]
 verify_jwt = false
+
+[functions.mp-environment]
+verify_jwt = false
