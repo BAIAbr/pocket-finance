@@ -58,6 +58,7 @@ const App = () => (
         <AppearanceProvider>
         <AuthProvider>
         <UserPreferencesProvider>
+          <FeatureFlagsProvider>
           <FinanceProvider>
             <FamilyProvider>
             <Toaster />
