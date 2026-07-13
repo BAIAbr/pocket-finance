@@ -2,17 +2,22 @@ import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Crown, Loader2 } from 'lucide-react';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
+import { useFeatureFlags } from '@/contexts/FeatureFlagsContext';
 import { FEATURE_LABELS, PlanFeature } from '@/lib/planCapabilities';
 
 interface Props {
-  feature: PlanFeature;
+  feature?: PlanFeature;
+  /** Feature flag slug (from feature_flags table). Takes precedence over `feature` when provided. */
+  flag?: string;
   children: ReactNode;
   /** Optional inline mode: render an inline lock card instead of a full-page block */
   inline?: boolean;
 }
 
-export function PlanGate({ feature, children, inline }: Props) {
-  const { loading, has, planCode } = usePlanAccess();
+export function PlanGate({ feature, flag, children, inline }: Props) {
+  const { loading: planLoading, has, planCode } = usePlanAccess();
+  const { loading: flagsLoading, hasFeature, flags } = useFeatureFlags();
+  const loading = planLoading || flagsLoading;
   const navigate = useNavigate();
 
   if (loading) {
