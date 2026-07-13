@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CreditCard, Crown, Check, Lock, Sparkles, Calendar, Clock, ArrowRight, ShieldCheck, X,
+  CreditCard, Crown, Check, Lock, Sparkles, Calendar, Clock, ArrowRight, ShieldCheck, X, Receipt,
 } from 'lucide-react';
 import { SettingsSubPageHeader } from '@/components/settings/SettingsSubPageHeader';
 import { VipRedeemInput } from '@/components/VipRedeemInput';
@@ -11,6 +11,18 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { formatBRL } from '@/lib/currency';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+
+interface PaymentRow {
+  id: string;
+  plan_code: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  payment_method: string | null;
+  paid_at: string | null;
+  created_at: string;
+}
 
 function formatDatePtBR(iso: string) {
   try {
@@ -31,6 +43,18 @@ export default function SubscriptionSettings() {
   const navigate = useNavigate();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [payments, setPayments] = useState<PaymentRow[]>([]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('payments')
+      .select('id, plan_code, amount, currency, status, payment_method, paid_at, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(({ data }) => setPayments((data as PaymentRow[]) ?? []));
+  }, [user?.id]);
 
   const currentPlan = plans.find(p => p.code === currentPlanCode);
   const isPaid = currentPlanCode !== 'free';
@@ -53,7 +77,9 @@ export default function SubscriptionSettings() {
     if (!user) return;
     setCancelling(true);
     try {
-      await selectPlan('free');
+      const { data, error } = await supabase.functions.invoke('cancel-subscription', { body: {} });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
       toast.success('Assinatura cancelada', { description: 'Você voltou ao plano gratuito.' });
       setConfirmingCancel(false);
       await reload();
@@ -63,6 +89,14 @@ export default function SubscriptionSettings() {
       setCancelling(false);
     }
   };
+
+  const statusColor = (s: string) =>
+    s === 'approved' ? 'bg-success/15 text-success'
+    : s === 'pending' || s === 'in_process' ? 'bg-warning/15 text-warning'
+    : s === 'rejected' || s === 'cancelled' ? 'bg-destructive/15 text-destructive'
+    : 'bg-muted text-muted-foreground';
+  const statusLabelBr = (s: string) =>
+    ({ approved: 'Aprovado', pending: 'Pendente', in_process: 'Em análise', rejected: 'Recusado', cancelled: 'Cancelado', refunded: 'Estornado' } as Record<string, string>)[s] ?? s;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -291,6 +325,42 @@ export default function SubscriptionSettings() {
         >
           <VipRedeemInput />
         </motion.div>
+
+        {/* Payment history */}
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.2 }}
+          className="card-finance"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Receipt size={16} className="text-primary" />
+            <h2 className="font-semibold">Histórico de pagamentos</h2>
+          </div>
+          {payments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum pagamento registrado ainda.</p>
+          ) : (
+            <ul className="divide-y divide-border/40">
+              {payments.map((p) => (
+                <li key={p.id} className="py-2.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {p.plan_code ? `Plano ${p.plan_code}` : 'Pagamento'} · {formatBRL(Number(p.amount))}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatDatePtBR(p.paid_at ?? p.created_at)}
+                      {p.payment_method ? ` · ${p.payment_method}` : ''}
+                    </p>
+                  </div>
+                  <span className={cn('text-[11px] font-semibold px-2 py-0.5 rounded-full', statusColor(p.status))}>
+                    {statusLabelBr(p.status)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </motion.section>
+
 
         {/* Footer */}
         <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground pt-2">
