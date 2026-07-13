@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
-  X, TrendingUp, Bot, Camera, FileDown, BarChart3, FileText,
+  X, TrendingUp, Bot, Camera, ArrowDownUp, BarChart3,
   Crown, Settings as SettingsIcon, User, HelpCircle, Sparkles, ChevronRight, Lock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
