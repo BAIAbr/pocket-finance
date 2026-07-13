@@ -63,14 +63,6 @@ export default function SettingsPage() {
       accentClass: 'bg-primary/15 text-primary',
     },
     {
-      id: 'data',
-      title: 'Importar e Exportar',
-      description: 'Backup, PDF, Excel, CSV e migrações.',
-      icon: <Download size={26} />,
-      onClick: () => navigate('/settings/data'),
-      accentClass: 'bg-secondary text-foreground',
-    },
-    {
       id: 'preferences',
       title: 'Preferências',
       description: 'Idioma, moeda, formato de data e fuso.',

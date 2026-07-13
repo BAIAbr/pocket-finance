@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
-  X, TrendingUp, Bot, Camera, FileDown, BarChart3, FileText,
+  X, TrendingUp, Bot, Camera, ArrowDownUp, BarChart3,
   Crown, Settings as SettingsIcon, User, HelpCircle, Sparkles, ChevronRight, Lock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -78,8 +78,7 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
       title: 'Finanças',
       items: [
         { icon: TrendingUp, label: 'Investimentos', description: 'Acompanhe rendimentos e carteira', badge: 'Novo', action: go('/investments') },
-        { icon: FileDown, label: 'Importar Extratos', description: 'Importe CSV/OFX do seu banco', premium: true, action: premiumSoon('Importar Extratos') },
-        { icon: FileText, label: 'Exportar Dados', description: 'Baixe suas informações', action: go('/reports') },
+        { icon: ArrowDownUp, label: 'Importar e Exportar', description: 'CSV, OFX, Excel, PDF e backup', action: go('/settings/data') },
       ],
     },
     {
