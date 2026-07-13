@@ -65,6 +65,187 @@ export type Database = {
         }
         Relationships: []
       }
+      changelog_entries: {
+        Row: {
+          autor: string | null
+          categoria: Database["public"]["Enums"]["changelog_category"]
+          created_at: string
+          descricao: Json
+          icon: string | null
+          id: string
+          image: string | null
+          is_highlight: boolean
+          published_at: string | null
+          status: Database["public"]["Enums"]["document_status"]
+          tags: string[]
+          titulo: string
+          updated_at: string
+          versao: string
+        }
+        Insert: {
+          autor?: string | null
+          categoria?: Database["public"]["Enums"]["changelog_category"]
+          created_at?: string
+          descricao?: Json
+          icon?: string | null
+          id?: string
+          image?: string | null
+          is_highlight?: boolean
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          tags?: string[]
+          titulo: string
+          updated_at?: string
+          versao: string
+        }
+        Update: {
+          autor?: string | null
+          categoria?: Database["public"]["Enums"]["changelog_category"]
+          created_at?: string
+          descricao?: Json
+          icon?: string | null
+          id?: string
+          image?: string | null
+          is_highlight?: boolean
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          tags?: string[]
+          titulo?: string
+          updated_at?: string
+          versao?: string
+        }
+        Relationships: []
+      }
+      changelog_views: {
+        Row: {
+          entry_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          entry_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          entry_id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "changelog_views_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "changelog_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_versions: {
+        Row: {
+          autor: string | null
+          conteudo: Json
+          created_at: string
+          document_id: string
+          id: string
+          resumo_alteracao: string | null
+          subtitulo: string | null
+          titulo: string
+          versao: number
+        }
+        Insert: {
+          autor?: string | null
+          conteudo: Json
+          created_at?: string
+          document_id: string
+          id?: string
+          resumo_alteracao?: string | null
+          subtitulo?: string | null
+          titulo: string
+          versao: number
+        }
+        Update: {
+          autor?: string | null
+          conteudo?: Json
+          created_at?: string
+          document_id?: string
+          id?: string
+          resumo_alteracao?: string | null
+          subtitulo?: string | null
+          titulo?: string
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          autor: string | null
+          conteudo: Json
+          cover_image: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          published_at: string | null
+          seo_description: string | null
+          seo_image: string | null
+          seo_title: string | null
+          slug: string
+          status: Database["public"]["Enums"]["document_status"]
+          subtitulo: string | null
+          tipo: Database["public"]["Enums"]["document_type"]
+          titulo: string
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          autor?: string | null
+          conteudo?: Json
+          cover_image?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          published_at?: string | null
+          seo_description?: string | null
+          seo_image?: string | null
+          seo_title?: string | null
+          slug: string
+          status?: Database["public"]["Enums"]["document_status"]
+          subtitulo?: string | null
+          tipo?: Database["public"]["Enums"]["document_type"]
+          titulo: string
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          autor?: string | null
+          conteudo?: Json
+          cover_image?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          published_at?: string | null
+          seo_description?: string | null
+          seo_image?: string | null
+          seo_title?: string | null
+          slug?: string
+          status?: Database["public"]["Enums"]["document_status"]
+          subtitulo?: string | null
+          tipo?: Database["public"]["Enums"]["document_type"]
+          titulo?: string
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: []
+      }
       families: {
         Row: {
           ai_enabled: boolean
@@ -1995,6 +2176,25 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      changelog_category:
+        | "novidade"
+        | "melhoria"
+        | "correcao"
+        | "seguranca"
+        | "performance"
+        | "premium"
+        | "planejamento"
+        | "investimentos"
+        | "cartoes"
+        | "ia"
+      document_status: "published" | "draft" | "archived"
+      document_type:
+        | "policy"
+        | "terms"
+        | "cookies"
+        | "about"
+        | "changelog"
+        | "custom"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2123,6 +2323,27 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      changelog_category: [
+        "novidade",
+        "melhoria",
+        "correcao",
+        "seguranca",
+        "performance",
+        "premium",
+        "planejamento",
+        "investimentos",
+        "cartoes",
+        "ia",
+      ],
+      document_status: ["published", "draft", "archived"],
+      document_type: [
+        "policy",
+        "terms",
+        "cookies",
+        "about",
+        "changelog",
+        "custom",
+      ],
     },
   },
 } as const
