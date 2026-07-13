@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
-import { Loader2, Users, Clock, Activity, TrendingUp, TrendingDown, Download, ArrowLeft, Search, Palette, CreditCard, Crown } from 'lucide-react';
+import { Loader2, Users, Clock, Activity, TrendingUp, TrendingDown, Download, ArrowLeft, Search, Palette, CreditCard, Crown, FileText, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ import PlansManager from '@/components/admin/PlansManager';
 import { AdminSetPasswordButton } from '@/components/admin/AdminSetPasswordButton';
 import { GenerateResetLinkButton } from '@/components/admin/GenerateResetLinkButton';
 import VipCodesManager from '@/components/admin/VipCodesManager';
+import DocumentsManager from '@/components/admin/documents/DocumentsManager';
+import ChangelogManager from '@/components/admin/documents/ChangelogManager';
 
 interface AnalyticsRow {
   user_id: string;
@@ -236,7 +238,7 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="analytics" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6">
           <TabsTrigger value="analytics" className="gap-1.5">
             <Activity size={14} />
             Analytics
@@ -248,6 +250,14 @@ export default function AdminDashboard() {
           <TabsTrigger value="vip" className="gap-1.5">
             <Crown size={14} />
             VIP
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="gap-1.5">
+            <FileText size={14} />
+            Documentos
+          </TabsTrigger>
+          <TabsTrigger value="changelog" className="gap-1.5">
+            <Sparkles size={14} />
+            Novidades
           </TabsTrigger>
           <TabsTrigger value="appearance" className="gap-1.5">
             <Palette size={14} />
@@ -514,6 +524,14 @@ export default function AdminDashboard() {
 
         <TabsContent value="vip">
           <VipCodesManager />
+        </TabsContent>
+
+        <TabsContent value="documents">
+          <DocumentsManager />
+        </TabsContent>
+
+        <TabsContent value="changelog">
+          <ChangelogManager />
         </TabsContent>
 
         <TabsContent value="appearance">

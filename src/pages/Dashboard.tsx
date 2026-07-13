@@ -8,6 +8,7 @@ import { QuickPiggyDeposit } from '@/components/QuickPiggyDeposit';
 import { UpcomingBillsCard } from '@/components/UpcomingBillsCard';
 import { PlanningSummaryCard } from '@/components/planning/PlanningSummaryCard';
 import { InvestmentsSummaryCard } from '@/components/investments/InvestmentsSummaryCard';
+import { ChangelogHighlight } from '@/components/ChangelogHighlight';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStreak } from '@/hooks/useStreak';
@@ -34,6 +35,9 @@ export default function Dashboard() {
       </header>
 
       <main className="px-4 lg:px-8 space-y-5">
+        {/* Novidades destacadas */}
+        <ChangelogHighlight />
+
         {/* Balance is always highlighted at the top */}
         <div className="animate-fade-in">
           <BalanceCard />
