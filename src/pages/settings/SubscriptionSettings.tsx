@@ -43,6 +43,18 @@ export default function SubscriptionSettings() {
   const navigate = useNavigate();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [payments, setPayments] = useState<PaymentRow[]>([]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('payments')
+      .select('id, plan_code, amount, currency, status, payment_method, paid_at, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(({ data }) => setPayments((data as PaymentRow[]) ?? []));
+  }, [user?.id]);
 
   const currentPlan = plans.find(p => p.code === currentPlanCode);
   const isPaid = currentPlanCode !== 'free';
