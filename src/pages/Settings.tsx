@@ -70,12 +70,6 @@ export default function SettingsPage() {
       onClick: () => navigate('/settings/preferences'),
       accentClass: 'bg-secondary text-foreground',
     },
-      title: 'Preferências',
-      description: 'Idioma, moeda, formato de data e fuso.',
-      icon: <Globe size={26} />,
-      onClick: () => navigate('/settings/preferences'),
-      accentClass: 'bg-secondary text-foreground',
-    },
     {
       id: 'labs',
       title: 'Laboratório Finango',
