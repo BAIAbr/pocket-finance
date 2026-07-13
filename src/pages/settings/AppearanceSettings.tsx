@@ -211,14 +211,15 @@ export default function AppearanceSettings() {
         {/* Layout / Density */}
         <section className="card-finance">
           <h2 className="font-semibold mb-3 flex items-center gap-2"><Gauge size={18} /> Layout</h2>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             {[
-              { id: 'comfortable', label: 'Confortável', desc: 'Mais respiro visual' },
-              { id: 'compact', label: 'Compacto', desc: 'Mais informação em tela' },
+              { id: 'compact', label: 'Compacto', desc: 'Mais informação' },
+              { id: 'comfortable', label: 'Confortável', desc: 'Equilibrado' },
+              { id: 'spacious', label: 'Espaçoso', desc: 'Mais respiro' },
             ].map(opt => (
               <button
                 key={opt.id}
-                onClick={() => setDensity(opt.id as 'compact' | 'comfortable')}
+                onClick={() => setDensity(opt.id as 'compact' | 'comfortable' | 'spacious')}
                 className={cn(
                   'p-3 rounded-xl text-left transition-all touch-scale',
                   density === opt.id ? 'bg-primary/15 ring-2 ring-primary' : 'bg-secondary/50 hover:bg-secondary',
@@ -229,6 +230,7 @@ export default function AppearanceSettings() {
               </button>
             ))}
           </div>
+
         </section>
 
         {/* Animações */}

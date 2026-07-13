@@ -398,6 +398,9 @@
 .density-compact .card-finance { padding: 0.75rem; }
 .density-compact .card-finance + .card-finance { margin-top: 0.5rem; }
 .density-comfortable .card-finance { /* default */ }
+.density-spacious .card-finance { padding: 1.5rem; }
+.density-spacious .card-finance + .card-finance { margin-top: 1rem; }
+
 
 /* Animation modes */
 .anim-off *,

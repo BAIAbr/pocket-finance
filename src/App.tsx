@@ -51,8 +51,8 @@ const App = () => (
     <TooltipProvider>
       <ThemeProvider>
         <AppearanceProvider>
-        <UserPreferencesProvider>
         <AuthProvider>
+        <UserPreferencesProvider>
           <FinanceProvider>
             <FamilyProvider>
             <Toaster />
@@ -95,10 +95,11 @@ const App = () => (
             </HashRouter>
             </FamilyProvider>
           </FinanceProvider>
-        </AuthProvider>
         </UserPreferencesProvider>
+        </AuthProvider>
         </AppearanceProvider>
       </ThemeProvider>
+
 
     </TooltipProvider>
   </QueryClientProvider>
