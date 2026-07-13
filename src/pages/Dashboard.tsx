@@ -8,6 +8,7 @@ import { QuickPiggyDeposit } from '@/components/QuickPiggyDeposit';
 import { UpcomingBillsCard } from '@/components/UpcomingBillsCard';
 import { PlanningSummaryCard } from '@/components/planning/PlanningSummaryCard';
 import { InvestmentsSummaryCard } from '@/components/investments/InvestmentsSummaryCard';
+import { ChangelogHighlight } from '@/components/ChangelogHighlight';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStreak } from '@/hooks/useStreak';
