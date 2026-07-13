@@ -1,11 +1,20 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
-import { AlertTriangle, Check, Crown, Sparkles, Loader2, ArrowLeft, Mail } from 'lucide-react';
+import { AlertTriangle, Check, Crown, Sparkles, Loader2, ArrowLeft, Mail, FlaskConical, ShieldCheck, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+
+type MpEnv = {
+  mode: 'test' | 'live' | 'unknown';
+  configured: boolean;
+  collector_email: string | null;
+  collector_nickname?: string | null;
+  site_id?: string | null;
+  error?: string;
+};
 
 export default function PlansPage() {
   const { user } = useAuth();
@@ -14,6 +23,22 @@ export default function PlansPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [payerEmail, setPayerEmail] = useState('');
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
+  const [mpEnv, setMpEnv] = useState<MpEnv | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    supabase.functions.invoke('mp-environment', { body: {} }).then(({ data }) => {
+      if (alive && data) setMpEnv(data as MpEnv);
+    }).catch(() => { /* silent */ });
+    return () => { alive = false; };
+  }, []);
+
+  const effectivePayer = (payerEmail.trim() || user?.email || '').toLowerCase();
+  const collector = (mpEnv?.collector_email ?? '').toLowerCase();
+  const emailMatchesCollector = Boolean(collector && effectivePayer && collector === effectivePayer);
+  const isTest = mpEnv?.mode === 'test';
+  const isLive = mpEnv?.mode === 'live';
+
 
   const handleSelect = async (code: string) => {
     if (code === currentPlanCode) return;
