@@ -8,6 +8,7 @@ import { FinanceProvider } from "@/contexts/FinanceContext";
 import { FamilyProvider } from "@/contexts/FamilyContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppearanceProvider } from "@/contexts/AppearanceContext";
+import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import { PlanGate } from "@/components/PlanGate";
@@ -18,6 +19,14 @@ import Categories from "./pages/Categories";
 import Savings from "./pages/Savings";
 import Planning from "./pages/Planning";
 import SettingsPage from "./pages/Settings";
+import AppearanceSettings from "./pages/settings/AppearanceSettings";
+import NotificationSettings from "./pages/settings/NotificationSettings";
+import SubscriptionSettings from "./pages/settings/SubscriptionSettings";
+import DataSettings from "./pages/settings/DataSettings";
+import PreferenceSettings from "./pages/settings/PreferenceSettings";
+import LabsSettings from "./pages/settings/LabsSettings";
+import HelpSettings from "./pages/settings/HelpSettings";
+import AboutSettings from "./pages/settings/AboutSettings";
 import AuthPage from "./pages/Auth";
 import ResetPasswordPage from "./pages/ResetPassword";
 import RedefinirSenhaPage from "./pages/RedefinirSenha";
@@ -33,6 +42,7 @@ import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
 import VipRedeem from "./pages/VipRedeem";
 import Profile from "./pages/Profile";
+
 
 const queryClient = new QueryClient();
 
