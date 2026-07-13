@@ -2,17 +2,22 @@ import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Crown, Loader2 } from 'lucide-react';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
+import { useFeatureFlags } from '@/contexts/FeatureFlagsContext';
 import { FEATURE_LABELS, PlanFeature } from '@/lib/planCapabilities';
 
 interface Props {
-  feature: PlanFeature;
+  feature?: PlanFeature;
+  /** Feature flag slug (from feature_flags table). Takes precedence over `feature` when provided. */
+  flag?: string;
   children: ReactNode;
   /** Optional inline mode: render an inline lock card instead of a full-page block */
   inline?: boolean;
 }
 
-export function PlanGate({ feature, children, inline }: Props) {
-  const { loading, has, planCode } = usePlanAccess();
+export function PlanGate({ feature, flag, children, inline }: Props) {
+  const { loading: planLoading, has, planCode } = usePlanAccess();
+  const { loading: flagsLoading, hasFeature, flags } = useFeatureFlags();
+  const loading = planLoading || flagsLoading;
   const navigate = useNavigate();
 
   if (loading) {
@@ -23,7 +28,14 @@ export function PlanGate({ feature, children, inline }: Props) {
     );
   }
 
-  if (has(feature)) return <>{children}</>;
+  const allowed = flag ? hasFeature(flag) : feature ? has(feature) : true;
+  if (allowed) return <>{children}</>;
+
+  const label = flag
+    ? (flags.find(f => f.slug === flag)?.name ?? flag)
+    : feature
+      ? FEATURE_LABELS[feature]
+      : 'Este recurso';
 
   const card = (
     <div className="max-w-md mx-auto text-center p-6 rounded-2xl border border-border bg-card/70 backdrop-blur">
@@ -32,7 +44,7 @@ export function PlanGate({ feature, children, inline }: Props) {
       </div>
       <h2 className="text-lg font-bold mb-1">Recurso bloqueado</h2>
       <p className="text-sm text-muted-foreground mb-4">
-        <span className="font-medium text-foreground">{FEATURE_LABELS[feature]}</span> não está disponível no seu plano atual
+        <span className="font-medium text-foreground">{label}</span> não está disponível no seu plano atual
         {planCode ? ` (${planCode})` : ''}. Faça upgrade para desbloquear.
       </p>
       <button
