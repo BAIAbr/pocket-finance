@@ -115,9 +115,25 @@ export default function PlansPage() {
         </div>
 
         <div className="mb-6 rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
-          <label htmlFor="payer-email" className="text-sm font-semibold flex items-center gap-2 mb-2">
-            <Mail size={16} className="text-primary" /> E-mail do pagador no Mercado Pago
-          </label>
+          <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+            <label htmlFor="payer-email" className="text-sm font-semibold flex items-center gap-2">
+              <Mail size={16} className="text-primary" /> E-mail do pagador no Mercado Pago
+            </label>
+            {mpEnv?.configured && (
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide border',
+                  isTest && 'bg-amber-500/15 text-amber-600 border-amber-500/30',
+                  isLive && 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
+                  !isTest && !isLive && 'bg-muted text-muted-foreground border-border',
+                )}
+                title={mpEnv.collector_email ? `Recebedor: ${mpEnv.collector_email}` : undefined}
+              >
+                {isTest ? <FlaskConical size={12} /> : isLive ? <ShieldCheck size={12} /> : <Info size={12} />}
+                {isTest ? 'Sandbox (teste)' : isLive ? 'Produção' : 'Desconhecido'}
+              </span>
+            )}
+          </div>
           <input
             id="payer-email"
             type="email"
@@ -129,8 +145,21 @@ export default function PlansPage() {
             className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
           <p className="mt-2 text-xs text-muted-foreground">
-            Se deixar em branco, usaremos o e-mail da sua conta Finango. Em testes, use o comprador de teste do Mercado Pago.
+            {isTest
+              ? 'Ambiente de teste detectado. Use o e-mail de um comprador de teste criado no painel do Mercado Pago — não use o e-mail da conta vendedora.'
+              : isLive
+              ? 'Ambiente de produção. Use uma conta Mercado Pago real diferente da conta vendedora para pagar.'
+              : 'Se deixar em branco, usaremos o e-mail da sua conta Finango.'}
           </p>
+          {emailMatchesCollector && (
+            <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+              <span>
+                Este e-mail é o mesmo do recebedor no Mercado Pago. O MP não permite pagar para si mesmo — informe outro e-mail
+                {isTest ? ' (comprador de teste)' : ' (conta real diferente)'}.
+              </span>
+            </div>
+          )}
           {checkoutNotice && (
             <div className="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" />
@@ -138,6 +167,7 @@ export default function PlansPage() {
             </div>
           )}
         </div>
+
 
         <div className="grid gap-4 lg:grid-cols-3">
           {plans.map((plan) => {
