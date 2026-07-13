@@ -11,7 +11,7 @@ import {
   type ParsedRow, type CsvMapping, makeExternalHash,
 } from '@/lib/import/parsers';
 import { applyRules, normalizeText, type UserRule } from '@/lib/import/categoryRules';
-import { formatCurrency } from '@/lib/currency';
+import { formatBRL as formatCurrency } from '@/lib/currency';
 
 type FileType = 'ofx' | 'csv' | 'xlsx';
 type Step = 'choose' | 'upload' | 'map' | 'preview' | 'importing' | 'done';
