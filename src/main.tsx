@@ -18,4 +18,6 @@ import { preHydrateTheme } from "./contexts/ThemeContext";
 // so the Profile header (and rest of the UI) never flashes the default palette.
 preHydrateTheme();
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <HelmetProvider><App /></HelmetProvider>
+);
