@@ -12,6 +12,9 @@ const json = (status: number, body: unknown) =>
 const isValidEmail = (value: unknown) =>
   typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
+const normalizeEmail = (value: unknown) =>
+  typeof value === 'string' ? value.trim().toLowerCase() : '';
+
 const getMercadoPagoMode = () => {
   if (MP_ACCESS_TOKEN?.startsWith('TEST-')) return 'test';
   if (MP_ACCESS_TOKEN?.startsWith('APP_USR-')) return 'live';
@@ -24,6 +27,39 @@ const isPayerCollectorModeError = (detail: any) => {
     message.includes('both payer and collector must be real or test users') ||
     message.includes('collector') && message.includes('payer')
   );
+};
+
+const getMercadoPagoCollector = async () => {
+  if (!MP_ACCESS_TOKEN) return null;
+
+  try {
+    const res = await fetch('https://api.mercadopago.com/users/me', {
+      headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` },
+    });
+    const raw = await res.text();
+    let data: any = {};
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch {
+      data = { raw };
+    }
+
+    console.log('[create-subscription] MP collector lookup', {
+      http_status: res.status,
+      ok: res.ok,
+      collector_email: data?.email ?? null,
+      collector_nickname: data?.nickname ?? null,
+      site_id: data?.site_id ?? null,
+      response_body: data,
+      __access_token: '[REDACTED]',
+    });
+
+    if (!res.ok) return null;
+    return data;
+  } catch (error) {
+    console.error('[create-subscription] MP collector lookup exception', error);
+    return null;
+  }
 };
 
 Deno.serve(async (req) => {
@@ -56,14 +92,14 @@ Deno.serve(async (req) => {
     console.error('[create-subscription] getUserById exception', e);
   }
 
-  let body: { plan_code?: string; back_url?: string };
+  let body: { plan_code?: string; back_url?: string; payer_email?: string };
   try { body = await req.json(); } catch { return json(400, { error: 'invalid_json' }); }
   const planCode = (body.plan_code ?? '').trim();
   if (!planCode || planCode === 'free') return json(400, { error: 'invalid_plan' });
 
   // ⚠️ payer_email SEMPRE vem de auth.users.email (fallback: claim JWT). Nunca aceita input do cliente,
   // variável de ambiente ou e-mail do admin/vendedor.
-  const payerEmail = (authUserEmail ?? claimsEmail ?? '').trim().toLowerCase();
+  const payerEmail = normalizeEmail(authUserEmail ?? claimsEmail);
   if (!isValidEmail(payerEmail)) {
     console.error('[create-subscription] invalid payer email', { userId, authUserEmail, claimsEmail });
     return json(400, {
@@ -100,18 +136,45 @@ Deno.serve(async (req) => {
     status: 'pending',
   };
 
-  // 🔎 Logs completos (Access Token nunca é logado)
   const mpMode = getMercadoPagoMode();
+  const collector = await getMercadoPagoCollector();
+  const collectorEmail = normalizeEmail(collector?.email);
+
+  if (collectorEmail && collectorEmail === payerEmail) {
+    console.error('[create-subscription] blocked because payer equals collector', {
+      mp_mode: mpMode,
+      user_id: userId,
+      auth_users_email: authUserEmail ?? null,
+      claims_email: claimsEmail ?? null,
+      payer_email_sent_to_api: payerEmail,
+      collector_email: collectorEmail,
+      external_reference: externalRef,
+      client_payer_email_ignored: body.payer_email ? normalizeEmail(body.payer_email) : null,
+      request_body_sent_to_api: { ...preapprovalPayload, __access_token: '[REDACTED]' },
+    });
+
+    return json(200, {
+      ok: false,
+      error: 'payer_equals_collector',
+      mode: mpMode,
+      payer_email: payerEmail,
+      message: 'O e-mail da sua conta Finango é igual ao e-mail da conta recebedora do Mercado Pago. Entre no Finango com uma conta de comprador diferente para assinar.',
+    });
+  }
+
+  // 🔎 Logs completos (Access Token nunca é logado)
   console.log('[create-subscription] preparing MP preapproval', {
     mp_mode: mpMode,
     user_id: userId,
-    auth_user_email: authUserEmail,
-    claims_email: claimsEmail,
-    payer_email: payerEmail,
+    auth_users_email: authUserEmail ?? null,
+    claims_email: claimsEmail ?? null,
+    payer_email_sent_to_api: payerEmail,
+    collector_email_detected: collectorEmail || null,
     external_reference: externalRef,
     plan_code: planCode,
     amount,
-    request_body: { ...preapprovalPayload, __access_token: '[REDACTED]' },
+    client_payer_email_ignored: body.payer_email ? normalizeEmail(body.payer_email) : null,
+    request_body_sent_to_api: { ...preapprovalPayload, __access_token: '[REDACTED]' },
   });
 
   const mpRes = await fetch('https://api.mercadopago.com/preapproval', {
@@ -122,13 +185,21 @@ Deno.serve(async (req) => {
     },
     body: JSON.stringify(preapprovalPayload),
   });
-  const mpData = await mpRes.json().catch(() => ({}));
+  const mpRawResponse = await mpRes.text();
+  let mpData: any = {};
+  try {
+    mpData = mpRawResponse ? JSON.parse(mpRawResponse) : {};
+  } catch {
+    mpData = { raw: mpRawResponse };
+  }
 
   console.log('[create-subscription] MP response', {
     http_status: mpRes.status,
     ok: mpRes.ok,
     mp_mode: mpMode,
-    payer_email_sent: payerEmail,
+    auth_users_email: authUserEmail ?? null,
+    payer_email_sent_to_api: payerEmail,
+    collector_email_detected: collectorEmail || null,
     external_reference: externalRef,
     response_body: mpData,
   });

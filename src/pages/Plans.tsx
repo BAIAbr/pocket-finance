@@ -21,7 +21,6 @@ export default function PlansPage() {
   const navigate = useNavigate();
   const { plans, currentPlanCode, loading, selectPlan } = useSubscription(user?.id);
   const [busy, setBusy] = useState<string | null>(null);
-  const [payerEmail, setPayerEmail] = useState('');
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
   const [mpEnv, setMpEnv] = useState<MpEnv | null>(null);
 
@@ -33,7 +32,7 @@ export default function PlansPage() {
     return () => { alive = false; };
   }, []);
 
-  const effectivePayer = (payerEmail.trim() || user?.email || '').toLowerCase();
+  const effectivePayer = (user?.email || '').toLowerCase();
   const collector = (mpEnv?.collector_email ?? '').toLowerCase();
   const emailMatchesCollector = Boolean(collector && effectivePayer && collector === effectivePayer);
   const isTest = mpEnv?.mode === 'test';
@@ -89,7 +88,6 @@ export default function PlansPage() {
           body: {
             plan_code: code,
             back_url: window.location.origin,
-            payer_email: payerEmail.trim() || undefined,
           },
         });
         if (error) throw error;
@@ -115,7 +113,6 @@ export default function PlansPage() {
         body: {
           plan_code: code,
           back_url: window.location.origin,
-          payer_email: payerEmail.trim() || undefined,
         },
       });
       if (error) throw error;
@@ -173,7 +170,7 @@ export default function PlansPage() {
         <div className="mb-6 rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
           <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
             <label htmlFor="payer-email" className="text-sm font-semibold flex items-center gap-2">
-              <Mail size={16} className="text-primary" /> E-mail do pagador no Mercado Pago
+              <Mail size={16} className="text-primary" /> E-mail usado no Mercado Pago
             </label>
             {mpEnv?.configured && (
               <span
@@ -190,22 +187,18 @@ export default function PlansPage() {
               </span>
             )}
           </div>
-          <input
+          <div
             id="payer-email"
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            value={payerEmail}
-            onChange={(event) => setPayerEmail(event.target.value)}
-            placeholder={user?.email ?? 'comprador@exemplo.com'}
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
+            className="w-full rounded-xl border border-input bg-muted/40 px-3 py-2 text-sm text-foreground"
+          >
+            {user?.email ?? 'E-mail da conta Finango'}
+          </div>
           <p className="mt-2 text-xs text-muted-foreground">
             {isTest
-              ? 'Ambiente de teste detectado. Use o e-mail de um comprador de teste criado no painel do Mercado Pago — não use o e-mail da conta vendedora.'
+              ? 'Ambiente de teste detectado. A assinatura usa obrigatoriamente o e-mail autenticado da conta Finango. Ele precisa ser um comprador de teste e não pode ser o vendedor.'
               : isLive
-              ? 'Ambiente de produção. Use uma conta Mercado Pago real diferente da conta vendedora para pagar.'
-              : 'Se deixar em branco, usaremos o e-mail da sua conta Finango.'}
+              ? 'Ambiente de produção. A assinatura usa obrigatoriamente o e-mail autenticado da conta Finango e ele precisa ser diferente da conta vendedora.'
+              : 'Por segurança, usaremos obrigatoriamente o e-mail autenticado da sua conta Finango.'}
           </p>
           {emailMatchesCollector && (
             <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
