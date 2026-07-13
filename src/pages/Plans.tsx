@@ -52,6 +52,16 @@ export default function PlansPage() {
         if ((data as any)?.error) throw new Error((data as any).error);
         toast.success('Plano atualizado para Gratuito');
       } else {
+        // Pré-flight: bloqueia se o e-mail do pagador é o mesmo do recebedor
+        if (emailMatchesCollector) {
+          setCheckoutNotice(
+            isTest
+              ? 'Você está no ambiente de teste. Use o e-mail de um comprador de teste do Mercado Pago — diferente da conta vendedora.'
+              : 'O e-mail informado é da mesma conta que recebe os pagamentos. Use outra conta Mercado Pago real para pagar.',
+          );
+          toast.error('Informe outro e-mail de pagador');
+          return;
+        }
         // Cria assinatura recorrente no Mercado Pago e redireciona pro checkout
         const { data, error } = await supabase.functions.invoke('create-subscription', {
           body: {
