@@ -28,7 +28,14 @@ export function PlanGate({ feature, flag, children, inline }: Props) {
     );
   }
 
-  if (has(feature)) return <>{children}</>;
+  const allowed = flag ? hasFeature(flag) : feature ? has(feature) : true;
+  if (allowed) return <>{children}</>;
+
+  const label = flag
+    ? (flags.find(f => f.slug === flag)?.name ?? flag)
+    : feature
+      ? FEATURE_LABELS[feature]
+      : 'Este recurso';
 
   const card = (
     <div className="max-w-md mx-auto text-center p-6 rounded-2xl border border-border bg-card/70 backdrop-blur">
@@ -37,7 +44,7 @@ export function PlanGate({ feature, flag, children, inline }: Props) {
       </div>
       <h2 className="text-lg font-bold mb-1">Recurso bloqueado</h2>
       <p className="text-sm text-muted-foreground mb-4">
-        <span className="font-medium text-foreground">{FEATURE_LABELS[feature]}</span> não está disponível no seu plano atual
+        <span className="font-medium text-foreground">{label}</span> não está disponível no seu plano atual
         {planCode ? ` (${planCode})` : ''}. Faça upgrade para desbloquear.
       </p>
       <button
