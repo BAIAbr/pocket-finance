@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { PaymentMethodModal } from '@/components/subscription/PaymentMethodModal';
 
 export default function PlansPage() {
   const { user } = useAuth();
@@ -14,11 +15,18 @@ export default function PlansPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
   const [checkoutDebugJson, setCheckoutDebugJson] = useState<string | null>(null);
+  const [methodModalPlan, setMethodModalPlan] = useState<{ code: string; name: string; price_monthly: number; description: string | null } | null>(null);
 
 
   const currentPlan = plans.find(p => p.code === currentPlanCode);
   const currentPrice = currentPlan?.price_monthly ?? 0;
   const isPaidUser = currentPlanCode !== 'free';
+
+  const openMethodModal = (code: string) => {
+    const p = plans.find(pl => pl.code === code);
+    if (!p) return;
+    setMethodModalPlan({ code: p.code, name: p.name, price_monthly: p.price_monthly, description: p.description });
+  };
 
   const handleSelect = async (code: string) => {
     if (code === currentPlanCode) return;
@@ -38,6 +46,14 @@ export default function PlansPage() {
         if ((data as any)?.error) throw new Error((data as any).message ?? (data as any).error);
         toast.success('Plano atualizado para Gratuito');
         window.location.reload();
+        return;
+      }
+
+      // Any paid target starting from FREE (or from a paid plan of equal/lower price)
+      // opens the payment method modal (PIX vs recorrente). Only strict paid→paid
+      // upgrades/downgrades keep the direct MP redirect below.
+      if (!isPaidUser || targetPrice === currentPrice) {
+        openMethodModal(code);
         return;
       }
 
@@ -239,6 +255,30 @@ export default function PlansPage() {
           Você pode trocar ou cancelar seu plano a qualquer momento.
         </p>
       </div>
+
+      <PaymentMethodModal
+        open={!!methodModalPlan}
+        plan={methodModalPlan}
+        onClose={() => setMethodModalPlan(null)}
+        onChooseRecurring={async () => {
+          if (!methodModalPlan) return;
+          const code = methodModalPlan.code;
+          setMethodModalPlan(null);
+          try {
+            const { data, error } = await supabase.functions.invoke('create-subscription', {
+              body: { plan_code: code, back_url: window.location.origin },
+            });
+            if (error) throw error;
+            if ((data as any)?.error) throw new Error((data as any)?.message ?? (data as any).error);
+            const checkoutUrl = (data as any)?.checkout_url;
+            if (!checkoutUrl) throw new Error('Não foi possível iniciar o checkout.');
+            window.location.href = checkoutUrl;
+          } catch (e: any) {
+            toast.error(e?.message ?? 'Erro ao iniciar assinatura');
+          }
+        }}
+      />
     </div>
   );
 }
+

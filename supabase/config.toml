@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.mp-environment]
 verify_jwt = false
+
+[functions.check-pix-expirations]
+verify_jwt = false
