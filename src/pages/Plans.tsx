@@ -255,6 +255,30 @@ export default function PlansPage() {
           Você pode trocar ou cancelar seu plano a qualquer momento.
         </p>
       </div>
+
+      <PaymentMethodModal
+        open={!!methodModalPlan}
+        plan={methodModalPlan}
+        onClose={() => setMethodModalPlan(null)}
+        onChooseRecurring={async () => {
+          if (!methodModalPlan) return;
+          const code = methodModalPlan.code;
+          setMethodModalPlan(null);
+          try {
+            const { data, error } = await supabase.functions.invoke('create-subscription', {
+              body: { plan_code: code, back_url: window.location.origin },
+            });
+            if (error) throw error;
+            if ((data as any)?.error) throw new Error((data as any)?.message ?? (data as any).error);
+            const checkoutUrl = (data as any)?.checkout_url;
+            if (!checkoutUrl) throw new Error('Não foi possível iniciar o checkout.');
+            window.location.href = checkoutUrl;
+          } catch (e: any) {
+            toast.error(e?.message ?? 'Erro ao iniciar assinatura');
+          }
+        }}
+      />
     </div>
   );
 }
+
