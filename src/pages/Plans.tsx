@@ -102,15 +102,6 @@ export default function PlansPage() {
       }
 
       // Free → Paid: usual create-subscription flow
-      if (emailMatchesCollector) {
-        setCheckoutNotice(
-          isTest
-            ? 'Você está no ambiente de teste. Use o e-mail de um comprador de teste do Mercado Pago — diferente da conta vendedora.'
-            : 'O e-mail informado é da mesma conta que recebe os pagamentos. Use outra conta Mercado Pago real para pagar.',
-        );
-        toast.error('Informe outro e-mail de pagador');
-        return;
-      }
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: {
           plan_code: code,
