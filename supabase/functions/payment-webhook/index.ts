@@ -58,6 +58,33 @@ async function activateSubscription(userId: string, planCode: string, preapprova
   );
 }
 
+// One-time PIX activation: N days (or lifetime when days=0)
+async function activatePixSubscription(userId: string, planCode: string, days: number, paymentId: string) {
+  const now = new Date();
+  const expiresAt = days > 0 ? new Date(now.getTime() + days * 24 * 60 * 60 * 1000) : null;
+  await admin.from('user_subscriptions').upsert(
+    {
+      user_id: userId,
+      plan_code: planCode,
+      status: 'active',
+      provider: 'mercado_pago',
+      provider_subscription_id: null,
+      started_at: now.toISOString(),
+      expires_at: expiresAt ? expiresAt.toISOString() : null,
+      next_billing_at: null,
+      cancelled_at: null,
+      metadata: { pix: true, days, last_payment_id: paymentId, lifetime: days === 0 },
+    },
+    { onConflict: 'user_id' },
+  );
+  await admin.from('subscription_logs').insert({
+    user_id: userId,
+    event: 'pix_activated',
+    source: 'webhook',
+    payload: { plan_code: planCode, days, payment_id: paymentId },
+  });
+}
+
 async function downgradeToFree(userId: string) {
   await admin.from('user_subscriptions').upsert(
     {
@@ -77,9 +104,15 @@ async function downgradeToFree(userId: string) {
 
 function parseExternalRef(ref?: string | null) {
   if (!ref) return null;
-  const [userId, planCode] = ref.split(':');
+  const parts = ref.split(':');
+  // PIX one-time: pix:<userId>:<planCode>:<days>
+  if (parts[0] === 'pix' && parts.length >= 4) {
+    return { kind: 'pix' as const, userId: parts[1], planCode: parts[2], days: Number(parts[3]) || 30 };
+  }
+  // Recurring: <userId>:<planCode>
+  const [userId, planCode] = parts;
   if (!userId || !planCode) return null;
-  return { userId, planCode };
+  return { kind: 'recurring' as const, userId, planCode };
 }
 
 Deno.serve(async (req) => {
@@ -133,13 +166,18 @@ Deno.serve(async (req) => {
             status_detail: p.status_detail,
             payment_method: p.payment_method_id,
             paid_at: p.date_approved,
+            external_reference: p.external_reference,
             raw: p,
           },
           { onConflict: 'provider_payment_id' },
         );
 
         if (p.status === 'approved' && planCode) {
-          await activateSubscription(userId, planCode, preapprovalId, { last_payment_id: p.id });
+          if (ref?.kind === 'pix') {
+            await activatePixSubscription(userId, planCode, ref.days, String(p.id));
+          } else {
+            await activateSubscription(userId, planCode, preapprovalId, { last_payment_id: p.id });
+          }
         }
       }
     } else if (type === 'subscription_preapproval' || type === 'preapproval' || type === 'subscription_authorized_payment') {
