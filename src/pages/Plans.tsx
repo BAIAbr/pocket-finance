@@ -1,43 +1,19 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
-import { AlertTriangle, Check, Crown, Sparkles, Loader2, ArrowLeft, Mail, FlaskConical, ShieldCheck, Info } from 'lucide-react';
+import { AlertTriangle, Check, Crown, Sparkles, Loader2, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-type MpEnv = {
-  mode: 'test' | 'live' | 'unknown';
-  configured: boolean;
-  collector_email: string | null;
-  collector_nickname?: string | null;
-  site_id?: string | null;
-  error?: string;
-};
 
 export default function PlansPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { plans, currentPlanCode, loading, selectPlan } = useSubscription(user?.id);
+  const { plans, currentPlanCode, loading } = useSubscription(user?.id);
   const [busy, setBusy] = useState<string | null>(null);
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
   const [checkoutDebugJson, setCheckoutDebugJson] = useState<string | null>(null);
-  const [mpEnv, setMpEnv] = useState<MpEnv | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    supabase.functions.invoke('mp-environment', { body: {} }).then(({ data }) => {
-      if (alive && data) setMpEnv(data as MpEnv);
-    }).catch(() => { /* silent */ });
-    return () => { alive = false; };
-  }, []);
-
-  const effectivePayer = (user?.email || '').toLowerCase();
-  const collector = (mpEnv?.collector_email ?? '').toLowerCase();
-  const emailMatchesCollector = Boolean(collector && effectivePayer && collector === effectivePayer);
-  const isTest = mpEnv?.mode === 'test';
-  const isLive = mpEnv?.mode === 'live';
 
 
   const currentPlan = plans.find(p => p.code === currentPlanCode);
@@ -77,15 +53,6 @@ export default function PlansPage() {
       }
 
       if (isPaidUser && targetPrice > currentPrice) {
-        if (emailMatchesCollector) {
-          setCheckoutNotice(
-            isTest
-              ? 'Use o e-mail de um comprador de teste do Mercado Pago — diferente da conta vendedora.'
-              : 'O e-mail informado é da conta que recebe pagamentos. Use outra conta Mercado Pago.',
-          );
-          toast.error('Informe outro e-mail de pagador');
-          return;
-        }
         const { data, error } = await supabase.functions.invoke('upgrade-plan', {
           body: {
             plan_code: code,
@@ -112,14 +79,14 @@ export default function PlansPage() {
       if ((data as any)?.ok === false && (data as any)?.mercado_pago) {
         const mpDebug = (data as any).mercado_pago;
         setCheckoutNotice((data as any)?.message ?? 'Mercado Pago retornou erro no checkout.');
-        setCheckoutDebugJson(JSON.stringify(mpDebug.response_body ?? mpDebug, null, 2));
+        setCheckoutDebugJson(JSON.stringify(mpDebug, null, 2));
         toast.error('Mercado Pago retornou erro no checkout');
         return;
       }
       if ((data as any)?.ok === false && (data as any)?.error === 'payer_collector_mode_mismatch') {
-        const message = (data as any)?.message ?? 'Informe um e-mail de pagador diferente para continuar.';
+        const message = (data as any)?.message ?? 'Mercado Pago recusou o pagador autenticado.';
         setCheckoutNotice(message);
-        toast.error('Mercado Pago recusou o pagador informado');
+        toast.error('Mercado Pago recusou o pagador autenticado');
         return;
       }
       if ((data as any)?.error) throw new Error((data as any)?.message ?? (data as any).error);
@@ -130,8 +97,8 @@ export default function PlansPage() {
     } catch (e: any) {
       const message = e?.message ?? 'Erro ao atualizar plano';
       if (message.includes('Both payer and collector must be real or test users')) {
-        setCheckoutNotice('Informe um e-mail de pagador compatível com o ambiente do Mercado Pago.');
-        toast.error('Informe outro e-mail de pagador');
+        setCheckoutNotice('Mercado Pago recusou o e-mail autenticado por incompatibilidade entre conta real e conta de teste.');
+        toast.error('Mercado Pago recusou o pagador autenticado');
       } else {
         toast.error(message);
       }
@@ -167,48 +134,8 @@ export default function PlansPage() {
           <p className="text-muted-foreground">Comece grátis. Evolua quando quiser.</p>
         </div>
 
+        {(checkoutNotice || checkoutDebugJson) && (
         <div className="mb-6 rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
-            <label htmlFor="payer-email" className="text-sm font-semibold flex items-center gap-2">
-              <Mail size={16} className="text-primary" /> E-mail usado no Mercado Pago
-            </label>
-            {mpEnv?.configured && (
-              <span
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide border',
-                  isTest && 'bg-amber-500/15 text-amber-600 border-amber-500/30',
-                  isLive && 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
-                  !isTest && !isLive && 'bg-muted text-muted-foreground border-border',
-                )}
-                title={mpEnv.collector_email ? `Recebedor: ${mpEnv.collector_email}` : undefined}
-              >
-                {isTest ? <FlaskConical size={12} /> : isLive ? <ShieldCheck size={12} /> : <Info size={12} />}
-                {isTest ? 'Sandbox (teste)' : isLive ? 'Produção' : 'Desconhecido'}
-              </span>
-            )}
-          </div>
-          <div
-            id="payer-email"
-            className="w-full rounded-xl border border-input bg-muted/40 px-3 py-2 text-sm text-foreground"
-          >
-            {user?.email ?? 'E-mail da conta Finango'}
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {isTest
-              ? 'Ambiente de teste detectado. A assinatura usa obrigatoriamente o e-mail autenticado da conta Finango. Ele precisa ser um comprador de teste e não pode ser o vendedor.'
-              : isLive
-              ? 'Ambiente de produção. A assinatura usa obrigatoriamente o e-mail autenticado da conta Finango e ele precisa ser diferente da conta vendedora.'
-              : 'Por segurança, usaremos obrigatoriamente o e-mail autenticado da sua conta Finango.'}
-          </p>
-          {emailMatchesCollector && (
-            <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
-              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-              <span>
-                Este e-mail é o mesmo do recebedor no Mercado Pago. O MP não permite pagar para si mesmo — informe outro e-mail
-                {isTest ? ' (comprador de teste)' : ' (conta real diferente)'}.
-              </span>
-            </div>
-          )}
           {checkoutNotice && (
             <div className="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" />
@@ -221,6 +148,7 @@ export default function PlansPage() {
             </pre>
           )}
         </div>
+        )}
 
 
         <div className="grid gap-4 lg:grid-cols-3">
