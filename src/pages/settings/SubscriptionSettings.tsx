@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard, Crown, Check, Lock, Sparkles, Calendar, Clock, ArrowRight, ShieldCheck, X, Receipt,
-  ExternalLink, Loader2, PartyPopper,
+  ExternalLink, Loader2,
 } from 'lucide-react';
 import { SettingsSubPageHeader } from '@/components/settings/SettingsSubPageHeader';
 import { VipRedeemInput } from '@/components/VipRedeemInput';
