@@ -22,6 +22,12 @@ export default function PlansPage() {
   const currentPrice = currentPlan?.price_monthly ?? 0;
   const isPaidUser = currentPlanCode !== 'free';
 
+  const openMethodModal = (code: string) => {
+    const p = plans.find(pl => pl.code === code);
+    if (!p) return;
+    setMethodModalPlan({ code: p.code, name: p.name, price_monthly: p.price_monthly, description: p.description });
+  };
+
   const handleSelect = async (code: string) => {
     if (code === currentPlanCode) return;
     setBusy(code);
@@ -40,6 +46,14 @@ export default function PlansPage() {
         if ((data as any)?.error) throw new Error((data as any).message ?? (data as any).error);
         toast.success('Plano atualizado para Gratuito');
         window.location.reload();
+        return;
+      }
+
+      // Any paid target starting from FREE (or from a paid plan of equal/lower price)
+      // opens the payment method modal (PIX vs recorrente). Only strict paid→paid
+      // upgrades/downgrades keep the direct MP redirect below.
+      if (!isPaidUser || targetPrice === currentPrice) {
+        openMethodModal(code);
         return;
       }
 
