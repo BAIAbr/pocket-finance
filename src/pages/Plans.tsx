@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { PaymentMethodModal } from '@/components/subscription/PaymentMethodModal';
 
 export default function PlansPage() {
   const { user } = useAuth();
@@ -14,6 +15,7 @@ export default function PlansPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
   const [checkoutDebugJson, setCheckoutDebugJson] = useState<string | null>(null);
+  const [methodModalPlan, setMethodModalPlan] = useState<{ code: string; name: string; price_monthly: number; description: string | null } | null>(null);
 
 
   const currentPlan = plans.find(p => p.code === currentPlanCode);
