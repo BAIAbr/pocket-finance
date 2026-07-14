@@ -82,7 +82,7 @@ export function useSubscription(userId: string | undefined) {
     })();
   }, [loadPlans, loadSubscription]);
 
-  const selectPlan = async (planCode: string, opts?: { payerEmail?: string; backUrl?: string }) => {
+  const selectPlan = async (planCode: string, opts?: { backUrl?: string }) => {
     if (!userId) throw new Error('Não autenticado');
 
     if (planCode === 'free') {
@@ -97,7 +97,6 @@ export function useSubscription(userId: string | undefined) {
       body: {
         plan_code: planCode,
         back_url: opts?.backUrl ?? (typeof window !== 'undefined' ? window.location.origin : undefined),
-        payer_email: opts?.payerEmail,
       },
     });
     if (error) throw error;

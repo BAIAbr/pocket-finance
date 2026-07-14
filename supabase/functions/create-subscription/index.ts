@@ -2,6 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const MP_ACCESS_TOKEN = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN')!;
+const MP_PREAPPROVAL_ENDPOINT = 'https://api.mercadopago.com/preapproval';
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -14,6 +15,25 @@ const isValidEmail = (value: unknown) =>
 
 const normalizeEmail = (value: unknown) =>
   typeof value === 'string' ? value.trim().toLowerCase() : '';
+
+const pickMercadoPagoFields = (body: any) => ({
+  message: body?.message ?? null,
+  error: body?.error ?? null,
+  cause: body?.cause ?? null,
+  status: body?.status ?? null,
+});
+
+const mercadoPagoDebugPayload = (args: {
+  httpStatus: number;
+  requestBody: Record<string, unknown>;
+  responseBody: unknown;
+}) => ({
+  endpoint: MP_PREAPPROVAL_ENDPOINT,
+  http_status: args.httpStatus,
+  request_body: { ...args.requestBody, __access_token: '[REDACTED]' },
+  response_body: args.responseBody,
+  ...pickMercadoPagoFields(args.responseBody),
+});
 
 const getMercadoPagoMode = () => {
   if (MP_ACCESS_TOKEN?.startsWith('TEST-')) return 'test';
@@ -140,30 +160,9 @@ Deno.serve(async (req) => {
   const collector = await getMercadoPagoCollector();
   const collectorEmail = normalizeEmail(collector?.email);
 
-  if (collectorEmail && collectorEmail === payerEmail) {
-    console.error('[create-subscription] blocked because payer equals collector', {
-      mp_mode: mpMode,
-      user_id: userId,
-      auth_users_email: authUserEmail ?? null,
-      claims_email: claimsEmail ?? null,
-      payer_email_sent_to_api: payerEmail,
-      collector_email: collectorEmail,
-      external_reference: externalRef,
-      client_payer_email_ignored: body.payer_email ? normalizeEmail(body.payer_email) : null,
-      request_body_sent_to_api: { ...preapprovalPayload, __access_token: '[REDACTED]' },
-    });
-
-    return json(200, {
-      ok: false,
-      error: 'payer_equals_collector',
-      mode: mpMode,
-      payer_email: payerEmail,
-      message: 'O e-mail da sua conta Finango é igual ao e-mail da conta recebedora do Mercado Pago. Entre no Finango com uma conta de comprador diferente para assinar.',
-    });
-  }
-
   // 🔎 Logs completos (Access Token nunca é logado)
   console.log('[create-subscription] preparing MP preapproval', {
+    endpoint: MP_PREAPPROVAL_ENDPOINT,
     mp_mode: mpMode,
     user_id: userId,
     auth_users_email: authUserEmail ?? null,
@@ -177,7 +176,7 @@ Deno.serve(async (req) => {
     request_body_sent_to_api: { ...preapprovalPayload, __access_token: '[REDACTED]' },
   });
 
-  const mpRes = await fetch('https://api.mercadopago.com/preapproval', {
+  const mpRes = await fetch(MP_PREAPPROVAL_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -193,7 +192,14 @@ Deno.serve(async (req) => {
     mpData = { raw: mpRawResponse };
   }
 
+  const mpDebug = mercadoPagoDebugPayload({
+    httpStatus: mpRes.status,
+    requestBody: preapprovalPayload,
+    responseBody: mpData,
+  });
+
   console.log('[create-subscription] MP response', {
+    endpoint: MP_PREAPPROVAL_ENDPOINT,
     http_status: mpRes.status,
     ok: mpRes.ok,
     mp_mode: mpMode,
@@ -201,22 +207,29 @@ Deno.serve(async (req) => {
     payer_email_sent_to_api: payerEmail,
     collector_email_detected: collectorEmail || null,
     external_reference: externalRef,
+    request_body_sent_to_api: { ...preapprovalPayload, __access_token: '[REDACTED]' },
     response_body: mpData,
+    message: mpDebug.message,
+    error: mpDebug.error,
+    cause: mpDebug.cause,
+    status: mpDebug.status,
   });
 
   if (!mpRes.ok) {
-    if (isPayerCollectorModeError(mpData)) {
-      return json(200, {
-        ok: false,
-        error: 'payer_collector_mode_mismatch',
-        mode: mpMode,
-        payer_email: payerEmail,
-        message: mpMode === 'test'
-          ? 'Este Access Token é de TESTE. O e-mail da sua conta precisa ser de um usuário de teste do Mercado Pago (criado em https://www.mercadopago.com.br/developers/panel/test-users) e diferente da conta vendedora de teste.'
-          : 'O Mercado Pago rejeitou o pagador: verifique se sua conta Finango não usa o mesmo e-mail da conta vendedora do Mercado Pago.',
-      });
-    }
-    return json(502, { error: 'mp_error', http_status: mpRes.status, detail: mpData });
+    return json(200, {
+      ok: false,
+      error: 'mp_error',
+      mode: mpMode,
+      payer_email: payerEmail,
+      external_reference: externalRef,
+      mercado_pago: mpDebug,
+      detail: mpData,
+      message: mpDebug.message,
+      mp_error: mpDebug.error,
+      cause: mpDebug.cause,
+      status: mpDebug.status,
+      payer_collector_mode_mismatch: isPayerCollectorModeError(mpData),
+    });
   }
 
   await admin.from('user_subscriptions').upsert(
