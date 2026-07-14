@@ -131,15 +131,21 @@ export function PaymentMethodModal({ open, plan, onClose, onChooseRecurring }: P
       .subscribe();
     channelRef.current = ch;
 
-    // Polling backup every 4s
+    // Polling backup every 3s for up to 2 minutes (aligned with product spec)
+    const startedAt = Date.now();
+    const MAX_MS = 2 * 60 * 1000;
     const t = setInterval(async () => {
+      if (Date.now() - startedAt > MAX_MS) {
+        clearInterval(t);
+        return;
+      }
       const { data } = await supabase
         .from('payments')
         .select('status')
         .eq('provider_payment_id', pix.payment_id)
         .maybeSingle();
       if (data?.status) handleStatusChange(data.status);
-    }, 4000);
+    }, 3000);
 
     return () => {
       clearInterval(t);
