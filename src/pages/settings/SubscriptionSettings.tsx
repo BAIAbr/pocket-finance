@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard, Crown, Check, Lock, Sparkles, Calendar, Clock, ArrowRight, ShieldCheck, X, Receipt,
+  ExternalLink, Loader2,
 } from 'lucide-react';
 import { SettingsSubPageHeader } from '@/components/settings/SettingsSubPageHeader';
 import { VipRedeemInput } from '@/components/VipRedeemInput';
@@ -10,7 +11,7 @@ import { SubscriptionLogs } from '@/components/subscription/SubscriptionLogs';
 import { TrialBanner } from '@/components/subscription/TrialBanner';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { formatBRL } from '@/lib/currency';
 import { toast } from 'sonner';
@@ -25,6 +26,8 @@ interface PaymentRow {
   payment_method: string | null;
   paid_at: string | null;
   created_at: string;
+  provider_payment_id: string | null;
+  receipt_url: string | null;
 }
 
 function formatDatePtBR(iso: string) {
@@ -40,24 +43,124 @@ function daysUntil(iso: string) {
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
+function trackEvent(name: string, data?: Record<string, unknown>) {
+  try {
+    // Lightweight analytics — non-blocking, no layout changes.
+    // eslint-disable-next-line no-console
+    console.info('[analytics]', name, data ?? {});
+  } catch {}
+}
+
+const paymentMethodLabel = (m?: string | null) => {
+  if (!m) return null;
+  const map: Record<string, string> = {
+    pix: 'Pix',
+    credit_card: 'Cartão de crédito',
+    debit_card: 'Cartão de débito',
+    account_money: 'Saldo Mercado Pago',
+    ticket: 'Boleto',
+  };
+  return map[m] ?? m;
+};
+
+function StatusDot({ status }: { status: string }) {
+  const color =
+    status === 'active' ? 'bg-success'
+    : status === 'pending' || status === 'trial' ? 'bg-warning'
+    : status === 'cancelled' || status === 'expired' ? 'bg-destructive'
+    : 'bg-muted-foreground';
+  return <span className={cn('w-1.5 h-1.5 rounded-full animate-pulse', color)} />;
+}
+
+function SubscriptionSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      <div className="h-32 rounded-2xl bg-secondary/60" />
+      <div className="h-40 rounded-2xl bg-secondary/40" />
+      <div className="h-24 rounded-2xl bg-secondary/40" />
+    </div>
+  );
+}
+
 export default function SubscriptionSettings() {
   const { user } = useAuth();
-  const { plans, subscription, currentPlanCode, loading, selectPlan, reload } = useSubscription(user?.id);
+  const { plans, subscription, currentPlanCode, loading, reload } = useSubscription(user?.id);
   const navigate = useNavigate();
+  const location = useLocation();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
+  const [loadingPayments, setLoadingPayments] = useState(true);
+  const handledFeedbackRef = useRef(false);
 
-  useEffect(() => {
+  const loadPayments = async () => {
     if (!user?.id) return;
-    supabase
+    setLoadingPayments(true);
+    const { data } = await supabase
       .from('payments')
-      .select('id, plan_code, amount, currency, status, payment_method, paid_at, created_at')
+      .select('id, plan_code, amount, currency, status, payment_method, paid_at, created_at, provider_payment_id, receipt_url')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(20)
-      .then(({ data }) => setPayments((data as PaymentRow[]) ?? []));
+      .limit(20);
+    setPayments((data as PaymentRow[]) ?? []);
+    setLoadingPayments(false);
+  };
+
+  useEffect(() => {
+    loadPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  // Realtime: refresh when subscription or payments change (no page reload needed)
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`sub-live-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_subscriptions', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          reload();
+          const newStatus = (payload.new as any)?.status;
+          if (newStatus === 'active' && (payload.old as any)?.status !== 'active') {
+            toast.success('🎉 Assinatura ativada com sucesso!', {
+              description: 'Bem-vindo ao Finango Premium.',
+            });
+            trackEvent('payment_approved');
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'payments', filter: `user_id=eq.${user.id}` },
+        () => { loadPayments(); },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Handle Mercado Pago back_url feedback (?status=approved|rejected|pending)
+  useEffect(() => {
+    if (handledFeedbackRef.current) return;
+    const params = new URLSearchParams(location.search || window.location.hash.split('?')[1] || '');
+    const status = params.get('status') || params.get('collection_status');
+    if (!status) return;
+    handledFeedbackRef.current = true;
+    if (status === 'approved') {
+      toast.success('🎉 Assinatura ativada com sucesso!', { description: 'Bem-vindo ao Finango Premium.' });
+      trackEvent('checkout_completed');
+      reload();
+      loadPayments();
+    } else if (status === 'pending' || status === 'in_process') {
+      toast('Estamos confirmando seu pagamento', { description: 'Assim que aprovado, seu plano será ativado automaticamente.' });
+      trackEvent('checkout_pending');
+    } else if (status === 'rejected' || status === 'failure') {
+      toast.error('Não conseguimos aprovar o pagamento', { description: 'Tente novamente com outro método ou entre em contato.' });
+      trackEvent('payment_rejected');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   const currentPlan = plans.find(p => p.code === currentPlanCode);
   const isPaid = currentPlanCode !== 'free';
@@ -67,14 +170,27 @@ export default function SubscriptionSettings() {
   );
   const featuresToShow = currentPlan?.features?.length ? currentPlan.features : premiumPlan?.features ?? [];
 
-  const status = subscription?.status ?? (isPaid ? 'active' : 'free');
+  const rawStatus = subscription?.status ?? (isPaid ? 'active' : 'free');
+  const status = rawStatus;
   const statusLabel = isPaid
-    ? status === 'active' ? 'Plano ativo' : status === 'cancelled' ? 'Cancelado' : 'Em análise'
+    ? status === 'active' ? 'Ativa'
+      : status === 'cancelled' ? 'Cancelada'
+      : status === 'pending' ? 'Pendente'
+      : status === 'trial' ? 'Em teste'
+      : 'Em análise'
     : 'Plano gratuito';
+  const statusBadgeClass =
+    !isPaid ? 'bg-muted text-muted-foreground'
+    : status === 'active' ? 'bg-success/15 text-success'
+    : status === 'pending' || status === 'trial' ? 'bg-warning/15 text-warning'
+    : status === 'cancelled' || status === 'expired' ? 'bg-destructive/15 text-destructive'
+    : 'bg-muted text-muted-foreground';
 
   const price = currentPlan?.price_monthly ?? 0;
   const expiresAt = subscription?.expires_at ?? null;
   const daysLeft = expiresAt ? daysUntil(expiresAt) : null;
+  const lastApproved = payments.find(p => p.status === 'approved');
+  const methodLabel = paymentMethodLabel(lastApproved?.payment_method);
 
   const handleCancel = async () => {
     if (!user) return;
@@ -84,6 +200,7 @@ export default function SubscriptionSettings() {
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       toast.success('Assinatura cancelada', { description: 'Você voltou ao plano gratuito.' });
+      trackEvent('subscription_cancelled');
       setConfirmingCancel(false);
       await reload();
     } catch (e: any) {
@@ -111,278 +228,313 @@ export default function SubscriptionSettings() {
 
       <main className="px-4 space-y-5 max-w-3xl mx-auto">
         <TrialBanner />
-        {/* Header card */}
-        <motion.section
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className={cn(
-            'relative overflow-hidden rounded-2xl p-5 border',
-            isPaid
-              ? 'border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-accent/10'
-              : 'border-border/60 bg-secondary/40',
-          )}
-        >
-          {isPaid && (
-            <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
-          )}
-          <div className="relative flex items-start justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-3 min-w-0">
-              <div
-                className={cn(
-                  'w-12 h-12 rounded-2xl flex items-center justify-center shrink-0',
-                  isPaid ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground',
-                )}
-              >
-                {isPaid ? <Crown size={24} className="fill-primary/30" /> : <Sparkles size={22} />}
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-                  Seu plano
-                </p>
-                <h2 className="text-xl font-bold truncate">
-                  {loading ? 'Carregando…' : currentPlan?.name ?? 'Finango Free'}
-                </h2>
-                <span
-                  className={cn(
-                    'inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full mt-1',
-                    isPaid
-                      ? 'bg-success/15 text-success'
-                      : 'bg-muted text-muted-foreground',
-                  )}
-                >
-                  <span className={cn('w-1.5 h-1.5 rounded-full', isPaid ? 'bg-success' : 'bg-muted-foreground')} />
-                  {statusLabel}
-                </span>
-              </div>
-            </div>
-            {isPaid && price > 0 && (
-              <div className="text-right shrink-0">
-                <p className="text-lg font-bold">{formatBRL(price)}</p>
-                <p className="text-[11px] text-muted-foreground">por mês</p>
-              </div>
-            )}
-          </div>
 
-          {isPaid && expiresAt && (
-            <div className="relative mt-4 grid grid-cols-2 gap-2">
-              <div className="rounded-xl bg-background/60 border border-border/40 p-3">
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                  <Calendar size={12} /> Renova em
-                </div>
-                <p className="font-semibold text-sm mt-0.5">{formatDatePtBR(expiresAt)}</p>
-              </div>
-              <div className="rounded-xl bg-background/60 border border-border/40 p-3">
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                  <Clock size={12} /> Restam
-                </div>
-                <p className="font-semibold text-sm mt-0.5">
-                  {daysLeft} {daysLeft === 1 ? 'dia' : 'dias'}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {!isPaid && (
-            <div className="relative mt-4">
-              <p className="text-sm text-muted-foreground">
-                Você está utilizando o plano gratuito. Conheça os benefícios do Premium.
-              </p>
-              <button
-                onClick={() => navigate('/plans')}
-                className="mt-3 w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold touch-scale hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5"
-              >
-                Conhecer Premium <ArrowRight size={16} />
-              </button>
-            </div>
-          )}
-        </motion.section>
-
-        {/* Benefits */}
-        {featuresToShow.length > 0 && (
-          <motion.section
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.05 }}
-            className="card-finance"
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles size={16} className="text-primary" />
-              <h2 className="font-semibold">
-                {isPaid ? 'Seus benefícios' : 'Benefícios do Premium'}
-              </h2>
-            </div>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-              {featuresToShow.map((f, i) => {
-                const locked = !isPaid;
-                return (
-                  <li key={i} className={cn('flex items-start gap-2 text-sm', locked && 'text-muted-foreground')}>
+        {loading ? (
+          <SubscriptionSkeleton />
+        ) : (
+          <>
+            {/* Header card */}
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className={cn(
+                'relative overflow-hidden rounded-2xl p-5 border transition-shadow hover:shadow-lg',
+                isPaid
+                  ? 'border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-accent/10'
+                  : 'border-border/60 bg-secondary/40',
+              )}
+            >
+              {isPaid && (
+                <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
+              )}
+              <div className="relative flex items-start justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={cn(
+                      'w-12 h-12 rounded-2xl flex items-center justify-center shrink-0',
+                      isPaid ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    {isPaid ? <Crown size={24} className="fill-primary/30" /> : <Sparkles size={22} />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      Seu plano
+                    </p>
+                    <h2 className="text-xl font-bold truncate">
+                      {currentPlan?.name ?? 'Finango Free'}
+                    </h2>
                     <span
                       className={cn(
-                        'w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5',
-                        locked ? 'bg-muted' : 'bg-success/15 text-success',
+                        'inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full mt-1',
+                        statusBadgeClass,
                       )}
                     >
-                      {locked ? <Lock size={11} /> : <Check size={12} />}
+                      <StatusDot status={isPaid ? status : 'free'} />
+                      {statusLabel}
                     </span>
-                    <span className={cn(!f.enabled && 'opacity-50')}>{f.label}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          </motion.section>
-        )}
-
-        {/* Manage subscription — only real actions */}
-        {isPaid && (
-          <motion.section
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.1 }}
-            className="card-finance"
-          >
-            <h2 className="font-semibold mb-3">Gerenciar assinatura</h2>
-
-            <AnimatePresence mode="wait" initial={false}>
-              {confirmingCancel ? (
-                <motion.div
-                  key="confirm"
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"
-                >
-                  <p className="font-semibold text-sm">Tem certeza que deseja cancelar?</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Ao cancelar, você perderá o acesso a:
-                  </p>
-                  <ul className="mt-2 space-y-1">
-                    {featuresToShow.slice(0, 5).map((f, i) => (
-                      <li key={i} className="flex items-center gap-2 text-xs">
-                        <X size={12} className="text-destructive" />
-                        <span>{f.label}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex gap-2 mt-4">
-                    <button
-                      onClick={() => setConfirmingCancel(false)}
-                      disabled={cancelling}
-                      className="flex-1 py-2.5 rounded-xl bg-secondary font-medium text-sm touch-scale"
-                    >
-                      Voltar
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      disabled={cancelling}
-                      className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm touch-scale disabled:opacity-60"
-                    >
-                      {cancelling ? 'Cancelando…' : 'Confirmar cancelamento'}
-                    </button>
                   </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="actions"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="space-y-1.5"
-                >
-                  <button
-                    onClick={() => navigate('/plans')}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/60 touch-scale text-left"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
-                      <Crown size={18} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">Trocar de plano</p>
-                      <p className="text-xs text-muted-foreground">Compare e escolha outro plano</p>
-                    </div>
-                    <ArrowRight size={16} className="text-muted-foreground" />
-                  </button>
+                </div>
+                {isPaid && price > 0 && (
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-bold">{formatBRL(price)}</p>
+                    <p className="text-[11px] text-muted-foreground">por mês</p>
+                  </div>
+                )}
+              </div>
 
-                  <button
-                    onClick={() => setConfirmingCancel(true)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 touch-scale text-left text-destructive"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
-                      <X size={18} />
+              {isPaid && expiresAt && (
+                <div className="relative mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-background/60 border border-border/40 p-3">
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <Calendar size={12} /> Próxima cobrança
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">Cancelar assinatura</p>
-                      <p className="text-xs text-destructive/70">Voltar ao plano gratuito</p>
+                    <p className="font-semibold text-sm mt-0.5">{formatDatePtBR(expiresAt)}</p>
+                  </div>
+                  <div className="rounded-xl bg-background/60 border border-border/40 p-3">
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <Clock size={12} /> Tempo restante
                     </div>
-                  </button>
-                </motion.div>
+                    <p className="font-semibold text-sm mt-0.5">
+                      {daysLeft} {daysLeft === 1 ? 'dia' : 'dias'}
+                    </p>
+                  </div>
+                  {methodLabel && (
+                    <div className="rounded-xl bg-background/60 border border-border/40 p-3 col-span-2">
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <CreditCard size={12} /> Método de pagamento
+                      </div>
+                      <p className="font-semibold text-sm mt-0.5">{methodLabel}</p>
+                    </div>
+                  )}
+                </div>
               )}
-            </AnimatePresence>
-          </motion.section>
+
+              {!isPaid && (
+                <div className="relative mt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Você está utilizando o plano gratuito. Conheça os benefícios do Premium.
+                  </p>
+                  <button
+                    onClick={() => { trackEvent('subscribe_click'); navigate('/plans'); }}
+                    className="mt-3 w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold touch-scale hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Sparkles size={16} /> Assinar Premium <ArrowRight size={16} />
+                  </button>
+                </div>
+              )}
+            </motion.section>
+
+            {/* Benefits */}
+            {featuresToShow.length > 0 && (
+              <motion.section
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.05 }}
+                className="card-finance"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles size={16} className="text-primary" />
+                  <h2 className="font-semibold">
+                    {isPaid ? 'Seus benefícios' : 'Benefícios do Premium'}
+                  </h2>
+                </div>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                  {featuresToShow.map((f, i) => {
+                    const locked = !isPaid;
+                    return (
+                      <li key={i} className={cn('flex items-start gap-2 text-sm', locked && 'text-muted-foreground')}>
+                        <span
+                          className={cn(
+                            'w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                            locked ? 'bg-muted' : 'bg-success/15 text-success',
+                          )}
+                        >
+                          {locked ? <Lock size={11} /> : <Check size={12} />}
+                        </span>
+                        <span className={cn(!f.enabled && 'opacity-50')}>{f.label}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </motion.section>
+            )}
+
+            {/* Manage subscription */}
+            {isPaid && (
+              <motion.section
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.1 }}
+                className="card-finance"
+              >
+                <h2 className="font-semibold mb-3">Gerenciar assinatura</h2>
+
+                <AnimatePresence mode="wait" initial={false}>
+                  {confirmingCancel ? (
+                    <motion.div
+                      key="confirm"
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"
+                    >
+                      <p className="font-semibold text-sm">Tem certeza que deseja cancelar?</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Ao cancelar, você perderá o acesso a:
+                      </p>
+                      <ul className="mt-2 space-y-1">
+                        {featuresToShow.slice(0, 5).map((f, i) => (
+                          <li key={i} className="flex items-center gap-2 text-xs">
+                            <X size={12} className="text-destructive" />
+                            <span>{f.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="flex gap-2 mt-4">
+                        <button
+                          onClick={() => setConfirmingCancel(false)}
+                          disabled={cancelling}
+                          className="flex-1 py-2.5 rounded-xl bg-secondary font-medium text-sm touch-scale"
+                        >
+                          Voltar
+                        </button>
+                        <button
+                          onClick={handleCancel}
+                          disabled={cancelling}
+                          className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm touch-scale disabled:opacity-60 flex items-center justify-center gap-1.5"
+                        >
+                          {cancelling && <Loader2 size={14} className="animate-spin" />}
+                          {cancelling ? 'Cancelando…' : 'Confirmar cancelamento'}
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="actions"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-1.5"
+                    >
+                      <button
+                        onClick={() => navigate('/plans')}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/60 transition-colors touch-scale text-left"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
+                          <Crown size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm">Alterar plano</p>
+                          <p className="text-xs text-muted-foreground">Compare e escolha outro plano</p>
+                        </div>
+                        <ArrowRight size={16} className="text-muted-foreground" />
+                      </button>
+
+                      <button
+                        onClick={() => setConfirmingCancel(true)}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 transition-colors touch-scale text-left text-destructive"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+                          <X size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm">Cancelar assinatura</p>
+                          <p className="text-xs text-destructive/70">Voltar ao plano gratuito</p>
+                        </div>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.section>
+            )}
+
+            {/* Coupon */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.13 }}
+            >
+              <CouponInput
+                planCode={currentPlanCode}
+                onApplied={() => { trackEvent('coupon_applied'); reload(); }}
+              />
+            </motion.div>
+
+            {/* VIP */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.15 }}
+            >
+              <VipRedeemInput />
+            </motion.div>
+
+            {/* Subscription events log */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.18 }}
+            >
+              <SubscriptionLogs />
+            </motion.div>
+
+            {/* Payment history */}
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.2 }}
+              className="card-finance"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Receipt size={16} className="text-primary" />
+                <h2 className="font-semibold">Histórico de pagamentos</h2>
+              </div>
+              {loadingPayments ? (
+                <div className="space-y-2 animate-pulse">
+                  <div className="h-12 rounded-lg bg-secondary/50" />
+                  <div className="h-12 rounded-lg bg-secondary/40" />
+                  <div className="h-12 rounded-lg bg-secondary/30" />
+                </div>
+              ) : payments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum pagamento registrado ainda.</p>
+              ) : (
+                <ul className="divide-y divide-border/40">
+                  {payments.map((p) => (
+                    <li key={p.id} className="py-2.5 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {p.plan_code ? `Plano ${p.plan_code}` : 'Pagamento'} · {formatBRL(Number(p.amount))}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {formatDatePtBR(p.paid_at ?? p.created_at)}
+                          {paymentMethodLabel(p.payment_method) ? ` · ${paymentMethodLabel(p.payment_method)}` : ''}
+                          {p.provider_payment_id ? ` · Nº ${p.provider_payment_id}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {p.receipt_url && (
+                          <a
+                            href={p.receipt_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[11px] font-semibold text-primary inline-flex items-center gap-1 hover:underline"
+                          >
+                            Recibo <ExternalLink size={11} />
+                          </a>
+                        )}
+                        <span className={cn('text-[11px] font-semibold px-2 py-0.5 rounded-full', statusColor(p.status))}>
+                          {statusLabelBr(p.status)}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </motion.section>
+          </>
         )}
-
-        {/* Coupon */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.13 }}
-        >
-          <CouponInput planCode={currentPlanCode} onApplied={() => reload()} />
-        </motion.div>
-
-        {/* VIP */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.15 }}
-        >
-          <VipRedeemInput />
-        </motion.div>
-
-        {/* Subscription events log */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.18 }}
-        >
-          <SubscriptionLogs />
-        </motion.div>
-
-        {/* Payment history */}
-        <motion.section
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.2 }}
-          className="card-finance"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Receipt size={16} className="text-primary" />
-            <h2 className="font-semibold">Histórico de pagamentos</h2>
-          </div>
-          {payments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum pagamento registrado ainda.</p>
-          ) : (
-            <ul className="divide-y divide-border/40">
-              {payments.map((p) => (
-                <li key={p.id} className="py-2.5 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {p.plan_code ? `Plano ${p.plan_code}` : 'Pagamento'} · {formatBRL(Number(p.amount))}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {formatDatePtBR(p.paid_at ?? p.created_at)}
-                      {p.payment_method ? ` · ${p.payment_method}` : ''}
-                    </p>
-                  </div>
-                  <span className={cn('text-[11px] font-semibold px-2 py-0.5 rounded-full', statusColor(p.status))}>
-                    {statusLabelBr(p.status)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </motion.section>
-
 
         {/* Footer */}
         <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground pt-2">
