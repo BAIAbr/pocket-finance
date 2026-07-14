@@ -33,12 +33,28 @@ async function fetchFromBrapi(ticker: string): Promise<Quote> {
     if (!res) return { ticker, available: false, provider: "brapi" };
     const divs = res?.dividendsData?.cashDividends ?? [];
     const last = divs?.[0];
+    const price = res.regularMarketPrice ?? null;
+
+    // Dividend yield: sum of cash dividends paid in the last 12 months / current price.
+    let dividendYield: number | null = null;
+    if (price && price > 0 && Array.isArray(divs) && divs.length > 0) {
+      const cutoff = Date.now() - 365 * 24 * 60 * 60 * 1000;
+      const sum12m = divs.reduce((acc: number, d: any) => {
+        const dateStr = d?.paymentDate ?? d?.lastDatePrior;
+        const ts = dateStr ? new Date(dateStr).getTime() : NaN;
+        const rate = Number(d?.rate);
+        if (!Number.isFinite(ts) || !Number.isFinite(rate)) return acc;
+        return ts >= cutoff ? acc + rate : acc;
+      }, 0);
+      if (sum12m > 0) dividendYield = Number(((sum12m / price) * 100).toFixed(2));
+    }
+
     return {
       ticker,
       name: res.longName ?? res.shortName ?? null,
-      price: res.regularMarketPrice ?? null,
+      price,
       last_dividend: last?.rate ?? null,
-      dividend_yield: res.priceEarnings ? null : null,
+      dividend_yield: dividendYield,
       segment: res.sector ?? null,
       liquidity: res.regularMarketVolume ?? null,
       com_date: last?.lastDatePrior ?? null,
