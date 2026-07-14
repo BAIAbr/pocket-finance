@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { sendPushToUser } from '../_shared/webpush.ts';
 
 const admin = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -14,7 +15,7 @@ const json = (status: number, body: unknown) =>
 
 // Runs daily via pg_cron. Actions:
 // 1. Downgrade to FREE users whose PIX-based subscription has expired.
-// 2. Send a 3-day warning notification once per subscription.
+// 2. Send 3-day warning notification (in-app + push) once per subscription.
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -32,6 +33,7 @@ Deno.serve(async (req) => {
     .filter('metadata->>pix', 'eq', 'true');
 
   let downgraded = 0;
+  let pushedExpired = 0;
   for (const sub of expired ?? []) {
     await admin.from('user_subscriptions').update({
       plan_code: 'free',
@@ -57,6 +59,19 @@ Deno.serve(async (req) => {
       source: 'cron',
       payload: { plan_code: sub.plan_code, previous_expires_at: sub.expires_at },
     });
+
+    try {
+      const c = await sendPushToUser(admin, sub.user_id, {
+        title: 'Seu Premium expirou 🔴',
+        body: 'Seu acesso Premium via PIX chegou ao fim. Toque para renovar.',
+        url: '/#/settings/subscription',
+        tag: 'pix-expired',
+      });
+      pushedExpired += c;
+    } catch (e) {
+      console.error('push expired error', e);
+    }
+
     downgraded++;
   }
 
@@ -71,6 +86,7 @@ Deno.serve(async (req) => {
     .filter('metadata->>pix', 'eq', 'true');
 
   let warned = 0;
+  let pushedWarn = 0;
   for (const sub of warnings ?? []) {
     const meta = (sub.metadata ?? {}) as Record<string, unknown>;
     if (meta.warned_3d) continue;
@@ -87,8 +103,21 @@ Deno.serve(async (req) => {
     await admin.from('user_subscriptions').update({
       metadata: { ...meta, warned_3d: true },
     }).eq('id', sub.id);
+
+    try {
+      const c = await sendPushToUser(admin, sub.user_id, {
+        title: `Premium expira em ${daysLeft} dia(s) ⚠️`,
+        body: 'Renove seu PIX para não perder o acesso aos recursos Premium.',
+        url: '/#/plans',
+        tag: 'pix-warn',
+      });
+      pushedWarn += c;
+    } catch (e) {
+      console.error('push warn error', e);
+    }
+
     warned++;
   }
 
-  return json(200, { ok: true, downgraded, warned });
+  return json(200, { ok: true, downgraded, warned, pushedExpired, pushedWarn });
 });

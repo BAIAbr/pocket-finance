@@ -9,6 +9,7 @@ import { UpcomingBillsCard } from '@/components/UpcomingBillsCard';
 import { PlanningSummaryCard } from '@/components/planning/PlanningSummaryCard';
 import { InvestmentsSummaryCard } from '@/components/investments/InvestmentsSummaryCard';
 import { ChangelogHighlight } from '@/components/ChangelogHighlight';
+import { PixExpirationBanner } from '@/components/PixExpirationBanner';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStreak } from '@/hooks/useStreak';
@@ -35,6 +36,9 @@ export default function Dashboard() {
       </header>
 
       <main className="px-4 lg:px-8 space-y-5">
+        {/* Aviso de expiração PIX (Premium prestes a expirar / expirado) */}
+        <PixExpirationBanner />
+
         {/* Novidades destacadas */}
         <ChangelogHighlight />
 
