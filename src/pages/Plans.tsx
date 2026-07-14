@@ -22,6 +22,7 @@ export default function PlansPage() {
   const { plans, currentPlanCode, loading, selectPlan } = useSubscription(user?.id);
   const [busy, setBusy] = useState<string | null>(null);
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
+  const [checkoutDebugJson, setCheckoutDebugJson] = useState<string | null>(null);
   const [mpEnv, setMpEnv] = useState<MpEnv | null>(null);
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function PlansPage() {
     if (code === currentPlanCode) return;
     setBusy(code);
     setCheckoutNotice(null);
+    setCheckoutDebugJson(null);
     try {
       const targetPlan = plans.find(p => p.code === code);
       const targetPrice = targetPlan?.price_monthly ?? 0;
@@ -116,6 +118,13 @@ export default function PlansPage() {
         },
       });
       if (error) throw error;
+      if ((data as any)?.ok === false && (data as any)?.mercado_pago) {
+        const mpDebug = (data as any).mercado_pago;
+        setCheckoutNotice((data as any)?.message ?? 'Mercado Pago retornou erro no checkout.');
+        setCheckoutDebugJson(JSON.stringify(mpDebug.response_body ?? mpDebug, null, 2));
+        toast.error('Mercado Pago retornou erro no checkout');
+        return;
+      }
       if ((data as any)?.ok === false && (data as any)?.error === 'payer_collector_mode_mismatch') {
         const message = (data as any)?.message ?? 'Informe um e-mail de pagador diferente para continuar.';
         setCheckoutNotice(message);
@@ -214,6 +223,11 @@ export default function PlansPage() {
               <AlertTriangle size={16} className="mt-0.5 shrink-0" />
               <span>{checkoutNotice}</span>
             </div>
+          )}
+          {checkoutDebugJson && (
+            <pre className="mt-3 max-h-72 overflow-auto rounded-xl border border-border bg-muted/70 p-3 text-xs text-foreground whitespace-pre-wrap break-words">
+              {checkoutDebugJson}
+            </pre>
           )}
         </div>
 
