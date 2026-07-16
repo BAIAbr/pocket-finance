@@ -242,10 +242,14 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="analytics" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-9">
           <TabsTrigger value="analytics" className="gap-1.5">
             <Activity size={14} />
             Analytics
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="gap-1.5">
+            <HeartPulse size={14} />
+            Auditoria
           </TabsTrigger>
           <TabsTrigger value="subscriptions" className="gap-1.5">
             <DollarSign size={14} />
