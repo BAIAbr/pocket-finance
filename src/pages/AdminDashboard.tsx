@@ -534,6 +534,10 @@ export default function AdminDashboard() {
 
 
 
+        <TabsContent value="audit">
+          <AuditCenter />
+        </TabsContent>
+
         <TabsContent value="subscriptions">
           <SubscriptionsAdminManager />
         </TabsContent>
