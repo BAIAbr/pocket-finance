@@ -24,6 +24,8 @@ import DocumentsManager from '@/components/admin/documents/DocumentsManager';
 import ChangelogManager from '@/components/admin/documents/ChangelogManager';
 import FeatureFlagsManager from '@/components/admin/FeatureFlagsManager';
 import SubscriptionsAdminManager from '@/components/admin/SubscriptionsAdminManager';
+import AuditCenter from '@/components/admin/AuditCenter';
+import { HeartPulse } from 'lucide-react';
 
 interface AnalyticsRow {
   user_id: string;
