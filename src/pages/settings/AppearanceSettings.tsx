@@ -17,6 +17,7 @@ const DASHBOARD_CARDS: { id: string; label: string }[] = [
   { id: 'upcomingEvents', label: 'Próximos eventos' },
   { id: 'financialFeed', label: 'Feed financeiro' },
   { id: 'weeklySummary', label: 'Resumo semanal' },
+  { id: 'yearOverYear', label: 'Comparativo Ano vs Ano' },
   { id: 'planning', label: 'Planejamento' },
   { id: 'investments', label: 'Investimentos' },
   { id: 'transactions', label: 'Transações recentes' },
