@@ -1,6 +1,8 @@
 import { Home, History, Brain, Target, Settings, TrendingUp } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { NotificationCenter } from '@/components/NotificationCenter';
+import { GlobalSearchButton } from '@/components/GlobalSearch';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Início' },
