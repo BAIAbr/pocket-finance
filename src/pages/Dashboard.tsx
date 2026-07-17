@@ -133,6 +133,12 @@ export default function Dashboard() {
               </div>
             )}
 
+            {!isFamily && (
+              <div className="animate-fade-in stagger-2">
+                <CreditCardsDashboardCard />
+              </div>
+            )}
+
             {!isHidden('transactions') && (
               <div className="animate-fade-in stagger-2">
                 <div className="flex items-center justify-between mb-3">
