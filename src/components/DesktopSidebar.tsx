@@ -1,6 +1,8 @@
 import { Home, History, Brain, Target, Settings, TrendingUp } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { NotificationCenter } from '@/components/NotificationCenter';
+import { GlobalSearchButton } from '@/components/GlobalSearch';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Início' },
@@ -49,10 +51,18 @@ export function DesktopSidebar() {
     <aside className="hidden lg:flex flex-col w-64 min-h-screen border-r border-border/50 bg-card/50 backdrop-blur-sm">
       {/* Logo / Brand */}
       <div className="px-6 py-6 border-b border-border/30">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-          Finango
-        </h1>
-        <p className="text-xs text-muted-foreground mt-0.5">Gestão Financeira</p>
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Finango
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Gestão Financeira</p>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <GlobalSearchButton onClick={() => window.dispatchEvent(new Event('finango:open-search'))} />
+            <NotificationCenter variant="icon" />
+          </div>
+        </div>
       </div>
 
       {/* Nav Items */}

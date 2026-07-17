@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { BottomNav } from '@/components/BottomNav';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { PlanSimulator } from '@/components/PlanSimulator';
+import { GlobalSearch } from '@/components/GlobalSearch';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamilyContext } from '@/contexts/FamilyContext';
 import { Loader2, Users, User } from 'lucide-react';
@@ -11,9 +13,30 @@ import { cn } from '@/lib/utils';
 export function AppLayout() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const { family, viewContext, setViewContext } = useFamilyContext();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Track user sessions
   useSessionTracker(user?.id);
+
+  // Global Ctrl+K / Cmd+K shortcut for the search palette
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const isCombo = (e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K');
+      if (isCombo) {
+        e.preventDefault();
+        setSearchOpen(v => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // Expose an opener via window event so nav components can trigger search
+  useEffect(() => {
+    const handler = () => setSearchOpen(true);
+    window.addEventListener('finango:open-search', handler);
+    return () => window.removeEventListener('finango:open-search', handler);
+  }, []);
 
   // Show loading while checking auth
   if (isLoading) {
@@ -82,6 +105,9 @@ export function AppLayout() {
 
       {/* Simulador de plano (apenas admin) */}
       <PlanSimulator />
+
+      {/* Global search palette (Ctrl+K) */}
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   );
 }
