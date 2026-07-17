@@ -348,35 +348,13 @@ function QuickAccessRow({ onClose }: { onClose: () => void }) {
         </div>
         <span>Alertas</span>
       </button>
-      {notifOpen && (
-        <div className="hidden">
-          <NotificationCenter />
-        </div>
-      )}
-      <NotificationHiddenTrigger open={notifOpen} onOpenChange={setNotifOpen} />
+      <NotificationCenter
+        variant="none"
+        open={notifOpen}
+        onOpenChange={setNotifOpen}
+      />
     </div>
   );
 }
 
-/**
- * Renders only the notification sheet without its own trigger button —
- * we drive open state from an external button in QuickAccessRow.
- */
-function NotificationHiddenTrigger({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  // Re-use the NotificationCenter sheet by simulating a click when open flips.
-  // Simple approach: mount NotificationCenter and click its trigger via ref-less DOM query.
-  // Cleaner: expose imperative control by dispatching a custom event.
-  useEffectOpenNotifications(open, onOpenChange);
-  return null;
-}
-
-function useEffectOpenNotifications(open: boolean, onOpenChange: (v: boolean) => void) {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  useEffect(() => {
-    if (open) {
-      window.dispatchEvent(new Event('finango:open-notifications'));
-      onOpenChange(false);
-    }
-  }, [open, onOpenChange]);
-}
 
