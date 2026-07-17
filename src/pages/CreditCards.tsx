@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, CreditCard as CardIcon } from 'lucide-react';
+import { Plus, CreditCard as CardIcon, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCreditCards } from '@/hooks/useCreditCards';
 import CardFormModal from '@/components/creditcards/CardFormModal';
