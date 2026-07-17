@@ -4,7 +4,10 @@ import { toast } from 'sonner';
 import {
   X, TrendingUp, Bot, Camera, ArrowDownUp, BarChart3,
   Crown, Settings as SettingsIcon, User, HelpCircle, Sparkles, ChevronRight, Lock,
+  Search, Bell,
 } from 'lucide-react';
+import { NotificationCenter } from '@/components/NotificationCenter';
+import { useNotifications } from '@/hooks/useNotifications';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
