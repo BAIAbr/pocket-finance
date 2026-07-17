@@ -73,11 +73,19 @@ export default function Dashboard() {
               </div>
             )}
 
+            <div className="animate-fade-in stagger-2">
+              <MonthlySummaryCard />
+            </div>
+
             {!isFamily && (
               <div className="animate-fade-in stagger-2">
-                <UpcomingBillsCard />
+                <UpcomingEventsCard />
               </div>
             )}
+
+            <div className="animate-fade-in stagger-3">
+              <FinancialFeedCard />
+            </div>
           </div>
 
           {/* RIGHT column */}
