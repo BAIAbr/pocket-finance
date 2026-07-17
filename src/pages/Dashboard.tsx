@@ -14,6 +14,7 @@ import { InvestmentsSummaryCard } from '@/components/investments/InvestmentsSumm
 import { ChangelogHighlight } from '@/components/ChangelogHighlight';
 import { SmartInsightsSection } from '@/components/SmartInsightsSection';
 import { PixExpirationBanner } from '@/components/PixExpirationBanner';
+import CreditCardsDashboardCard from '@/components/CreditCardsDashboardCard';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStreak } from '@/hooks/useStreak';
