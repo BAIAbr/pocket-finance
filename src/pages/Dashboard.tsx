@@ -43,6 +43,10 @@ export default function Dashboard() {
         {/* Novidades destacadas */}
         <ChangelogHighlight />
 
+        {/* Assistente inteligente: saudação personalizada + insights da semana */}
+        <SmartInsightsSection />
+
+
         {/* Balance is always highlighted at the top */}
         <div className="animate-fade-in">
           <BalanceCard />
