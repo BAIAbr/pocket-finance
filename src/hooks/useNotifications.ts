@@ -52,6 +52,7 @@ export function useNotifications() {
   const { items: recurring } = useRecurring() as any;
   const { user } = useAuth();
   const { subscription } = useSubscription(user?.id) as any;
+  const { cards, invoices, getCardMetrics } = useCreditCards();
   const [readIds, setReadIds] = useState<Set<string>>(() => loadRead());
 
   const notifications = useMemo<AppNotification[]>(() => {
