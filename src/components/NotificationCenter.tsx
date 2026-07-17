@@ -25,12 +25,19 @@ const priorityRing = {
 } as const;
 
 interface Props {
-  variant?: 'icon' | 'menu-item';
+  variant?: 'icon' | 'menu-item' | 'none';
   className?: string;
+  open?: boolean;
+  onOpenChange?: (v: boolean) => void;
 }
 
-export function NotificationCenter({ variant = 'icon', className }: Props) {
-  const [open, setOpen] = useState(false);
+export function NotificationCenter({ variant = 'icon', className, open: openProp, onOpenChange }: Props) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = openProp ?? internalOpen;
+  const setOpen = (v: boolean) => {
+    onOpenChange?.(v);
+    if (openProp === undefined) setInternalOpen(v);
+  };
   const navigate = useNavigate();
   const { notifications, unreadCount, isRead, markAsRead, markAllAsRead } = useNotifications();
 
