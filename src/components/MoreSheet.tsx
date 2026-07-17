@@ -312,3 +312,71 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
     </AnimatePresence>
   );
 }
+
+function QuickAccessRow({ onClose }: { onClose: () => void }) {
+  const { unreadCount } = useNotifications();
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  const openSearch = () => {
+    try { (navigator as any)?.vibrate?.(8); } catch { /* noop */ }
+    onClose();
+    setTimeout(() => window.dispatchEvent(new Event('finango:open-search')), 120);
+  };
+
+  return (
+    <div className="grid grid-cols-2 gap-2 mb-4">
+      <button
+        onClick={openSearch}
+        className="flex items-center gap-2 p-3 rounded-xl bg-secondary/60 hover:bg-secondary text-sm font-medium transition-all"
+      >
+        <div className="w-8 h-8 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
+          <Search size={16} />
+        </div>
+        <span>Buscar</span>
+      </button>
+      <button
+        onClick={() => setNotifOpen(true)}
+        className="flex items-center gap-2 p-3 rounded-xl bg-secondary/60 hover:bg-secondary text-sm font-medium transition-all relative"
+      >
+        <div className="w-8 h-8 rounded-lg bg-primary/15 text-primary flex items-center justify-center relative">
+          <Bell size={16} />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-secondary">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </div>
+        <span>Alertas</span>
+      </button>
+      {notifOpen && (
+        <div className="hidden">
+          <NotificationCenter />
+        </div>
+      )}
+      <NotificationHiddenTrigger open={notifOpen} onOpenChange={setNotifOpen} />
+    </div>
+  );
+}
+
+/**
+ * Renders only the notification sheet without its own trigger button —
+ * we drive open state from an external button in QuickAccessRow.
+ */
+function NotificationHiddenTrigger({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  // Re-use the NotificationCenter sheet by simulating a click when open flips.
+  // Simple approach: mount NotificationCenter and click its trigger via ref-less DOM query.
+  // Cleaner: expose imperative control by dispatching a custom event.
+  useEffectOpenNotifications(open, onOpenChange);
+  return null;
+}
+
+function useEffectOpenNotifications(open: boolean, onOpenChange: (v: boolean) => void) {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (open) {
+      window.dispatchEvent(new Event('finango:open-notifications'));
+      onOpenChange(false);
+    }
+  }, [open, onOpenChange]);
+}
+
