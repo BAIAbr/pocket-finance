@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, CreditCard as CardIcon } from 'lucide-react';
+import { Plus, CreditCard as CardIcon, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCreditCards } from '@/hooks/useCreditCards';
 import CardFormModal from '@/components/creditcards/CardFormModal';
@@ -25,9 +25,14 @@ export default function CreditCards() {
         </div>
         <div className="flex gap-2">
           {cards.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => { setPurchaseCardId(undefined); setOpenPurchase(true); }}>
-              Nova compra
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={() => navigate('/cards/reports')}>
+                <BarChart3 className="w-4 h-4 mr-1" />Relatórios
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { setPurchaseCardId(undefined); setOpenPurchase(true); }}>
+                Nova compra
+              </Button>
+            </>
           )}
           <Button size="sm" onClick={() => setOpenForm(true)}><Plus className="w-4 h-4 mr-1" />Adicionar</Button>
         </div>

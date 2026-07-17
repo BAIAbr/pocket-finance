@@ -43,6 +43,7 @@ import Investments from "./pages/Investments";
 import Installments from "./pages/Installments";
 import CreditCards from "./pages/CreditCards";
 import CreditCardDetail from "./pages/CreditCardDetail";
+import CreditCardReports from "./pages/CreditCardReports";
 import Plans from "./pages/Plans";
 import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
@@ -100,6 +101,7 @@ const App = () => (
                   
                   <Route path="/installments" element={<PlanGate feature="installments"><Installments /></PlanGate>} />
                   <Route path="/cards" element={<CreditCards />} />
+                  <Route path="/cards/reports" element={<CreditCardReports />} />
                   <Route path="/cards/:id" element={<CreditCardDetail />} />
                   <Route path="/plans" element={<Plans />} />
                   <Route path="/security" element={<Security />} />
