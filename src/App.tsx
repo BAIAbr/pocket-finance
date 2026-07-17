@@ -99,6 +99,8 @@ const App = () => (
                   <Route path="/investments" element={<PlanGate feature="investments"><Investments /></PlanGate>} />
                   
                   <Route path="/installments" element={<PlanGate feature="installments"><Installments /></PlanGate>} />
+                  <Route path="/cards" element={<CreditCards />} />
+                  <Route path="/cards/:id" element={<CreditCardDetail />} />
                   <Route path="/plans" element={<Plans />} />
                   <Route path="/security" element={<Security />} />
                   <Route path="/admin" element={<AdminDashboard />} />
