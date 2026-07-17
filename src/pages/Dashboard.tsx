@@ -8,6 +8,7 @@ import { QuickPiggyDeposit } from '@/components/QuickPiggyDeposit';
 import { UpcomingEventsCard } from '@/components/UpcomingEventsCard';
 import { MonthlySummaryCard } from '@/components/MonthlySummaryCard';
 import { FinancialFeedCard } from '@/components/FinancialFeedCard';
+import { YearOverYearCard } from '@/components/YearOverYearCard';
 import { PlanningSummaryCard } from '@/components/planning/PlanningSummaryCard';
 import { InvestmentsSummaryCard } from '@/components/investments/InvestmentsSummaryCard';
 import { ChangelogHighlight } from '@/components/ChangelogHighlight';
@@ -110,6 +111,12 @@ export default function Dashboard() {
                   currentStreak={isFamily ? 0 : currentStreak}
                   isVisible={weeklySummary.isVisible}
                 />
+              </div>
+            )}
+
+            {!isHidden('yearOverYear') && (
+              <div className="animate-fade-in stagger-2">
+                <YearOverYearCard />
               </div>
             )}
 
