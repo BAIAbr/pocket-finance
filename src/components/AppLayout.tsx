@@ -105,6 +105,9 @@ export function AppLayout() {
 
       {/* Simulador de plano (apenas admin) */}
       <PlanSimulator />
+
+      {/* Global search palette (Ctrl+K) */}
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   );
 }
