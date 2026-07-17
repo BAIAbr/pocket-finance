@@ -2,12 +2,12 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
-  eachDayOfInterval, format, isSameMonth, isSameDay, parseISO, isToday,
+  eachDayOfInterval, format, isSameMonth, isSameDay, isToday,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   ChevronLeft, ChevronRight, Calendar as CalendarIcon,
-  ArrowUpRight, ArrowDownRight, CalendarClock, Flag, Target, X,
+  ArrowUpRight, ArrowDownRight, CalendarClock, Flag, Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
