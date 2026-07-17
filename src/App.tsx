@@ -101,6 +101,7 @@ const App = () => (
                   
                   <Route path="/installments" element={<PlanGate feature="installments"><Installments /></PlanGate>} />
                   <Route path="/cards" element={<CreditCards />} />
+                  <Route path="/cards/reports" element={<CreditCardReports />} />
                   <Route path="/cards/:id" element={<CreditCardDetail />} />
                   <Route path="/plans" element={<Plans />} />
                   <Route path="/security" element={<Security />} />
