@@ -192,7 +192,22 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
                 </div>
               </motion.button>
 
-              {/* Premium Card */}
+              {/* Quick access: Search + Notifications */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <button
+                  onClick={() => { haptic(); onClose(); setTimeout(() => window.dispatchEvent(new Event('finango:open-search')), 120); }}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-secondary/60 hover:bg-secondary text-sm font-medium transition-all"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
+                    <Sparkles size={16} />
+                  </div>
+                  <span>Buscar</span>
+                </button>
+                <div className="[&>button]:!w-full [&>button]:!flex [&>button]:!items-center [&>button]:!gap-2 [&>button]:!p-3 [&>button]:!rounded-xl [&>button]:!bg-secondary/60 hover:[&>button]:!bg-secondary [&>button]:!text-sm [&>button]:!font-medium [&>button]:!justify-start [&>button]:!h-auto">
+                  <NotificationCenterMobileTrigger />
+                </div>
+              </div>
+
               <motion.button
                 onClick={go('/plans')}
                 initial={{ opacity: 0, y: 8 }}
