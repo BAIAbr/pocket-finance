@@ -100,7 +100,7 @@ export default function CardFormModal({ open, onClose, onSubmit, editing }: Prop
             </div>
             <div>
               <Label>Limite total *</Label>
-              <MoneyInput value={creditLimit} onValueChange={setCreditLimit} />
+              <MoneyInput value={creditLimit} onChange={(v) => setCreditLimit(Number(v) || 0)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
