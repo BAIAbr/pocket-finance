@@ -25,7 +25,8 @@ import ChangelogManager from '@/components/admin/documents/ChangelogManager';
 import FeatureFlagsManager from '@/components/admin/FeatureFlagsManager';
 import SubscriptionsAdminManager from '@/components/admin/SubscriptionsAdminManager';
 import AuditCenter from '@/components/admin/AuditCenter';
-import { HeartPulse } from 'lucide-react';
+import SystemHealth from '@/components/admin/SystemHealth';
+import { HeartPulse, Gauge } from 'lucide-react';
 
 interface AnalyticsRow {
   user_id: string;
@@ -242,7 +243,7 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="analytics" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 md:grid-cols-9">
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-10">
           <TabsTrigger value="analytics" className="gap-1.5">
             <Activity size={14} />
             Analytics
@@ -250,6 +251,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="audit" className="gap-1.5">
             <HeartPulse size={14} />
             Auditoria
+          </TabsTrigger>
+          <TabsTrigger value="health" className="gap-1.5">
+            <Gauge size={14} />
+            Saúde
           </TabsTrigger>
           <TabsTrigger value="subscriptions" className="gap-1.5">
             <DollarSign size={14} />
@@ -536,6 +541,10 @@ export default function AdminDashboard() {
 
         <TabsContent value="audit">
           <AuditCenter />
+        </TabsContent>
+
+        <TabsContent value="health">
+          <SystemHealth />
         </TabsContent>
 
         <TabsContent value="subscriptions">
