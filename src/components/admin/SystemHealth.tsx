@@ -29,7 +29,7 @@ const STATUS_META: Record<Status, { text: string; bg: string; Icon: any; label: 
   loading: { text: 'text-muted-foreground', bg: 'bg-secondary',     Icon: Loader2,        label: 'Verificando' },
 };
 
-async function timed<T>(fn: () => Promise<T>): Promise<{ result: T | null; ms: number; error: any }> {
+async function timed<T>(fn: () => PromiseLike<T>): Promise<{ result: T | null; ms: number; error: any }> {
   const start = performance.now();
   try {
     const result = await fn();
@@ -158,7 +158,8 @@ export default function SystemHealth() {
     const err = checks.filter(c => c.status === 'error').length;
     const total = checks.length || 1;
     const score = Math.round((ok / total) * 100);
-    const badge: Status = err > 0 ? 'error' : warn > 0 ? 'warn' : 'ok';
+    const anyLoading = checks.some(c => c.status === 'loading');
+    const badge: Status = err > 0 ? 'error' : warn > 0 ? 'warn' : anyLoading ? 'loading' : 'ok';
     return { ok, warn, err, score, badge };
   }, [checks]);
 
