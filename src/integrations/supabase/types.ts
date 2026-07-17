@@ -2889,10 +2889,9 @@ export type Database = {
     }
     Functions: {
       cc_ensure_invoice: {
-        Args: { _card_id: string; _reference_month: string; _user_id: string }
+        Args: { _card_id: string; _reference_month: string }
         Returns: string
       }
-      cc_recalc_invoice: { Args: { _invoice_id: string }; Returns: undefined }
       cc_reference_month: {
         Args: { _closing_day: number; _purchase_date: string }
         Returns: string
