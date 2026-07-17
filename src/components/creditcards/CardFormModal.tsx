@@ -93,15 +93,9 @@ export default function CardFormModal({ open, onClose, onSubmit, editing }: Prop
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Últimos 4 dígitos</Label>
-              <Input inputMode="numeric" maxLength={4} value={lastDigits} onChange={e => setLastDigits(e.target.value.replace(/\D/g,''))} placeholder="1234" />
-            </div>
-            <div>
-              <Label>Limite total *</Label>
-              <MoneyInput value={creditLimit} onChange={(v) => setCreditLimit(Number(v) || 0)} />
-            </div>
+          <div>
+            <Label>Limite total *</Label>
+            <MoneyInput value={creditLimit} onChange={(v) => setCreditLimit(Number(v) || 0)} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
