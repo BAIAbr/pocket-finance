@@ -17,12 +17,15 @@ import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStreak } from '@/hooks/useStreak';
 import { useWeeklySummary } from '@/hooks/useWeeklySummary';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 export default function Dashboard() {
   const { transactions, currentMonthStats, categories, isFamily, piggyBanks, formatCurrency, _personalFinance } = useEffectiveFinance();
   const { user } = useAuth();
   const { currentStreak } = useStreak(user?.id ?? null);
   const weeklySummary = useWeeklySummary(transactions as any, categories as any, 0);
+  const { dashboardLayout } = useUserPreferences();
+  const isHidden = (id: string) => dashboardLayout.hidden.includes(id);
 
   return (
     <div className="min-h-screen bg-background pb-28 lg:pb-8 safe-top">
