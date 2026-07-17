@@ -13,9 +13,30 @@ import { cn } from '@/lib/utils';
 export function AppLayout() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const { family, viewContext, setViewContext } = useFamilyContext();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Track user sessions
   useSessionTracker(user?.id);
+
+  // Global Ctrl+K / Cmd+K shortcut for the search palette
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const isCombo = (e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K');
+      if (isCombo) {
+        e.preventDefault();
+        setSearchOpen(v => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // Expose an opener via window event so nav components can trigger search
+  useEffect(() => {
+    const handler = () => setSearchOpen(true);
+    window.addEventListener('finango:open-search', handler);
+    return () => window.removeEventListener('finango:open-search', handler);
+  }, []);
 
   // Show loading while checking auth
   if (isLoading) {
