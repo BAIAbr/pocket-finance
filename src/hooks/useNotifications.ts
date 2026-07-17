@@ -4,12 +4,15 @@ import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useRecurring } from '@/hooks/useRecurring';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCreditCards } from '@/hooks/useCreditCards';
 
 export type NotificationType =
   | 'bill_due'
   | 'goal_deadline'
   | 'piggy_completed'
   | 'pix_expiring'
+  | 'card_limit'
+  | 'card_invoice'
   | 'insight'
   | 'system';
 
