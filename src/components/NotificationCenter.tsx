@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, ArrowRight, CheckCheck, Calendar, Target, Trophy, Crown, Sparkles } from 'lucide-react';
+import { Bell, ArrowRight, CheckCheck, Calendar, Target, Trophy, Crown, Sparkles, CreditCard, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,8 @@ const iconMap = {
   goal_deadline: Target,
   piggy_completed: Trophy,
   pix_expiring: Crown,
+  card_limit: AlertTriangle,
+  card_invoice: CreditCard,
   insight: Sparkles,
   system: Bell,
 } as const;

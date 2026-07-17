@@ -7,14 +7,15 @@ import {
 import { ptBR } from 'date-fns/locale';
 import {
   ChevronLeft, ChevronRight, Calendar as CalendarIcon,
-  ArrowUpRight, ArrowDownRight, CalendarClock, Flag, Target,
+  ArrowUpRight, ArrowDownRight, CalendarClock, Flag, Target, CreditCard as CreditCardIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useRecurring } from '@/hooks/useRecurring';
 import { useFinancialGoals } from '@/hooks/useFinancialGoals';
+import { useCreditCards } from '@/hooks/useCreditCards';
 
-type EventKind = 'income' | 'expense' | 'bill' | 'goal' | 'piggy';
+type EventKind = 'income' | 'expense' | 'bill' | 'goal' | 'piggy' | 'card';
 interface DayEvent {
   id: string;
   kind: EventKind;
@@ -29,6 +30,7 @@ const KIND_META: Record<EventKind, { label: string; dot: string; text: string; b
   bill:    { label: 'Conta prevista', dot: 'bg-orange-500',  text: 'text-orange-500',   bg: 'bg-orange-500/10',  Icon: CalendarClock },
   goal:    { label: 'Prazo de meta',  dot: 'bg-primary',     text: 'text-primary',      bg: 'bg-primary/10',     Icon: Flag },
   piggy:   { label: 'Cofrinho',       dot: 'bg-accent',      text: 'text-accent',       bg: 'bg-accent/10',      Icon: Target },
+  card:    { label: 'Fatura cartão',  dot: 'bg-violet-500',  text: 'text-violet-500',   bg: 'bg-violet-500/10',  Icon: CreditCardIcon },
 };
 
 export default function FinancialCalendar() {
@@ -40,6 +42,7 @@ export default function FinancialCalendar() {
   const { items: recurring } = useRecurring();
   const { goals } = useFinancialGoals();
   const { piggyBanks } = useEffectiveFinance() as any;
+  const { cards, invoices } = useCreditCards();
 
   const days = useMemo(() => {
     const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 0 });
@@ -97,8 +100,21 @@ export default function FinancialCalendar() {
       });
     });
 
+    (invoices as any[]).filter(i => i.status !== 'paid').forEach((inv) => {
+      const card = (cards as any[]).find(c => c.id === inv.card_id);
+      const remaining = Number(inv.total_amount) - Number(inv.paid_amount);
+      if (remaining <= 0) return;
+      push(inv.due_date, {
+        id: `card-inv-${inv.id}`,
+        kind: 'card',
+        title: `Fatura ${card?.name ?? 'Cartão'}`,
+        amount: remaining,
+        route: `/cards/${inv.card_id}`,
+      });
+    });
+
     return map;
-  }, [transactions, categories, recurring, goals, piggyBanks]);
+  }, [transactions, categories, recurring, goals, piggyBanks, invoices, cards]);
 
   const selectedKey = format(selected, 'yyyy-MM-dd');
   const selectedEvents = eventsByDay.get(selectedKey) ?? [];
