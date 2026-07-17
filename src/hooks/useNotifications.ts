@@ -3,6 +3,7 @@ import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useRecurring } from '@/hooks/useRecurring';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/contexts/AuthContext';
 
 export type NotificationType =
   | 'bill_due'
