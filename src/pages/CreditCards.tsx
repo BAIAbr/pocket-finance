@@ -25,9 +25,14 @@ export default function CreditCards() {
         </div>
         <div className="flex gap-2">
           {cards.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => { setPurchaseCardId(undefined); setOpenPurchase(true); }}>
-              Nova compra
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={() => navigate('/cards/reports')}>
+                <BarChart3 className="w-4 h-4 mr-1" />Relatórios
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { setPurchaseCardId(undefined); setOpenPurchase(true); }}>
+                Nova compra
+              </Button>
+            </>
           )}
           <Button size="sm" onClick={() => setOpenForm(true)}><Plus className="w-4 h-4 mr-1" />Adicionar</Button>
         </div>
