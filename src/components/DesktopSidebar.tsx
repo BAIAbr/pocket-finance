@@ -1,4 +1,4 @@
-import { Home, History, Brain, Target, Settings, TrendingUp, CalendarDays } from 'lucide-react';
+import { Home, History, Brain, Target, Settings, TrendingUp, CalendarDays, CreditCard } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { NotificationCenter } from '@/components/NotificationCenter';
@@ -12,6 +12,7 @@ const navItems = [
   { path: '/savings', icon: Target, label: 'Metas' },
   { path: '/planning', icon: TrendingUp, label: 'Planejamento' },
   { path: '/investments', icon: TrendingUp, label: 'Investimentos' },
+  { path: '/cards', icon: CreditCard, label: 'Cartões' },
   { path: '/settings', icon: Settings, label: 'Ajustes' },
 ];
 
