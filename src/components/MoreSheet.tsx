@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import {
   X, TrendingUp, Bot, Camera, ArrowDownUp, BarChart3,
   Crown, Settings as SettingsIcon, User, HelpCircle, Sparkles, ChevronRight, Lock,
-  Search, Bell, CalendarDays,
+  Search, Bell, CalendarDays, CreditCard,
 } from 'lucide-react';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useNotifications } from '@/hooks/useNotifications';
