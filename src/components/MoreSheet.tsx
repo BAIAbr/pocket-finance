@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import {
   X, TrendingUp, Bot, Camera, ArrowDownUp, BarChart3,
   Crown, Settings as SettingsIcon, User, HelpCircle, Sparkles, ChevronRight, Lock,
-  Search, Bell, CalendarDays,
+  Search, Bell, CalendarDays, CreditCard,
 } from 'lucide-react';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -82,6 +82,7 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
       items: [
         { icon: CalendarDays, label: 'Calendário Financeiro', description: 'Contas, prazos e movimentações por dia', badge: 'Novo', action: go('/calendar') },
         { icon: TrendingUp, label: 'Investimentos', description: 'Acompanhe rendimentos e carteira', badge: 'Novo', action: go('/investments') },
+        { icon: CreditCard, label: 'Cartões de crédito', description: 'Limites, faturas e parcelas', badge: 'Novo', action: go('/cards') },
         { icon: ArrowDownUp, label: 'Importar e Exportar', description: 'CSV, OFX, Excel, PDF e backup', action: go('/settings/data') },
       ],
     },

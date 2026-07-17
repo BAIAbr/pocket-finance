@@ -241,6 +241,315 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_card_installments: {
+        Row: {
+          amount: number
+          card_id: string
+          created_at: string
+          id: string
+          installment_number: number
+          invoice_id: string | null
+          purchase_id: string
+          reference_month: string
+          status: string
+          total_installments: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          card_id: string
+          created_at?: string
+          id?: string
+          installment_number: number
+          invoice_id?: string | null
+          purchase_id: string
+          reference_month: string
+          status?: string
+          total_installments: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          card_id?: string
+          created_at?: string
+          id?: string
+          installment_number?: number
+          invoice_id?: string | null
+          purchase_id?: string
+          reference_month?: string
+          status?: string
+          total_installments?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_card_installments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_card_usage"
+            referencedColumns: ["card_id"]
+          },
+          {
+            foreignKeyName: "credit_card_installments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_card_installments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "credit_card_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_card_installments_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "credit_card_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_card_invoices: {
+        Row: {
+          card_id: string
+          closing_date: string
+          created_at: string
+          due_date: string
+          id: string
+          paid_amount: number
+          reference_month: string
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          closing_date: string
+          created_at?: string
+          due_date: string
+          id?: string
+          paid_amount?: number
+          reference_month: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          closing_date?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          paid_amount?: number
+          reference_month?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_card_invoices_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_card_usage"
+            referencedColumns: ["card_id"]
+          },
+          {
+            foreignKeyName: "credit_card_invoices_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_card_payments: {
+        Row: {
+          amount: number
+          card_id: string
+          created_at: string
+          id: string
+          invoice_id: string
+          notes: string | null
+          payment_date: string
+          source_account: string | null
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          card_id: string
+          created_at?: string
+          id?: string
+          invoice_id: string
+          notes?: string | null
+          payment_date?: string
+          source_account?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          card_id?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          notes?: string | null
+          payment_date?: string
+          source_account?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_card_payments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_card_usage"
+            referencedColumns: ["card_id"]
+          },
+          {
+            foreignKeyName: "credit_card_payments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_card_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "credit_card_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_card_purchases: {
+        Row: {
+          card_id: string
+          category_id: string | null
+          created_at: string
+          description: string
+          id: string
+          installments_count: number
+          is_recurring: boolean
+          purchase_date: string
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          category_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          installments_count?: number
+          is_recurring?: boolean
+          purchase_date?: string
+          status?: string
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          installments_count?: number
+          is_recurring?: boolean
+          purchase_date?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_card_purchases_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_card_usage"
+            referencedColumns: ["card_id"]
+          },
+          {
+            foreignKeyName: "credit_card_purchases_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_cards: {
+        Row: {
+          bank: string | null
+          brand: string | null
+          closing_day: number
+          color: string | null
+          created_at: string
+          credit_limit: number
+          default_category_id: string | null
+          due_day: number
+          id: string
+          is_active: boolean
+          last_digits: string | null
+          name: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bank?: string | null
+          brand?: string | null
+          closing_day: number
+          color?: string | null
+          created_at?: string
+          credit_limit?: number
+          default_category_id?: string | null
+          due_day: number
+          id?: string
+          is_active?: boolean
+          last_digits?: string | null
+          name: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bank?: string | null
+          brand?: string | null
+          closing_day?: number
+          color?: string | null
+          created_at?: string
+          credit_limit?: number
+          default_category_id?: string | null
+          due_day?: number
+          id?: string
+          is_active?: boolean
+          last_digits?: string | null
+          name?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       document_versions: {
         Row: {
           autor: string | null
@@ -2567,9 +2876,26 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      credit_card_usage: {
+        Row: {
+          available_amount: number | null
+          card_id: string | null
+          credit_limit: number | null
+          used_amount: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      cc_ensure_invoice: {
+        Args: { _card_id: string; _reference_month: string }
+        Returns: string
+      }
+      cc_reference_month: {
+        Args: { _closing_day: number; _purchase_date: string }
+        Returns: string
+      }
       find_family_by_invite_code: { Args: { p_code: string }; Returns: string }
       get_family_invite_code: { Args: { _family_id: string }; Returns: string }
       get_plan_limit: {

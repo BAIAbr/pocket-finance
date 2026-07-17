@@ -41,6 +41,8 @@ import Recurring from "./pages/Recurring";
 import Investments from "./pages/Investments";
 
 import Installments from "./pages/Installments";
+import CreditCards from "./pages/CreditCards";
+import CreditCardDetail from "./pages/CreditCardDetail";
 import Plans from "./pages/Plans";
 import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
@@ -97,6 +99,8 @@ const App = () => (
                   <Route path="/investments" element={<PlanGate feature="investments"><Investments /></PlanGate>} />
                   
                   <Route path="/installments" element={<PlanGate feature="installments"><Installments /></PlanGate>} />
+                  <Route path="/cards" element={<CreditCards />} />
+                  <Route path="/cards/:id" element={<CreditCardDetail />} />
                   <Route path="/plans" element={<Plans />} />
                   <Route path="/security" element={<Security />} />
                   <Route path="/admin" element={<AdminDashboard />} />
