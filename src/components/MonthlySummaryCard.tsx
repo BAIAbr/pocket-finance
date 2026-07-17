@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TrendingUp, TrendingDown, PiggyBank, ChevronRight, BarChart3 } from 'lucide-react';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
-import { getIconComponent } from '@/lib/icons';
+import { getIconByName } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 
 export function MonthlySummaryCard() {
@@ -98,7 +98,7 @@ export function MonthlySummaryCard() {
           </p>
           <div className="space-y-2">
             {topCategories.map((c: any) => {
-              const Icon = getIconComponent(c.icon);
+              const Icon = getIconByName(c.icon);
               return (
                 <div key={c.categoryId} className="flex items-center gap-2">
                   <div

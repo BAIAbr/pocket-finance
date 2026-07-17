@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { Activity, Sparkles } from 'lucide-react';
 import { useFinancialFeed, FeedEvent } from '@/hooks/useFinancialFeed';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
-import { getIconComponent } from '@/lib/icons';
+import { getIconByName } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 
 function eventSign(type: FeedEvent['type']): 'up' | 'down' | 'neutral' {
@@ -52,7 +52,7 @@ export function FinancialFeedCard() {
         <div className="absolute left-[19px] top-1 bottom-1 w-px bg-border/60" aria-hidden />
         <ul className="space-y-3">
           {visible.map(ev => {
-            const Icon = getIconComponent(ev.icon);
+            const Icon = getIconByName(ev.icon);
             const sign = eventSign(ev.type);
             let ago = '';
             try { ago = formatDistanceToNow(parseISO(ev.timestamp), { locale: ptBR, addSuffix: true }); } catch { ago = ''; }
