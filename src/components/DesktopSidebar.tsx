@@ -1,4 +1,4 @@
-import { Home, History, Brain, Target, Settings, TrendingUp } from 'lucide-react';
+import { Home, History, Brain, Target, Settings, TrendingUp, CalendarDays } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { NotificationCenter } from '@/components/NotificationCenter';
@@ -7,6 +7,7 @@ import { GlobalSearchButton } from '@/components/GlobalSearch';
 const navItems = [
   { path: '/', icon: Home, label: 'Início' },
   { path: '/history', icon: History, label: 'Histórico' },
+  { path: '/calendar', icon: CalendarDays, label: 'Calendário' },
   { path: '/ai-insights', icon: Brain, label: 'IA' },
   { path: '/savings', icon: Target, label: 'Metas' },
   { path: '/planning', icon: TrendingUp, label: 'Planejamento' },

@@ -35,6 +35,7 @@ import ResetPasswordPage from "./pages/ResetPassword";
 import RedefinirSenhaPage from "./pages/RedefinirSenha";
 import AdminDashboard from "./pages/AdminDashboard";
 import FinancialHistory from "./pages/FinancialHistory";
+import FinancialCalendar from "./pages/FinancialCalendar";
 
 import Recurring from "./pages/Recurring";
 import Investments from "./pages/Investments";
@@ -91,6 +92,7 @@ const App = () => (
                   <Route path="/settings/about" element={<AboutSettings />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/history" element={<FinancialHistory />} />
+                  <Route path="/calendar" element={<FinancialCalendar />} />
                   <Route path="/recurring" element={<PlanGate feature="recurring"><Recurring /></PlanGate>} />
                   <Route path="/investments" element={<PlanGate feature="investments"><Investments /></PlanGate>} />
                   
