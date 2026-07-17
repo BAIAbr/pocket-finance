@@ -42,6 +42,7 @@ export default function FinancialCalendar() {
   const { items: recurring } = useRecurring();
   const { goals } = useFinancialGoals();
   const { piggyBanks } = useEffectiveFinance() as any;
+  const { cards, invoices } = useCreditCards();
 
   const days = useMemo(() => {
     const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 0 });
