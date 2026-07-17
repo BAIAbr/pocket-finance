@@ -5,7 +5,9 @@ import { QuickActionsFab } from '@/components/QuickActionsFab';
 import { WeeklySummaryCard } from '@/components/WeeklySummaryCard';
 import { FamilyDashboard } from '@/components/FamilyDashboard';
 import { QuickPiggyDeposit } from '@/components/QuickPiggyDeposit';
-import { UpcomingBillsCard } from '@/components/UpcomingBillsCard';
+import { UpcomingEventsCard } from '@/components/UpcomingEventsCard';
+import { MonthlySummaryCard } from '@/components/MonthlySummaryCard';
+import { FinancialFeedCard } from '@/components/FinancialFeedCard';
 import { PlanningSummaryCard } from '@/components/planning/PlanningSummaryCard';
 import { InvestmentsSummaryCard } from '@/components/investments/InvestmentsSummaryCard';
 import { ChangelogHighlight } from '@/components/ChangelogHighlight';
@@ -71,11 +73,19 @@ export default function Dashboard() {
               </div>
             )}
 
+            <div className="animate-fade-in stagger-2">
+              <MonthlySummaryCard />
+            </div>
+
             {!isFamily && (
               <div className="animate-fade-in stagger-2">
-                <UpcomingBillsCard />
+                <UpcomingEventsCard />
               </div>
             )}
+
+            <div className="animate-fade-in stagger-3">
+              <FinancialFeedCard />
+            </div>
           </div>
 
           {/* RIGHT column */}
