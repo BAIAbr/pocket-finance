@@ -100,8 +100,21 @@ export default function FinancialCalendar() {
       });
     });
 
+    (invoices as any[]).filter(i => i.status !== 'paid').forEach((inv) => {
+      const card = (cards as any[]).find(c => c.id === inv.card_id);
+      const remaining = Number(inv.total_amount) - Number(inv.paid_amount);
+      if (remaining <= 0) return;
+      push(inv.due_date, {
+        id: `card-inv-${inv.id}`,
+        kind: 'card',
+        title: `Fatura ${card?.name ?? 'Cartão'}`,
+        amount: remaining,
+        route: `/cards/${inv.card_id}`,
+      });
+    });
+
     return map;
-  }, [transactions, categories, recurring, goals, piggyBanks]);
+  }, [transactions, categories, recurring, goals, piggyBanks, invoices, cards]);
 
   const selectedKey = format(selected, 'yyyy-MM-dd');
   const selectedEvents = eventsByDay.get(selectedKey) ?? [];
