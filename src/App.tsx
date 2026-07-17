@@ -43,6 +43,7 @@ import Investments from "./pages/Investments";
 import Installments from "./pages/Installments";
 import CreditCards from "./pages/CreditCards";
 import CreditCardDetail from "./pages/CreditCardDetail";
+import CreditCardReports from "./pages/CreditCardReports";
 import Plans from "./pages/Plans";
 import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
