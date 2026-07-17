@@ -9,20 +9,24 @@ import finangoLogo from '@/assets/finango-logo.png.asset.json';
 import { toast } from 'sonner';
 
 const DASHBOARD_CARDS: { id: string; label: string }[] = [
+  { id: 'smartInsights', label: 'Assistente inteligente' },
   { id: 'balance', label: 'Saldo' },
-  { id: 'weeklySummary', label: 'Resumo semanal' },
-  { id: 'quickDeposit', label: 'Depósito rápido' },
-  { id: 'upcomingBills', label: 'Contas a vencer' },
-  { id: 'missions', label: 'Missões' },
   { id: 'chart', label: 'Gráfico' },
+  { id: 'quickDeposit', label: 'Depósito rápido no cofrinho' },
+  { id: 'monthlySummary', label: 'Resumo mensal' },
+  { id: 'upcomingEvents', label: 'Próximos eventos' },
+  { id: 'financialFeed', label: 'Feed financeiro' },
+  { id: 'weeklySummary', label: 'Resumo semanal' },
+  { id: 'planning', label: 'Planejamento' },
+  { id: 'investments', label: 'Investimentos' },
   { id: 'transactions', label: 'Transações recentes' },
 ];
 
 const PRESETS: { id: 'essential' | 'investor' | 'planning' | 'business' | 'custom'; name: string; emoji: string; hidden: string[] }[] = [
-  { id: 'essential', name: 'Essencial', emoji: '🏦', hidden: ['missions', 'quickDeposit'] },
-  { id: 'investor', name: 'Investidor', emoji: '📈', hidden: ['missions'] },
-  { id: 'planning', name: 'Planejamento', emoji: '🎯', hidden: ['missions'] },
-  { id: 'business', name: 'Empresarial', emoji: '💼', hidden: ['missions', 'quickDeposit'] },
+  { id: 'essential', name: 'Essencial', emoji: '🏦', hidden: ['financialFeed', 'planning', 'investments', 'quickDeposit'] },
+  { id: 'investor', name: 'Investidor', emoji: '📈', hidden: ['financialFeed', 'quickDeposit'] },
+  { id: 'planning', name: 'Planejamento', emoji: '🎯', hidden: ['investments', 'financialFeed'] },
+  { id: 'business', name: 'Empresarial', emoji: '💼', hidden: ['quickDeposit', 'weeklySummary', 'financialFeed'] },
   { id: 'custom', name: 'Personalizado', emoji: '✨', hidden: [] },
 ];
 
