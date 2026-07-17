@@ -96,7 +96,7 @@ export function NotificationCenter({ variant = 'icon', className, open: openProp
 
   return (
     <>
-      {trigger}
+      {variant !== 'none' && trigger}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
           <SheetHeader className="px-5 py-4 border-b border-border/50">
