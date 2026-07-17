@@ -9,6 +9,7 @@ import { UpcomingBillsCard } from '@/components/UpcomingBillsCard';
 import { PlanningSummaryCard } from '@/components/planning/PlanningSummaryCard';
 import { InvestmentsSummaryCard } from '@/components/investments/InvestmentsSummaryCard';
 import { ChangelogHighlight } from '@/components/ChangelogHighlight';
+import { SmartInsightsSection } from '@/components/SmartInsightsSection';
 import { PixExpirationBanner } from '@/components/PixExpirationBanner';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useAuth } from '@/contexts/AuthContext';
