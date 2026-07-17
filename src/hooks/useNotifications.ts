@@ -46,8 +46,9 @@ function saveRead(set: Set<string>) {
  */
 export function useNotifications() {
   const { piggyBanks } = useEffectiveFinance() as any;
-  const { recurring } = useRecurring() as any;
-  const { subscription } = useSubscription() as any;
+  const { items: recurring } = useRecurring() as any;
+  const { user } = useAuth();
+  const { subscription } = useSubscription(user?.id) as any;
   const [readIds, setReadIds] = useState<Set<string>>(() => loadRead());
 
   const notifications = useMemo<AppNotification[]>(() => {
