@@ -153,6 +153,58 @@ export function useNotifications() {
       } catch { /* noop */ }
     }
 
+    // Credit cards: high utilization + invoice due soon
+    (cards || []).forEach((card: any) => {
+      const m = getCardMetrics(card.id);
+      if (m.percent >= 95) {
+        list.push({
+          id: `card-limit95-${card.id}`,
+          type: 'card_limit',
+          title: `Limite crítico: ${card.name}`,
+          description: `${Math.round(m.percent)}% do limite utilizado.`,
+          href: `/cards/${card.id}`,
+          timestamp: today,
+          priority: 'high',
+        });
+      } else if (m.percent >= 80) {
+        list.push({
+          id: `card-limit80-${card.id}`,
+          type: 'card_limit',
+          title: `Atenção ao limite: ${card.name}`,
+          description: `${Math.round(m.percent)}% do limite utilizado.`,
+          href: `/cards/${card.id}`,
+          timestamp: today,
+          priority: 'medium',
+        });
+      }
+    });
+
+    (invoices || []).forEach((inv: any) => {
+      if (inv.status === 'paid') return;
+      const remaining = Number(inv.total_amount) - Number(inv.paid_amount);
+      if (remaining <= 0) return;
+      try {
+        const due = parseISO(inv.due_date);
+        const days = differenceInCalendarDays(due, now);
+        if (days < -2 || days > 7) return;
+        const card = (cards || []).find((c: any) => c.id === inv.card_id);
+        const late = days < 0;
+        list.push({
+          id: `card-inv-${inv.id}-${inv.due_date}`,
+          type: 'card_invoice',
+          title: late
+            ? `Fatura atrasada: ${card?.name ?? 'Cartão'}`
+            : days === 0
+              ? `Fatura vence hoje: ${card?.name ?? 'Cartão'}`
+              : `Fatura em ${days}d: ${card?.name ?? 'Cartão'}`,
+          description: `R$ ${remaining.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          href: `/cards/${inv.card_id}`,
+          timestamp: due.toISOString(),
+          priority: late || days <= 1 ? 'high' : days <= 3 ? 'medium' : 'low',
+        });
+      } catch { /* noop */ }
+    });
+
     // Sort: high → medium → low, then most recent
     const order = { high: 0, medium: 1, low: 2 } as const;
     list.sort((a, b) => {
@@ -162,7 +214,7 @@ export function useNotifications() {
     });
 
     return list;
-  }, [recurring, piggyBanks, subscription]);
+  }, [recurring, piggyBanks, subscription, cards, invoices, getCardMetrics]);
 
   const unreadCount = useMemo(
     () => notifications.filter(n => !readIds.has(n.id)).length,
