@@ -46,10 +46,22 @@ Deno.serve(async (req) => {
     return json(200, { valid: true, plan_code: vip.plan_code, duration_days: vip.duration_days });
   }
 
+  // Prevent double redemption: reject if this user has already redeemed this code
+  const { data: existingRedemption } = await admin
+    .from('vip_redemptions')
+    .select('id')
+    .eq('vip_code_id', vip.id)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (existingRedemption) {
+    return json(400, { valid: false, error: 'already_redeemed' });
+  }
+
   // Apply
   const expiresAt = vip.duration_days
     ? new Date(Date.now() + vip.duration_days * 86400_000).toISOString()
     : null;
+
 
   await admin.from('user_subscriptions').upsert(
     {
