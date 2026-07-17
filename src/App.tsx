@@ -41,6 +41,8 @@ import Recurring from "./pages/Recurring";
 import Investments from "./pages/Investments";
 
 import Installments from "./pages/Installments";
+import CreditCards from "./pages/CreditCards";
+import CreditCardDetail from "./pages/CreditCardDetail";
 import Plans from "./pages/Plans";
 import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
