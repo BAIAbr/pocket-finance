@@ -11,3 +11,7 @@ verify_jwt = false
 
 [functions.check-pix-expirations]
 verify_jwt = false
+
+[functions.cc-run-recurring]
+verify_jwt = false
+
