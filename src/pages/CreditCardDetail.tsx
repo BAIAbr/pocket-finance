@@ -113,9 +113,10 @@ export default function CreditCardDetail() {
       </div>
 
       <Tabs defaultValue="current">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="current">Fatura atual</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="current">Fatura</TabsTrigger>
           <TabsTrigger value="purchases">Compras</TabsTrigger>
+          <TabsTrigger value="recurring">Recorrências</TabsTrigger>
           <TabsTrigger value="history">Histórico</TabsTrigger>
         </TabsList>
 
