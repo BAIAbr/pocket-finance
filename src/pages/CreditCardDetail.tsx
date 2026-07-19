@@ -30,12 +30,15 @@ export default function CreditCardDetail() {
   const { categories } = useFinanceContext();
   const cats = categories as any[];
   const {
-    cards, installments, purchases, invoices, getCardMetrics,
+    cards, installments, purchases, invoices, recurring, getCardMetrics,
     updateCard, deleteCard, createPurchase, payInvoice, deletePurchase,
+    createRecurring, updateRecurring, deleteRecurring, toggleRecurring, runRecurringNow,
   } = useCreditCards();
 
   const [openEdit, setOpenEdit] = useState(false);
   const [openPurchase, setOpenPurchase] = useState(false);
+  const [openRecurring, setOpenRecurring] = useState(false);
+  const [editingRecurring, setEditingRecurring] = useState<CreditCardRecurring | null>(null);
   const [payTarget, setPayTarget] = useState<CreditCardInvoice | null>(null);
 
   const card = cards.find(c => c.id === id);
