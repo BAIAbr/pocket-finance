@@ -67,6 +67,35 @@ export interface CardUsage {
   available_amount: number;
 }
 
+export interface CreditCardRecurring {
+  id: string;
+  user_id: string;
+  card_id: string;
+  description: string;
+  category_id: string | null;
+  amount: number;
+  day_of_month: number;
+  starts_on: string;
+  ends_on: string | null;
+  is_active: boolean;
+  last_charged_month: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecurringInput {
+  card_id: string;
+  description: string;
+  category_id?: string | null;
+  amount: number;
+  day_of_month: number;
+  starts_on?: string;
+  ends_on?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+}
+
 export interface CardFormInput {
   name: string;
   bank?: string | null;
