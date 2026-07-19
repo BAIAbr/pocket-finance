@@ -182,6 +182,66 @@ export default function CreditCardDetail() {
           ))}
         </TabsContent>
 
+        <TabsContent value="recurring" className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs text-muted-foreground">Assinaturas fixas lançadas todo mês na fatura</div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={runRecurringNow}>
+                <Play className="w-3.5 h-3.5 mr-1" />Rodar agora
+              </Button>
+              <Button size="sm" onClick={() => { setEditingRecurring(null); setOpenRecurring(true); }}>
+                <Plus className="w-3.5 h-3.5 mr-1" />Adicionar
+              </Button>
+            </div>
+          </div>
+          {(() => {
+            const cardRecurring = recurring.filter(r => r.card_id === card.id);
+            if (cardRecurring.length === 0) {
+              return (
+                <div className="text-center py-8 rounded-lg border border-dashed">
+                  <Repeat className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  <div className="text-sm text-muted-foreground">Nenhuma recorrência cadastrada</div>
+                </div>
+              );
+            }
+            return cardRecurring.map(r => (
+              <div key={r.id} className={`rounded-lg border p-3 ${!r.is_active ? 'opacity-60' : ''}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate flex items-center gap-2">
+                      <Repeat className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      {r.description}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {catName(r.category_id)} • Todo dia {r.day_of_month}
+                      {r.last_charged_month && ` • último: ${new Date(r.last_charged_month + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })}`}
+                    </div>
+                  </div>
+                  <div className="font-semibold shrink-0">{fmt(Number(r.amount))}</div>
+                </div>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t">
+                  <button
+                    onClick={() => toggleRecurring(r.id, !r.is_active)}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <Power className="w-3 h-3" />{r.is_active ? 'Ativa' : 'Pausada'}
+                  </button>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingRecurring(r); setOpenRecurring(true); }}>
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={async () => {
+                      if (confirm('Remover esta recorrência? Os lançamentos já feitos não serão excluídos.')) await deleteRecurring(r.id);
+                    }}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ));
+          })()}
+        </TabsContent>
+
         <TabsContent value="history" className="space-y-1">
           {invSorted.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">Sem histórico</div>
