@@ -145,6 +145,7 @@ export function useCreditCards() {
   const [installments, setInstallments] = useState<CreditCardInstallment[]>([]);
   const [purchases, setPurchases] = useState<CreditCardPurchase[]>([]);
   const [usage, setUsage] = useState<CardUsage[]>([]);
+  const [recurring, setRecurring] = useState<CreditCardRecurring[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
