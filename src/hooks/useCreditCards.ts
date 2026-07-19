@@ -150,18 +150,20 @@ export function useCreditCards() {
 
   const refresh = useCallback(async () => {
     if (!user) { setLoading(false); return; }
-    const [c, inv, ins, p, u] = await Promise.all([
+    const [c, inv, ins, p, u, r] = await Promise.all([
       supabase.from('credit_cards').select('*').order('created_at'),
       supabase.from('credit_card_invoices').select('*').order('reference_month', { ascending: false }),
       supabase.from('credit_card_installments').select('*').order('reference_month'),
       supabase.from('credit_card_purchases').select('*').order('purchase_date', { ascending: false }),
       supabase.from('credit_card_usage').select('*'),
+      supabase.from('credit_card_recurring' as any).select('*').order('created_at'),
     ]);
     setCards((c.data as any) ?? []);
     setInvoices((inv.data as any) ?? []);
     setInstallments((ins.data as any) ?? []);
     setPurchases((p.data as any) ?? []);
     setUsage((u.data as any) ?? []);
+    setRecurring((r.data as any) ?? []);
     setLoading(false);
   }, [user]);
 
