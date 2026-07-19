@@ -177,6 +177,7 @@ export function useCreditCards() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_installments' }, () => refresh())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_purchases' }, () => refresh())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_payments' }, () => refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_recurring' }, () => refresh())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user, refresh]);
