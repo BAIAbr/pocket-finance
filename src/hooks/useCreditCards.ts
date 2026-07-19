@@ -312,9 +312,54 @@ export function useCreditCards() {
     return { limit, used, available: Math.max(limit - used, 0), percent: limit > 0 ? (used / limit) * 100 : 0 };
   }, [cards, usage]);
 
+  const createRecurring = useCallback(async (input: RecurringInput) => {
+    if (!user) return;
+    const { error } = await supabase.from('credit_card_recurring' as any).insert({
+      user_id: user.id,
+      card_id: input.card_id,
+      description: input.description,
+      category_id: input.category_id ?? null,
+      amount: input.amount,
+      day_of_month: input.day_of_month,
+      starts_on: input.starts_on ?? format(new Date(), 'yyyy-MM-dd'),
+      ends_on: input.ends_on ?? null,
+      is_active: input.is_active ?? true,
+      notes: input.notes ?? null,
+    } as any);
+    if (error) { toast.error('Erro: ' + error.message); throw error; }
+    toast.success('Recorrência criada');
+    await refresh();
+  }, [user, refresh]);
+
+  const updateRecurring = useCallback(async (id: string, patch: Partial<RecurringInput>) => {
+    const { error } = await supabase.from('credit_card_recurring' as any).update(patch as any).eq('id', id);
+    if (error) { toast.error('Erro: ' + error.message); throw error; }
+    await refresh();
+  }, [refresh]);
+
+  const deleteRecurring = useCallback(async (id: string) => {
+    const { error } = await supabase.from('credit_card_recurring' as any).delete().eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Recorrência removida');
+    await refresh();
+  }, [refresh]);
+
+  const toggleRecurring = useCallback(async (id: string, active: boolean) => {
+    await updateRecurring(id, { is_active: active });
+  }, [updateRecurring]);
+
+  const runRecurringNow = useCallback(async () => {
+    const { data, error } = await supabase.functions.invoke('cc-run-recurring', { body: {} });
+    if (error) { toast.error('Erro ao processar: ' + error.message); return; }
+    const count = (data as any)?.processed ?? 0;
+    toast.success(count > 0 ? `${count} recorrência(s) lançada(s)` : 'Nenhuma recorrência pendente');
+    await refresh();
+  }, [refresh]);
+
   return {
-    cards, invoices, installments, purchases, usage, loading, totals,
+    cards, invoices, installments, purchases, usage, recurring, loading, totals,
     refresh, createCard, updateCard, deleteCard,
     createPurchase, deletePurchase, payInvoice, getCardMetrics,
+    createRecurring, updateRecurring, deleteRecurring, toggleRecurring, runRecurringNow,
   };
 }
