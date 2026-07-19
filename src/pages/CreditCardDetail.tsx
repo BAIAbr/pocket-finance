@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Edit2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { useCreditCards, CreditCardInvoice } from '@/hooks/useCreditCards';
+import { useCreditCards, CreditCardInvoice, CreditCardRecurring } from '@/hooks/useCreditCards';
 import CreditCardVisual from '@/components/creditcards/CreditCardVisual';
 import CardFormModal from '@/components/creditcards/CardFormModal';
 import PurchaseFormModal from '@/components/creditcards/PurchaseFormModal';
 import PayInvoiceModal from '@/components/creditcards/PayInvoiceModal';
+import RecurringFormModal from '@/components/creditcards/RecurringFormModal';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
