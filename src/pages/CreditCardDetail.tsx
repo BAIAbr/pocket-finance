@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Edit2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { useCreditCards, CreditCardInvoice } from '@/hooks/useCreditCards';
+import { useCreditCards, CreditCardInvoice, CreditCardRecurring } from '@/hooks/useCreditCards';
 import CreditCardVisual from '@/components/creditcards/CreditCardVisual';
 import CardFormModal from '@/components/creditcards/CardFormModal';
 import PurchaseFormModal from '@/components/creditcards/PurchaseFormModal';
 import PayInvoiceModal from '@/components/creditcards/PayInvoiceModal';
+import RecurringFormModal from '@/components/creditcards/RecurringFormModal';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -28,12 +30,15 @@ export default function CreditCardDetail() {
   const { categories } = useFinanceContext();
   const cats = categories as any[];
   const {
-    cards, installments, purchases, invoices, getCardMetrics,
+    cards, installments, purchases, invoices, recurring, getCardMetrics,
     updateCard, deleteCard, createPurchase, payInvoice, deletePurchase,
+    createRecurring, updateRecurring, deleteRecurring, toggleRecurring, runRecurringNow,
   } = useCreditCards();
 
   const [openEdit, setOpenEdit] = useState(false);
   const [openPurchase, setOpenPurchase] = useState(false);
+  const [openRecurring, setOpenRecurring] = useState(false);
+  const [editingRecurring, setEditingRecurring] = useState<CreditCardRecurring | null>(null);
   const [payTarget, setPayTarget] = useState<CreditCardInvoice | null>(null);
 
   const card = cards.find(c => c.id === id);
@@ -108,9 +113,10 @@ export default function CreditCardDetail() {
       </div>
 
       <Tabs defaultValue="current">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="current">Fatura atual</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="current">Fatura</TabsTrigger>
           <TabsTrigger value="purchases">Compras</TabsTrigger>
+          <TabsTrigger value="recurring">Recorrências</TabsTrigger>
           <TabsTrigger value="history">Histórico</TabsTrigger>
         </TabsList>
 
@@ -176,6 +182,66 @@ export default function CreditCardDetail() {
           ))}
         </TabsContent>
 
+        <TabsContent value="recurring" className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs text-muted-foreground">Assinaturas fixas lançadas todo mês na fatura</div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={runRecurringNow}>
+                <Play className="w-3.5 h-3.5 mr-1" />Rodar agora
+              </Button>
+              <Button size="sm" onClick={() => { setEditingRecurring(null); setOpenRecurring(true); }}>
+                <Plus className="w-3.5 h-3.5 mr-1" />Adicionar
+              </Button>
+            </div>
+          </div>
+          {(() => {
+            const cardRecurring = recurring.filter(r => r.card_id === card.id);
+            if (cardRecurring.length === 0) {
+              return (
+                <div className="text-center py-8 rounded-lg border border-dashed">
+                  <Repeat className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  <div className="text-sm text-muted-foreground">Nenhuma recorrência cadastrada</div>
+                </div>
+              );
+            }
+            return cardRecurring.map(r => (
+              <div key={r.id} className={`rounded-lg border p-3 ${!r.is_active ? 'opacity-60' : ''}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate flex items-center gap-2">
+                      <Repeat className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      {r.description}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {catName(r.category_id)} • Todo dia {r.day_of_month}
+                      {r.last_charged_month && ` • último: ${new Date(r.last_charged_month + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })}`}
+                    </div>
+                  </div>
+                  <div className="font-semibold shrink-0">{fmt(Number(r.amount))}</div>
+                </div>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t">
+                  <button
+                    onClick={() => toggleRecurring(r.id, !r.is_active)}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <Power className="w-3 h-3" />{r.is_active ? 'Ativa' : 'Pausada'}
+                  </button>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingRecurring(r); setOpenRecurring(true); }}>
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={async () => {
+                      if (confirm('Remover esta recorrência? Os lançamentos já feitos não serão excluídos.')) await deleteRecurring(r.id);
+                    }}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ));
+          })()}
+        </TabsContent>
+
         <TabsContent value="history" className="space-y-1">
           {invSorted.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">Sem histórico</div>
@@ -203,6 +269,17 @@ export default function CreditCardDetail() {
         onSubmit={async (amount, account) => {
           if (payTarget) await payInvoice(payTarget.id, payTarget.card_id, amount, account);
         }} />
+      <RecurringFormModal
+        open={openRecurring}
+        onClose={() => { setOpenRecurring(false); setEditingRecurring(null); }}
+        cards={cards}
+        initialCardId={card.id}
+        editing={editingRecurring}
+        onSubmit={async (input) => {
+          if (editingRecurring) await updateRecurring(editingRecurring.id, input);
+          else await createRecurring(input);
+        }}
+      />
     </div>
   );
 }

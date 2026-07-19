@@ -496,6 +496,72 @@ export type Database = {
           },
         ]
       }
+      credit_card_recurring: {
+        Row: {
+          amount: number
+          card_id: string
+          category_id: string | null
+          created_at: string
+          day_of_month: number
+          description: string
+          ends_on: string | null
+          id: string
+          is_active: boolean
+          last_charged_month: string | null
+          notes: string | null
+          starts_on: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          card_id: string
+          category_id?: string | null
+          created_at?: string
+          day_of_month: number
+          description: string
+          ends_on?: string | null
+          id?: string
+          is_active?: boolean
+          last_charged_month?: string | null
+          notes?: string | null
+          starts_on?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          card_id?: string
+          category_id?: string | null
+          created_at?: string
+          day_of_month?: number
+          description?: string
+          ends_on?: string | null
+          id?: string
+          is_active?: boolean
+          last_charged_month?: string | null
+          notes?: string | null
+          starts_on?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_card_recurring_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_card_usage"
+            referencedColumns: ["card_id"]
+          },
+          {
+            foreignKeyName: "credit_card_recurring_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_cards: {
         Row: {
           bank: string | null
@@ -2892,6 +2958,7 @@ export type Database = {
         Args: { _card_id: string; _reference_month: string }
         Returns: string
       }
+      cc_process_recurring: { Args: never; Returns: number }
       cc_reference_month: {
         Args: { _closing_day: number; _purchase_date: string }
         Returns: string

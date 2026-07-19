@@ -67,6 +67,35 @@ export interface CardUsage {
   available_amount: number;
 }
 
+export interface CreditCardRecurring {
+  id: string;
+  user_id: string;
+  card_id: string;
+  description: string;
+  category_id: string | null;
+  amount: number;
+  day_of_month: number;
+  starts_on: string;
+  ends_on: string | null;
+  is_active: boolean;
+  last_charged_month: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecurringInput {
+  card_id: string;
+  description: string;
+  category_id?: string | null;
+  amount: number;
+  day_of_month: number;
+  starts_on?: string;
+  ends_on?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+}
+
 export interface CardFormInput {
   name: string;
   bank?: string | null;
@@ -116,22 +145,25 @@ export function useCreditCards() {
   const [installments, setInstallments] = useState<CreditCardInstallment[]>([]);
   const [purchases, setPurchases] = useState<CreditCardPurchase[]>([]);
   const [usage, setUsage] = useState<CardUsage[]>([]);
+  const [recurring, setRecurring] = useState<CreditCardRecurring[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     if (!user) { setLoading(false); return; }
-    const [c, inv, ins, p, u] = await Promise.all([
+    const [c, inv, ins, p, u, r] = await Promise.all([
       supabase.from('credit_cards').select('*').order('created_at'),
       supabase.from('credit_card_invoices').select('*').order('reference_month', { ascending: false }),
       supabase.from('credit_card_installments').select('*').order('reference_month'),
       supabase.from('credit_card_purchases').select('*').order('purchase_date', { ascending: false }),
       supabase.from('credit_card_usage').select('*'),
+      supabase.from('credit_card_recurring' as any).select('*').order('created_at'),
     ]);
     setCards((c.data as any) ?? []);
     setInvoices((inv.data as any) ?? []);
     setInstallments((ins.data as any) ?? []);
     setPurchases((p.data as any) ?? []);
     setUsage((u.data as any) ?? []);
+    setRecurring((r.data as any) ?? []);
     setLoading(false);
   }, [user]);
 
@@ -145,6 +177,7 @@ export function useCreditCards() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_installments' }, () => refresh())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_purchases' }, () => refresh())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_payments' }, () => refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_recurring' }, () => refresh())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user, refresh]);
@@ -279,9 +312,54 @@ export function useCreditCards() {
     return { limit, used, available: Math.max(limit - used, 0), percent: limit > 0 ? (used / limit) * 100 : 0 };
   }, [cards, usage]);
 
+  const createRecurring = useCallback(async (input: RecurringInput) => {
+    if (!user) return;
+    const { error } = await supabase.from('credit_card_recurring' as any).insert({
+      user_id: user.id,
+      card_id: input.card_id,
+      description: input.description,
+      category_id: input.category_id ?? null,
+      amount: input.amount,
+      day_of_month: input.day_of_month,
+      starts_on: input.starts_on ?? format(new Date(), 'yyyy-MM-dd'),
+      ends_on: input.ends_on ?? null,
+      is_active: input.is_active ?? true,
+      notes: input.notes ?? null,
+    } as any);
+    if (error) { toast.error('Erro: ' + error.message); throw error; }
+    toast.success('Recorrência criada');
+    await refresh();
+  }, [user, refresh]);
+
+  const updateRecurring = useCallback(async (id: string, patch: Partial<RecurringInput>) => {
+    const { error } = await supabase.from('credit_card_recurring' as any).update(patch as any).eq('id', id);
+    if (error) { toast.error('Erro: ' + error.message); throw error; }
+    await refresh();
+  }, [refresh]);
+
+  const deleteRecurring = useCallback(async (id: string) => {
+    const { error } = await supabase.from('credit_card_recurring' as any).delete().eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Recorrência removida');
+    await refresh();
+  }, [refresh]);
+
+  const toggleRecurring = useCallback(async (id: string, active: boolean) => {
+    await updateRecurring(id, { is_active: active });
+  }, [updateRecurring]);
+
+  const runRecurringNow = useCallback(async () => {
+    const { data, error } = await supabase.functions.invoke('cc-run-recurring', { body: {} });
+    if (error) { toast.error('Erro ao processar: ' + error.message); return; }
+    const count = (data as any)?.processed ?? 0;
+    toast.success(count > 0 ? `${count} recorrência(s) lançada(s)` : 'Nenhuma recorrência pendente');
+    await refresh();
+  }, [refresh]);
+
   return {
-    cards, invoices, installments, purchases, usage, loading, totals,
+    cards, invoices, installments, purchases, usage, recurring, loading, totals,
     refresh, createCard, updateCard, deleteCard,
     createPurchase, deletePurchase, payInvoice, getCardMetrics,
+    createRecurring, updateRecurring, deleteRecurring, toggleRecurring, runRecurringNow,
   };
 }
