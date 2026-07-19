@@ -269,6 +269,17 @@ export default function CreditCardDetail() {
         onSubmit={async (amount, account) => {
           if (payTarget) await payInvoice(payTarget.id, payTarget.card_id, amount, account);
         }} />
+      <RecurringFormModal
+        open={openRecurring}
+        onClose={() => { setOpenRecurring(false); setEditingRecurring(null); }}
+        cards={cards}
+        initialCardId={card.id}
+        editing={editingRecurring}
+        onSubmit={async (input) => {
+          if (editingRecurring) await updateRecurring(editingRecurring.id, input);
+          else await createRecurring(input);
+        }}
+      />
     </div>
   );
 }
