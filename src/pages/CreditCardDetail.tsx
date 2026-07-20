@@ -45,6 +45,7 @@ export default function CreditCardDetail() {
 
   const card = cards.find(c => c.id === id);
   const metrics = useMemo(() => id ? getCardMetrics(id) : null, [id, getCardMetrics]);
+  const insights = useCardInsights(id ?? '');
 
   if (!card || !metrics) {
     return (
