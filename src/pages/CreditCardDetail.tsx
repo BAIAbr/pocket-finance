@@ -11,6 +11,8 @@ import CardFormModal from '@/components/creditcards/CardFormModal';
 import PurchaseFormModal from '@/components/creditcards/PurchaseFormModal';
 import PayInvoiceModal from '@/components/creditcards/PayInvoiceModal';
 import RecurringFormModal from '@/components/creditcards/RecurringFormModal';
+import CreditCardInsights from '@/components/creditcards/CreditCardInsights';
+import { useCardInsights } from '@/hooks/useCreditCardInsights';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
