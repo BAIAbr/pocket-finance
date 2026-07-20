@@ -11,6 +11,8 @@ import CardFormModal from '@/components/creditcards/CardFormModal';
 import PurchaseFormModal from '@/components/creditcards/PurchaseFormModal';
 import PayInvoiceModal from '@/components/creditcards/PayInvoiceModal';
 import RecurringFormModal from '@/components/creditcards/RecurringFormModal';
+import CreditCardInsights from '@/components/creditcards/CreditCardInsights';
+import { useCardInsights } from '@/hooks/useCreditCardInsights';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -43,6 +45,7 @@ export default function CreditCardDetail() {
 
   const card = cards.find(c => c.id === id);
   const metrics = useMemo(() => id ? getCardMetrics(id) : null, [id, getCardMetrics]);
+  const insights = useCardInsights(id ?? '');
 
   if (!card || !metrics) {
     return (
@@ -111,6 +114,8 @@ export default function CreditCardDetail() {
           <Button variant="secondary" className="flex-1" onClick={() => setPayTarget(currentInvoice)}>Pagar fatura</Button>
         )}
       </div>
+
+      {insights.length > 0 && <CreditCardInsights insights={insights} compact />}
 
       <Tabs defaultValue="current">
         <TabsList className="grid w-full grid-cols-4">
