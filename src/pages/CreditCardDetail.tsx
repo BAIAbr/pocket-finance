@@ -115,6 +115,8 @@ export default function CreditCardDetail() {
         )}
       </div>
 
+      {insights.length > 0 && <CreditCardInsights insights={insights} compact />}
+
       <Tabs defaultValue="current">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="current">Fatura</TabsTrigger>
