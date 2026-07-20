@@ -1,11 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { CreditCard as CardIcon, ChevronRight } from 'lucide-react';
 import { useCreditCards } from '@/hooks/useCreditCards';
+import { useAllCardsInsights } from '@/hooks/useCreditCardInsights';
 import CreditCardVisual from '@/components/creditcards/CreditCardVisual';
+import CreditCardInsights from '@/components/creditcards/CreditCardInsights';
 
 export default function CreditCardsDashboardCard() {
   const navigate = useNavigate();
   const { cards, loading, getCardMetrics } = useCreditCards();
+  const insights = useAllCardsInsights();
 
   if (loading) return null;
   if (cards.length === 0) return null;
@@ -13,7 +16,7 @@ export default function CreditCardsDashboardCard() {
   const display = cards.slice(0, 2);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <CardIcon className="w-4 h-4 text-muted-foreground" />
@@ -40,6 +43,10 @@ export default function CreditCardsDashboardCard() {
           );
         })}
       </div>
+      {insights.length > 0 && (
+        <CreditCardInsights insights={insights.slice(0, 3)} title="Insights dos cartões" compact showCardLink />
+      )}
     </div>
   );
 }
+
