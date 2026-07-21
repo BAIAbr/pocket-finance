@@ -60,6 +60,17 @@ export interface CreditCardPurchase {
   status: 'active' | 'canceled';
 }
 
+export interface CreditCardPayment {
+  id: string;
+  card_id: string;
+  invoice_id: string;
+  user_id: string;
+  amount: number;
+  payment_date: string;
+  source_account: string | null;
+  notes: string | null;
+}
+
 export interface CardUsage {
   card_id: string;
   credit_limit: number;
