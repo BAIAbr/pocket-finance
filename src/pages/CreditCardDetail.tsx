@@ -1,19 +1,23 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power, MoreVertical, RotateCcw, FastForward, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { useCreditCards, CreditCardInvoice, CreditCardRecurring } from '@/hooks/useCreditCards';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { useCreditCards, CreditCardInvoice, CreditCardRecurring, CreditCardInstallment } from '@/hooks/useCreditCards';
 import CreditCardVisual from '@/components/creditcards/CreditCardVisual';
 import CardFormModal from '@/components/creditcards/CardFormModal';
 import PurchaseFormModal from '@/components/creditcards/PurchaseFormModal';
 import PayInvoiceModal from '@/components/creditcards/PayInvoiceModal';
 import RecurringFormModal from '@/components/creditcards/RecurringFormModal';
+import InstallmentEditModal from '@/components/creditcards/InstallmentEditModal';
 import CreditCardInsights from '@/components/creditcards/CreditCardInsights';
 import { useCardInsights } from '@/hooks/useCreditCardInsights';
 import { useFinanceContext } from '@/contexts/FinanceContext';
+
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtDate = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
@@ -32,16 +36,19 @@ export default function CreditCardDetail() {
   const { categories } = useFinanceContext();
   const cats = categories as any[];
   const {
-    cards, installments, purchases, invoices, recurring, getCardMetrics,
+    cards, installments, purchases, invoices, recurring, payments, getCardMetrics,
     updateCard, deleteCard, createPurchase, payInvoice, deletePurchase,
     createRecurring, updateRecurring, deleteRecurring, toggleRecurring, runRecurringNow,
+    updateInstallment, deleteInstallment, anticipateInstallment, reopenInvoice, deletePayment,
   } = useCreditCards();
 
   const [openEdit, setOpenEdit] = useState(false);
   const [openPurchase, setOpenPurchase] = useState(false);
   const [openRecurring, setOpenRecurring] = useState(false);
   const [editingRecurring, setEditingRecurring] = useState<CreditCardRecurring | null>(null);
+  const [editingInstallment, setEditingInstallment] = useState<CreditCardInstallment | null>(null);
   const [payTarget, setPayTarget] = useState<CreditCardInvoice | null>(null);
+
 
   const card = cards.find(c => c.id === id);
   const metrics = useMemo(() => id ? getCardMetrics(id) : null, [id, getCardMetrics]);
@@ -138,7 +145,19 @@ export default function CreditCardDetail() {
                     <div className="text-xs text-muted-foreground mt-1">Pago: {fmt(Number(currentInvoice.paid_amount))}</div>
                   )}
                 </div>
-                <Badge className={STATUS_LABEL[currentInvoice.status].color}>{STATUS_LABEL[currentInvoice.status].label}</Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge className={STATUS_LABEL[currentInvoice.status].color}>{STATUS_LABEL[currentInvoice.status].label}</Badge>
+                  {(currentInvoice.status === 'paid' || currentInvoice.status === 'closed') && (
+                    <Button variant="ghost" size="sm" className="h-7 text-xs"
+                      onClick={async () => {
+                        if (confirm('Reabrir esta fatura? As parcelas voltarão para "em aberto".')) {
+                          await reopenInvoice(currentInvoice.id);
+                        }
+                      }}>
+                      <RotateCcw className="w-3 h-3 mr-1" />Reabrir
+                    </Button>
+                  )}
+                </div>
               </div>
               {currentInstallments.length === 0 ? (
                 <div className="text-center py-6 text-sm text-muted-foreground">Sem lançamentos</div>
@@ -146,23 +165,80 @@ export default function CreditCardDetail() {
                 <div className="space-y-1">
                   {currentInstallments.map(inst => {
                     const p = purchaseOf(inst.purchase_id);
+                    const otherFutureInv = metrics.cardInvoices
+                      .filter(i => i.id !== inst.invoice_id && i.reference_month > currentInvoice.reference_month && i.status !== 'paid')
+                      .sort((a, b) => a.reference_month.localeCompare(b.reference_month));
                     return (
-                      <div key={inst.id} className="rounded-lg border p-3 flex items-center justify-between">
-                        <div className="min-w-0">
+                      <div key={inst.id} className="rounded-lg border p-3 flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
                           <div className="font-medium truncate">{p?.description ?? 'Compra'}</div>
                           <div className="text-xs text-muted-foreground">
                             {p ? `${catName(p.category_id)} • ${fmtDate(p.purchase_date)}` : ''}
                             {inst.total_installments > 1 && ` • ${inst.installment_number}/${inst.total_installments}`}
                           </div>
                         </div>
-                        <div className="font-semibold">{fmt(Number(inst.amount))}</div>
+                        <div className="font-semibold shrink-0">{fmt(Number(inst.amount))}</div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setEditingInstallment(inst)}>
+                              <Edit2 className="w-3.5 h-3.5 mr-2" />Editar / mover
+                            </DropdownMenuItem>
+                            {otherFutureInv.length > 0 && (
+                              <DropdownMenuItem onClick={async () => {
+                                await anticipateInstallment(inst.id, currentInvoice.id);
+                              }}>
+                                <FastForward className="w-3.5 h-3.5 mr-2" />Antecipar p/ atual
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive" onClick={async () => {
+                              if (confirm('Estornar esta parcela? O valor será removido da fatura.')) {
+                                await deleteInstallment(inst.id);
+                              }
+                            }}>
+                              <Trash2 className="w-3.5 h-3.5 mr-2" />Estornar parcela
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     );
                   })}
                 </div>
               )}
+
+              {(() => {
+                const invPayments = payments.filter(pp => pp.invoice_id === currentInvoice.id);
+                if (invPayments.length === 0) return null;
+                return (
+                  <div className="mt-4 space-y-1">
+                    <div className="text-xs font-semibold text-muted-foreground px-1">Pagamentos</div>
+                    {invPayments.map(pay => (
+                      <div key={pay.id} className="rounded-lg border p-3 flex items-center justify-between bg-emerald-500/5">
+                        <div className="min-w-0">
+                          <div className="font-medium text-emerald-700 dark:text-emerald-400">{fmt(Number(pay.amount))}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {fmtDate(pay.payment_date)}{pay.source_account ? ` • ${pay.source_account}` : ''}
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-7 w-7"
+                          onClick={async () => {
+                            if (confirm('Estornar este pagamento?')) await deletePayment(pay.id);
+                          }}>
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </>
           )}
+
         </TabsContent>
 
         <TabsContent value="purchases" className="space-y-1">
@@ -250,20 +326,31 @@ export default function CreditCardDetail() {
         <TabsContent value="history" className="space-y-1">
           {invSorted.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">Sem histórico</div>
-          ) : invSorted.map(inv => (
-            <button key={inv.id} onClick={() => Number(inv.total_amount) > Number(inv.paid_amount) && setPayTarget(inv)}
-              className="w-full rounded-lg border p-3 flex items-center justify-between hover:bg-muted/50 transition text-left">
-              <div>
-                <div className="font-medium">{new Date(inv.reference_month + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</div>
-                <div className="text-xs text-muted-foreground">Vence {fmtDate(inv.due_date)}</div>
+          ) : invSorted.map(inv => {
+            const remaining = Number(inv.total_amount) - Number(inv.paid_amount);
+            return (
+              <div key={inv.id} className="w-full rounded-lg border p-3 flex items-center justify-between gap-2 hover:bg-muted/50 transition">
+                <button onClick={() => remaining > 0 && setPayTarget(inv)} className="flex-1 text-left min-w-0">
+                  <div className="font-medium">{new Date(inv.reference_month + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</div>
+                  <div className="text-xs text-muted-foreground">Vence {fmtDate(inv.due_date)}</div>
+                </button>
+                <div className="text-right shrink-0">
+                  <div className="font-semibold">{fmt(Number(inv.total_amount))}</div>
+                  <Badge className={STATUS_LABEL[inv.status].color}>{STATUS_LABEL[inv.status].label}</Badge>
+                </div>
+                {(inv.status === 'paid' || inv.status === 'closed') && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"
+                    onClick={async () => {
+                      if (confirm('Reabrir esta fatura?')) await reopenInvoice(inv.id);
+                    }}>
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
-              <div className="text-right">
-                <div className="font-semibold">{fmt(Number(inv.total_amount))}</div>
-                <Badge className={STATUS_LABEL[inv.status].color}>{STATUS_LABEL[inv.status].label}</Badge>
-              </div>
-            </button>
-          ))}
+            );
+          })}
         </TabsContent>
+
       </Tabs>
 
       <CardFormModal open={openEdit} onClose={() => setOpenEdit(false)} editing={card}
@@ -285,6 +372,15 @@ export default function CreditCardDetail() {
           else await createRecurring(input);
         }}
       />
+      <InstallmentEditModal
+        open={!!editingInstallment}
+        onClose={() => setEditingInstallment(null)}
+        installment={editingInstallment}
+        invoices={invoices}
+        onSaveAmount={async (id, amount) => { await updateInstallment(id, { amount }); }}
+        onAnticipate={async (id, invId) => { await anticipateInstallment(id, invId); }}
+      />
     </div>
   );
 }
+

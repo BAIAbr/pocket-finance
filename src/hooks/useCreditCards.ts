@@ -60,6 +60,17 @@ export interface CreditCardPurchase {
   status: 'active' | 'canceled';
 }
 
+export interface CreditCardPayment {
+  id: string;
+  card_id: string;
+  invoice_id: string;
+  user_id: string;
+  amount: number;
+  payment_date: string;
+  source_account: string | null;
+  notes: string | null;
+}
+
 export interface CardUsage {
   card_id: string;
   credit_limit: number;
@@ -146,17 +157,19 @@ export function useCreditCards() {
   const [purchases, setPurchases] = useState<CreditCardPurchase[]>([]);
   const [usage, setUsage] = useState<CardUsage[]>([]);
   const [recurring, setRecurring] = useState<CreditCardRecurring[]>([]);
+  const [payments, setPayments] = useState<CreditCardPayment[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     if (!user) { setLoading(false); return; }
-    const [c, inv, ins, p, u, r] = await Promise.all([
+    const [c, inv, ins, p, u, r, pay] = await Promise.all([
       supabase.from('credit_cards').select('*').order('created_at'),
       supabase.from('credit_card_invoices').select('*').order('reference_month', { ascending: false }),
       supabase.from('credit_card_installments').select('*').order('reference_month'),
       supabase.from('credit_card_purchases').select('*').order('purchase_date', { ascending: false }),
       supabase.from('credit_card_usage').select('*'),
       supabase.from('credit_card_recurring' as any).select('*').order('created_at'),
+      supabase.from('credit_card_payments').select('*').order('payment_date', { ascending: false }),
     ]);
     setCards((c.data as any) ?? []);
     setInvoices((inv.data as any) ?? []);
@@ -164,6 +177,7 @@ export function useCreditCards() {
     setPurchases((p.data as any) ?? []);
     setUsage((u.data as any) ?? []);
     setRecurring((r.data as any) ?? []);
+    setPayments((pay.data as any) ?? []);
     setLoading(false);
   }, [user]);
 
@@ -356,10 +370,56 @@ export function useCreditCards() {
     await refresh();
   }, [refresh]);
 
+  // ---- Advanced invoice management ----
+  const updateInstallment = useCallback(async (id: string, patch: { amount?: number; status?: 'open' | 'billed' | 'paid' | 'canceled' }) => {
+    const { error } = await supabase.from('credit_card_installments').update(patch as any).eq('id', id);
+    if (error) { toast.error('Erro: ' + error.message); throw error; }
+    toast.success('Parcela atualizada');
+    await refresh();
+  }, [refresh]);
+
+  const deleteInstallment = useCallback(async (id: string) => {
+    const { error } = await supabase.from('credit_card_installments').delete().eq('id', id);
+    if (error) { toast.error('Erro: ' + error.message); throw error; }
+    toast.success('Parcela estornada');
+    await refresh();
+  }, [refresh]);
+
+  const anticipateInstallment = useCallback(async (installmentId: string, targetInvoiceId: string) => {
+    const inv = invoices.find(i => i.id === targetInvoiceId);
+    if (!inv) { toast.error('Fatura de destino não encontrada'); return; }
+    const { error } = await supabase.from('credit_card_installments')
+      .update({ invoice_id: targetInvoiceId, reference_month: inv.reference_month } as any)
+      .eq('id', installmentId);
+    if (error) { toast.error('Erro: ' + error.message); throw error; }
+    toast.success('Parcela antecipada');
+    await refresh();
+  }, [invoices, refresh]);
+
+  const reopenInvoice = useCallback(async (invoiceId: string) => {
+    const { error } = await supabase.from('credit_card_invoices')
+      .update({ status: 'open' } as any).eq('id', invoiceId);
+    if (error) { toast.error('Erro: ' + error.message); throw error; }
+    // Reset paid installments of this invoice to open so status recalcs
+    await supabase.from('credit_card_installments')
+      .update({ status: 'open' } as any)
+      .eq('invoice_id', invoiceId).eq('status', 'paid');
+    toast.success('Fatura reaberta');
+    await refresh();
+  }, [refresh]);
+
+  const deletePayment = useCallback(async (paymentId: string) => {
+    const { error } = await supabase.from('credit_card_payments').delete().eq('id', paymentId);
+    if (error) { toast.error('Erro: ' + error.message); throw error; }
+    toast.success('Pagamento estornado');
+    await refresh();
+  }, [refresh]);
+
   return {
-    cards, invoices, installments, purchases, usage, recurring, loading, totals,
+    cards, invoices, installments, purchases, usage, recurring, payments, loading, totals,
     refresh, createCard, updateCard, deleteCard,
     createPurchase, deletePurchase, payInvoice, getCardMetrics,
     createRecurring, updateRecurring, deleteRecurring, toggleRecurring, runRecurringNow,
+    updateInstallment, deleteInstallment, anticipateInstallment, reopenInvoice, deletePayment,
   };
 }
