@@ -326,20 +326,31 @@ export default function CreditCardDetail() {
         <TabsContent value="history" className="space-y-1">
           {invSorted.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">Sem histórico</div>
-          ) : invSorted.map(inv => (
-            <button key={inv.id} onClick={() => Number(inv.total_amount) > Number(inv.paid_amount) && setPayTarget(inv)}
-              className="w-full rounded-lg border p-3 flex items-center justify-between hover:bg-muted/50 transition text-left">
-              <div>
-                <div className="font-medium">{new Date(inv.reference_month + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</div>
-                <div className="text-xs text-muted-foreground">Vence {fmtDate(inv.due_date)}</div>
+          ) : invSorted.map(inv => {
+            const remaining = Number(inv.total_amount) - Number(inv.paid_amount);
+            return (
+              <div key={inv.id} className="w-full rounded-lg border p-3 flex items-center justify-between gap-2 hover:bg-muted/50 transition">
+                <button onClick={() => remaining > 0 && setPayTarget(inv)} className="flex-1 text-left min-w-0">
+                  <div className="font-medium">{new Date(inv.reference_month + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</div>
+                  <div className="text-xs text-muted-foreground">Vence {fmtDate(inv.due_date)}</div>
+                </button>
+                <div className="text-right shrink-0">
+                  <div className="font-semibold">{fmt(Number(inv.total_amount))}</div>
+                  <Badge className={STATUS_LABEL[inv.status].color}>{STATUS_LABEL[inv.status].label}</Badge>
+                </div>
+                {(inv.status === 'paid' || inv.status === 'closed') && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"
+                    onClick={async () => {
+                      if (confirm('Reabrir esta fatura?')) await reopenInvoice(inv.id);
+                    }}>
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
-              <div className="text-right">
-                <div className="font-semibold">{fmt(Number(inv.total_amount))}</div>
-                <Badge className={STATUS_LABEL[inv.status].color}>{STATUS_LABEL[inv.status].label}</Badge>
-              </div>
-            </button>
-          ))}
+            );
+          })}
         </TabsContent>
+
       </Tabs>
 
       <CardFormModal open={openEdit} onClose={() => setOpenEdit(false)} editing={card}
