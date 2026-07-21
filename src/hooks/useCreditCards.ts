@@ -157,17 +157,19 @@ export function useCreditCards() {
   const [purchases, setPurchases] = useState<CreditCardPurchase[]>([]);
   const [usage, setUsage] = useState<CardUsage[]>([]);
   const [recurring, setRecurring] = useState<CreditCardRecurring[]>([]);
+  const [payments, setPayments] = useState<CreditCardPayment[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     if (!user) { setLoading(false); return; }
-    const [c, inv, ins, p, u, r] = await Promise.all([
+    const [c, inv, ins, p, u, r, pay] = await Promise.all([
       supabase.from('credit_cards').select('*').order('created_at'),
       supabase.from('credit_card_invoices').select('*').order('reference_month', { ascending: false }),
       supabase.from('credit_card_installments').select('*').order('reference_month'),
       supabase.from('credit_card_purchases').select('*').order('purchase_date', { ascending: false }),
       supabase.from('credit_card_usage').select('*'),
       supabase.from('credit_card_recurring' as any).select('*').order('created_at'),
+      supabase.from('credit_card_payments').select('*').order('payment_date', { ascending: false }),
     ]);
     setCards((c.data as any) ?? []);
     setInvoices((inv.data as any) ?? []);
@@ -175,6 +177,7 @@ export function useCreditCards() {
     setPurchases((p.data as any) ?? []);
     setUsage((u.data as any) ?? []);
     setRecurring((r.data as any) ?? []);
+    setPayments((pay.data as any) ?? []);
     setLoading(false);
   }, [user]);
 
