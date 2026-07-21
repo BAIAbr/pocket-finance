@@ -372,8 +372,6 @@ export default function CreditCardDetail() {
           else await createRecurring(input);
         }}
       />
-    </div>
-  );
       <InstallmentEditModal
         open={!!editingInstallment}
         onClose={() => setEditingInstallment(null)}
@@ -385,3 +383,4 @@ export default function CreditCardDetail() {
     </div>
   );
 }
+
