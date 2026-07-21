@@ -1,19 +1,23 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power, MoreVertical, RotateCcw, FastForward, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { useCreditCards, CreditCardInvoice, CreditCardRecurring } from '@/hooks/useCreditCards';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { useCreditCards, CreditCardInvoice, CreditCardRecurring, CreditCardInstallment } from '@/hooks/useCreditCards';
 import CreditCardVisual from '@/components/creditcards/CreditCardVisual';
 import CardFormModal from '@/components/creditcards/CardFormModal';
 import PurchaseFormModal from '@/components/creditcards/PurchaseFormModal';
 import PayInvoiceModal from '@/components/creditcards/PayInvoiceModal';
 import RecurringFormModal from '@/components/creditcards/RecurringFormModal';
+import InstallmentEditModal from '@/components/creditcards/InstallmentEditModal';
 import CreditCardInsights from '@/components/creditcards/CreditCardInsights';
 import { useCardInsights } from '@/hooks/useCreditCardInsights';
 import { useFinanceContext } from '@/contexts/FinanceContext';
+
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtDate = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
