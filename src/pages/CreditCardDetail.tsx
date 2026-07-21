@@ -374,4 +374,14 @@ export default function CreditCardDetail() {
       />
     </div>
   );
+      <InstallmentEditModal
+        open={!!editingInstallment}
+        onClose={() => setEditingInstallment(null)}
+        installment={editingInstallment}
+        invoices={invoices}
+        onSaveAmount={async (id, amount) => { await updateInstallment(id, { amount }); }}
+        onAnticipate={async (id, invId) => { await anticipateInstallment(id, invId); }}
+      />
+    </div>
+  );
 }
