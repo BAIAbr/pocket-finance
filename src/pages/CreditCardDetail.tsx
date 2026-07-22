@@ -46,6 +46,7 @@ export default function CreditCardDetail() {
   const [openEdit, setOpenEdit] = useState(false);
   const [openPurchase, setOpenPurchase] = useState(false);
   const [openRecurring, setOpenRecurring] = useState(false);
+  const [openImport, setOpenImport] = useState(false);
   const [editingRecurring, setEditingRecurring] = useState<CreditCardRecurring | null>(null);
   const [editingInstallment, setEditingInstallment] = useState<CreditCardInstallment | null>(null);
   const [payTarget, setPayTarget] = useState<CreditCardInvoice | null>(null);
