@@ -117,10 +117,11 @@ export default function CreditCardDetail() {
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <Button className="flex-1" onClick={() => setOpenPurchase(true)}><Plus className="w-4 h-4 mr-1" />Nova compra</Button>
+      <div className="flex gap-2 flex-wrap">
+        <Button className="flex-1 min-w-[140px]" onClick={() => setOpenPurchase(true)}><Plus className="w-4 h-4 mr-1" />Nova compra</Button>
+        <Button variant="outline" className="flex-1 min-w-[140px]" onClick={() => setOpenImport(true)}><Upload className="w-4 h-4 mr-1" />Importar fatura</Button>
         {currentInvoice && Number(currentInvoice.total_amount) > Number(currentInvoice.paid_amount) && (
-          <Button variant="secondary" className="flex-1" onClick={() => setPayTarget(currentInvoice)}>Pagar fatura</Button>
+          <Button variant="secondary" className="flex-1 min-w-[140px]" onClick={() => setPayTarget(currentInvoice)}>Pagar fatura</Button>
         )}
       </div>
 
