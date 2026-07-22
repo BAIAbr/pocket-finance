@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power, MoreVertical, RotateCcw, FastForward, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power, MoreVertical, RotateCcw, FastForward, X, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import PurchaseFormModal from '@/components/creditcards/PurchaseFormModal';
 import PayInvoiceModal from '@/components/creditcards/PayInvoiceModal';
 import RecurringFormModal from '@/components/creditcards/RecurringFormModal';
 import InstallmentEditModal from '@/components/creditcards/InstallmentEditModal';
+import ImportInvoiceModal from '@/components/creditcards/ImportInvoiceModal';
 import CreditCardInsights from '@/components/creditcards/CreditCardInsights';
 import { useCardInsights } from '@/hooks/useCreditCardInsights';
 import { useFinanceContext } from '@/contexts/FinanceContext';
@@ -45,6 +46,7 @@ export default function CreditCardDetail() {
   const [openEdit, setOpenEdit] = useState(false);
   const [openPurchase, setOpenPurchase] = useState(false);
   const [openRecurring, setOpenRecurring] = useState(false);
+  const [openImport, setOpenImport] = useState(false);
   const [editingRecurring, setEditingRecurring] = useState<CreditCardRecurring | null>(null);
   const [editingInstallment, setEditingInstallment] = useState<CreditCardInstallment | null>(null);
   const [payTarget, setPayTarget] = useState<CreditCardInvoice | null>(null);
@@ -115,10 +117,11 @@ export default function CreditCardDetail() {
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <Button className="flex-1" onClick={() => setOpenPurchase(true)}><Plus className="w-4 h-4 mr-1" />Nova compra</Button>
+      <div className="flex gap-2 flex-wrap">
+        <Button className="flex-1 min-w-[140px]" onClick={() => setOpenPurchase(true)}><Plus className="w-4 h-4 mr-1" />Nova compra</Button>
+        <Button variant="outline" className="flex-1 min-w-[140px]" onClick={() => setOpenImport(true)}><Upload className="w-4 h-4 mr-1" />Importar fatura</Button>
         {currentInvoice && Number(currentInvoice.total_amount) > Number(currentInvoice.paid_amount) && (
-          <Button variant="secondary" className="flex-1" onClick={() => setPayTarget(currentInvoice)}>Pagar fatura</Button>
+          <Button variant="secondary" className="flex-1 min-w-[140px]" onClick={() => setPayTarget(currentInvoice)}>Pagar fatura</Button>
         )}
       </div>
 
@@ -379,6 +382,14 @@ export default function CreditCardDetail() {
         invoices={invoices}
         onSaveAmount={async (id, amount) => { await updateInstallment(id, { amount }); }}
         onAnticipate={async (id, invId) => { await anticipateInstallment(id, invId); }}
+      />
+      <ImportInvoiceModal
+        open={openImport}
+        onClose={() => setOpenImport(false)}
+        card={card}
+        categories={cats}
+        existingPurchases={cardPurchases}
+        onImport={createPurchase}
       />
     </div>
   );
