@@ -383,6 +383,14 @@ export default function CreditCardDetail() {
         onSaveAmount={async (id, amount) => { await updateInstallment(id, { amount }); }}
         onAnticipate={async (id, invId) => { await anticipateInstallment(id, invId); }}
       />
+      <ImportInvoiceModal
+        open={openImport}
+        onClose={() => setOpenImport(false)}
+        card={card}
+        categories={cats}
+        existingPurchases={cardPurchases}
+        onImport={createPurchase}
+      />
     </div>
   );
 }
