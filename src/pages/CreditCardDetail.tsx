@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power, MoreVertical, RotateCcw, FastForward, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power, MoreVertical, RotateCcw, FastForward, X, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
