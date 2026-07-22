@@ -14,6 +14,7 @@ import PurchaseFormModal from '@/components/creditcards/PurchaseFormModal';
 import PayInvoiceModal from '@/components/creditcards/PayInvoiceModal';
 import RecurringFormModal from '@/components/creditcards/RecurringFormModal';
 import InstallmentEditModal from '@/components/creditcards/InstallmentEditModal';
+import ImportInvoiceModal from '@/components/creditcards/ImportInvoiceModal';
 import CreditCardInsights from '@/components/creditcards/CreditCardInsights';
 import { useCardInsights } from '@/hooks/useCreditCardInsights';
 import { useFinanceContext } from '@/contexts/FinanceContext';
