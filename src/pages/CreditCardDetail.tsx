@@ -16,7 +16,10 @@ import RecurringFormModal from '@/components/creditcards/RecurringFormModal';
 import InstallmentEditModal from '@/components/creditcards/InstallmentEditModal';
 import ImportInvoiceModal from '@/components/creditcards/ImportInvoiceModal';
 import CreditCardInsights from '@/components/creditcards/CreditCardInsights';
+import CardRulesManager from '@/components/creditcards/CardRulesManager';
 import { useCardInsights } from '@/hooks/useCreditCardInsights';
+import { useCreditCardRules, resolveAutoCategory } from '@/hooks/useCreditCardRules';
+import { useCardRuleAlerts } from '@/hooks/useCardRuleAlerts';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 
 
