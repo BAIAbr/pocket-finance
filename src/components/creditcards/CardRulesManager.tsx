@@ -211,7 +211,7 @@ export default function CardRulesManager({ cardId, categories }: Props) {
                 </div>
                 <div>
                   <Label>Teto por fatura</Label>
-                  <MoneyInput value={threshold} onValueChange={setThreshold} />
+                  <MoneyInput value={threshold ? String(threshold) : ''} onChange={v => setThreshold(Number(v) || 0)} />
                 </div>
               </>
             )}
