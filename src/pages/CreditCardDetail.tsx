@@ -365,6 +365,10 @@ export default function CreditCardDetail() {
           })()}
         </TabsContent>
 
+        <TabsContent value="rules" className="space-y-2">
+          <CardRulesManager cardId={card.id} categories={cats} />
+        </TabsContent>
+
         <TabsContent value="history" className="space-y-1">
           {invSorted.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">Sem histórico</div>
