@@ -242,7 +242,7 @@ export default function CardRulesManager({ cardId, categories }: Props) {
             {rule_type === 'high_amount' && (
               <div>
                 <Label>Alertar a partir de</Label>
-                <MoneyInput value={minAmount} onValueChange={setMinAmount} />
+                <MoneyInput value={minAmount ? String(minAmount) : ''} onChange={v => setMinAmount(Number(v) || 0)} />
               </div>
             )}
           </div>
