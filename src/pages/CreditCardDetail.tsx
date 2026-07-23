@@ -140,11 +140,37 @@ export default function CreditCardDetail() {
 
       {insights.length > 0 && <CreditCardInsights insights={insights} compact />}
 
+      {ruleAlerts.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <AlertTriangle className="w-4 h-4 text-orange-500" />
+            <h3 className="text-sm font-semibold">Alertas das suas regras</h3>
+          </div>
+          <div className="space-y-2">
+            {ruleAlerts.map(a => (
+              <div key={a.id} className={`rounded-xl border p-3 ${
+                a.severity === 'danger' ? 'bg-red-500/5 border-red-500/30'
+                : a.severity === 'warning' ? 'bg-orange-500/5 border-orange-500/30'
+                : 'bg-primary/5'
+              }`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="text-sm font-semibold">{a.title}</div>
+                  {a.value && <div className="text-xs font-semibold shrink-0">{a.value}</div>}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">{a.description}</div>
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1">Regra: {a.ruleName}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <Tabs defaultValue="current">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="current">Fatura</TabsTrigger>
           <TabsTrigger value="purchases">Compras</TabsTrigger>
           <TabsTrigger value="recurring">Recorrências</TabsTrigger>
+          <TabsTrigger value="rules">Regras</TabsTrigger>
           <TabsTrigger value="history">Histórico</TabsTrigger>
         </TabsList>
 
