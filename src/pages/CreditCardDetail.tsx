@@ -439,7 +439,14 @@ export default function CreditCardDetail() {
         card={card}
         categories={cats}
         existingPurchases={cardPurchases}
-        onImport={createPurchase}
+        onImport={async (input) => {
+          const patched = { ...input };
+          if (!patched.category_id) {
+            const auto = resolveAutoCategory(patched.description, allRules, patched.card_id);
+            if (auto) patched.category_id = auto;
+          }
+          await createPurchase(patched);
+        }}
       />
     </div>
   );
