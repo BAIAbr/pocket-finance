@@ -79,6 +79,15 @@ export default function CreditCardDetail() {
 
   const invSorted = metrics.cardInvoices.slice().sort((a, b) => b.reference_month.localeCompare(a.reference_month));
 
+  const ruleAlerts = useCardRuleAlerts({
+    cardId: card.id,
+    rules: allRules,
+    currentInvoice,
+    installments: cardInstallments,
+    purchases: cardPurchases,
+    categoryName: catName,
+  });
+
   return (
     <div className="max-w-3xl mx-auto p-4 pb-24 space-y-4">
       <div className="flex items-center justify-between">
