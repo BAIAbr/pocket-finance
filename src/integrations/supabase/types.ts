@@ -562,6 +562,57 @@ export type Database = {
           },
         ]
       }
+      credit_card_rules: {
+        Row: {
+          card_id: string | null
+          config: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          rule_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_id?: string | null
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          rule_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string | null
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          rule_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_card_rules_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_card_usage"
+            referencedColumns: ["card_id"]
+          },
+          {
+            foreignKeyName: "credit_card_rules_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_cards: {
         Row: {
           bank: string | null

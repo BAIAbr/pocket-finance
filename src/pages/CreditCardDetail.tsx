@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power, MoreVertical, RotateCcw, FastForward, X, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, Repeat, Play, Power, MoreVertical, RotateCcw, FastForward, X, Upload, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,10 @@ import RecurringFormModal from '@/components/creditcards/RecurringFormModal';
 import InstallmentEditModal from '@/components/creditcards/InstallmentEditModal';
 import ImportInvoiceModal from '@/components/creditcards/ImportInvoiceModal';
 import CreditCardInsights from '@/components/creditcards/CreditCardInsights';
+import CardRulesManager from '@/components/creditcards/CardRulesManager';
 import { useCardInsights } from '@/hooks/useCreditCardInsights';
+import { useCreditCardRules, resolveAutoCategory } from '@/hooks/useCreditCardRules';
+import { useCardRuleAlerts } from '@/hooks/useCardRuleAlerts';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 
 
@@ -55,6 +58,7 @@ export default function CreditCardDetail() {
   const card = cards.find(c => c.id === id);
   const metrics = useMemo(() => id ? getCardMetrics(id) : null, [id, getCardMetrics]);
   const insights = useCardInsights(id ?? '');
+  const { rules: allRules } = useCreditCardRules();
 
   if (!card || !metrics) {
     return (
@@ -74,6 +78,15 @@ export default function CreditCardDetail() {
   const purchaseOf = (pid: string) => cardPurchases.find(p => p.id === pid);
 
   const invSorted = metrics.cardInvoices.slice().sort((a, b) => b.reference_month.localeCompare(a.reference_month));
+
+  const ruleAlerts = useCardRuleAlerts({
+    cardId: card.id,
+    rules: allRules,
+    currentInvoice,
+    installments: cardInstallments,
+    purchases: cardPurchases,
+    categoryName: catName,
+  });
 
   return (
     <div className="max-w-3xl mx-auto p-4 pb-24 space-y-4">
@@ -127,11 +140,37 @@ export default function CreditCardDetail() {
 
       {insights.length > 0 && <CreditCardInsights insights={insights} compact />}
 
+      {ruleAlerts.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <AlertTriangle className="w-4 h-4 text-orange-500" />
+            <h3 className="text-sm font-semibold">Alertas das suas regras</h3>
+          </div>
+          <div className="space-y-2">
+            {ruleAlerts.map(a => (
+              <div key={a.id} className={`rounded-xl border p-3 ${
+                a.severity === 'danger' ? 'bg-red-500/5 border-red-500/30'
+                : a.severity === 'warning' ? 'bg-orange-500/5 border-orange-500/30'
+                : 'bg-primary/5'
+              }`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="text-sm font-semibold">{a.title}</div>
+                  {a.value && <div className="text-xs font-semibold shrink-0">{a.value}</div>}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">{a.description}</div>
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1">Regra: {a.ruleName}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <Tabs defaultValue="current">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="current">Fatura</TabsTrigger>
           <TabsTrigger value="purchases">Compras</TabsTrigger>
           <TabsTrigger value="recurring">Recorrências</TabsTrigger>
+          <TabsTrigger value="rules">Regras</TabsTrigger>
           <TabsTrigger value="history">Histórico</TabsTrigger>
         </TabsList>
 
@@ -326,6 +365,10 @@ export default function CreditCardDetail() {
           })()}
         </TabsContent>
 
+        <TabsContent value="rules" className="space-y-2">
+          <CardRulesManager cardId={card.id} categories={cats} />
+        </TabsContent>
+
         <TabsContent value="history" className="space-y-1">
           {invSorted.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">Sem histórico</div>
@@ -359,7 +402,14 @@ export default function CreditCardDetail() {
       <CardFormModal open={openEdit} onClose={() => setOpenEdit(false)} editing={card}
         onSubmit={async (input) => { await updateCard(card.id, input); }} />
       <PurchaseFormModal open={openPurchase} onClose={() => setOpenPurchase(false)}
-        onSubmit={createPurchase} cards={cards} initialCardId={card.id} />
+        onSubmit={async (input) => {
+          const patched = { ...input };
+          if (!patched.category_id) {
+            const auto = resolveAutoCategory(patched.description, allRules, patched.card_id);
+            if (auto) patched.category_id = auto;
+          }
+          await createPurchase(patched);
+        }} cards={cards} initialCardId={card.id} />
       <PayInvoiceModal open={!!payTarget} onClose={() => setPayTarget(null)} invoice={payTarget}
         onSubmit={async (amount, account) => {
           if (payTarget) await payInvoice(payTarget.id, payTarget.card_id, amount, account);
@@ -389,7 +439,14 @@ export default function CreditCardDetail() {
         card={card}
         categories={cats}
         existingPurchases={cardPurchases}
-        onImport={createPurchase}
+        onImport={async (input) => {
+          const patched = { ...input };
+          if (!patched.category_id) {
+            const auto = resolveAutoCategory(patched.description, allRules, patched.card_id);
+            if (auto) patched.category_id = auto;
+          }
+          await createPurchase(patched);
+        }}
       />
     </div>
   );
