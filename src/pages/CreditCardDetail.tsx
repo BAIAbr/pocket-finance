@@ -402,7 +402,14 @@ export default function CreditCardDetail() {
       <CardFormModal open={openEdit} onClose={() => setOpenEdit(false)} editing={card}
         onSubmit={async (input) => { await updateCard(card.id, input); }} />
       <PurchaseFormModal open={openPurchase} onClose={() => setOpenPurchase(false)}
-        onSubmit={createPurchase} cards={cards} initialCardId={card.id} />
+        onSubmit={async (input) => {
+          const patched = { ...input };
+          if (!patched.category_id) {
+            const auto = resolveAutoCategory(patched.description, allRules, patched.card_id);
+            if (auto) patched.category_id = auto;
+          }
+          await createPurchase(patched);
+        }} cards={cards} initialCardId={card.id} />
       <PayInvoiceModal open={!!payTarget} onClose={() => setPayTarget(null)} invoice={payTarget}
         onSubmit={async (amount, account) => {
           if (payTarget) await payInvoice(payTarget.id, payTarget.card_id, amount, account);
