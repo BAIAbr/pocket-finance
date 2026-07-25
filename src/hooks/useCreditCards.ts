@@ -252,11 +252,12 @@ export function useCreditCards() {
     const rows: any[] = [];
     for (let i = 0; i < input.installments_count; i++) {
       const refMonth = format(addMonths(firstRefDate, i), 'yyyy-MM-dd');
-      // ensure invoice exists via RPC
-      const { data: invId, error: invErr } = await supabase.rpc('cc_ensure_invoice', {
-        _card_id: input.card_id, _reference_month: refMonth,
-      } as any);
-      if (invErr) { toast.error('Erro na fatura: ' + invErr.message); return; }
+      // ensure invoice exists via edge function (server-side ownership check)
+      const { data: invRes, error: invErr } = await supabase.functions.invoke('cc-ensure-invoice', {
+        body: { card_id: input.card_id, reference_month: refMonth },
+      });
+      if (invErr || !invRes?.invoice_id) { toast.error('Erro na fatura: ' + (invErr?.message || 'falha')); return; }
+      const invId = invRes.invoice_id as string;
       rows.push({
         user_id: user.id,
         purchase_id: (purchase as any).id,
