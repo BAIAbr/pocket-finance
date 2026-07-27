@@ -114,7 +114,13 @@ export default function PlansManager() {
         is_highlighted: plan.is_highlighted,
         is_active: plan.is_active,
         sort_order: plan.sort_order,
-      })
+        plan_group: plan.plan_group?.trim() || null,
+        billing_interval: plan.billing_interval || null,
+        interval_count: plan.interval_count ?? null,
+        badge_label: plan.badge_label?.trim() || null,
+        badge_color: plan.badge_color?.trim() || null,
+        discount_percent: plan.discount_percent ?? null,
+      } as any)
       .eq('id', plan.id);
     setSavingId(null);
     if (error) {
