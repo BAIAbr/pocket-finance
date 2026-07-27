@@ -21,7 +21,20 @@ interface Plan {
   is_highlighted: boolean;
   sort_order: number;
   is_active: boolean;
+  plan_group: string | null;
+  billing_interval: string | null;
+  interval_count: number | null;
+  badge_label: string | null;
+  badge_color: string | null;
+  discount_percent: number | null;
 }
+
+const INTERVAL_OPTIONS = [
+  { value: 'month', label: 'Mensal' },
+  { value: 'quarter', label: 'Trimestral' },
+  { value: 'semester', label: 'Semestral' },
+  { value: 'year', label: 'Anual' },
+];
 
 export default function PlansManager() {
   const [plans, setPlans] = useState<Plan[]>([]);
