@@ -244,13 +244,26 @@ Deno.serve(async (req) => {
 
   const { data: plan } = await admin
     .from('subscription_plans')
-    .select('code, name, price_monthly, is_active')
+    .select('code, name, price_monthly, is_active, billing_interval, interval_count')
     .eq('code', planCode)
     .maybeSingle();
 
   if (!plan || !plan.is_active) return json(404, { error: 'plan_not_found' });
   const amount = Number(plan.price_monthly);
   if (!(amount > 0)) return json(400, { error: 'invalid_amount' });
+
+  // Map billing_interval → Mercado Pago auto_recurring (frequency in months).
+  const rawInterval = (plan as any).billing_interval as string | null;
+  const rawCount = Number((plan as any).interval_count ?? 0);
+  const frequencyMonths = (() => {
+    if (rawCount && rawCount > 0) return rawCount;
+    switch (rawInterval) {
+      case 'quarter': return 3;
+      case 'semester': return 6;
+      case 'year': return 12;
+      default: return 1;
+    }
+  })();
 
   const origin = req.headers.get('origin') ?? body.back_url ?? 'https://finango.online';
   const backUrl = `${origin}/#/settings/subscription`;
@@ -262,7 +275,7 @@ Deno.serve(async (req) => {
     payer_email: payerEmail,
     back_url: backUrl,
     auto_recurring: {
-      frequency: 1,
+      frequency: frequencyMonths,
       frequency_type: 'months',
       transaction_amount: amount,
       currency_id: 'BRL',
