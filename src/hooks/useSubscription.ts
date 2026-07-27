@@ -6,6 +6,8 @@ export interface PlanFeatureItem {
   enabled: boolean;
 }
 
+export type BillingInterval = 'month' | 'quarter' | 'semester' | 'year';
+
 export interface SubscriptionPlan {
   id: string;
   code: string;
@@ -16,6 +18,12 @@ export interface SubscriptionPlan {
   is_highlighted: boolean;
   sort_order: number;
   is_active: boolean;
+  plan_group: string | null;
+  billing_interval: BillingInterval | null;
+  interval_count: number | null;
+  badge_label: string | null;
+  badge_color: string | null;
+  discount_percent: number | null;
 }
 
 export function normalizeFeatures(raw: any): PlanFeatureItem[] {
