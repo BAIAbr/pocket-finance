@@ -1,80 +1,48 @@
-# 📑 Central de Documentos Finango — Plano de Implementação
+## Objetivo
+Permitir escolher a periodicidade da assinatura Premium antes de pagar, com preço, economia e benefícios atualizando dinamicamente. Tudo configurável no admin, sem alterar código para novos intervalos.
 
-Vou construir um CMS interno para documentos institucionais e um Changelog público, tudo administrável pelo painel admin, sem tocar em nada existente.
+## Estrutura de dados
+Adicionar em `subscription_plans` (colunas novas, mantendo os planos existentes):
+- `plan_group` (text) — agrupa variações do mesmo plano (ex.: `premium`)
+- `billing_interval` (text) — `month | quarter | semester | year`
+- `interval_count` (int) — nº de meses cobertos (1, 3, 6, 12)
+- `badge_label` (text) — ex.: "Mais Popular", "Melhor Oferta"
+- `badge_color` (text) — cor de destaque (hex/token)
+- `discount_percent` (numeric) — economia vs mensal (auto-calculada ou manual)
 
-## Escopo
+Seed:
+- Manter `premium` (mensal) e `premium_yearly` (anual) já existentes → preencher `plan_group=premium`.
+- Criar `premium_quarterly` e `premium_semester` (inativos por padrão para o admin ativar quando quiser).
 
-**Documentos institucionais** (Política de Privacidade, Termos de Uso, Política de Cookies, Sobre) + **Changelog** (Novidades) — todos criados/editados via admin, publicados em rotas públicas.
+## Frontend — `src/pages/Plans.tsx`
+Agrupar planos por `plan_group`. Para cada grupo com >1 variação ativa:
+- Renderizar um card único com **seletor segmentado** (Mensal / Trimestral / Semestral / Anual) exibindo apenas as variações `is_active`.
+- Ao trocar, animar valores: preço total, `equivale a R$ X/mês`, economia %, badge, descrição e lista de benefícios.
+- Destacar automaticamente a variação com `is_highlighted` ou `badge_label`.
+- Manter o card `free` como está.
+- Fluxo de pagamento existente (PaymentMethodModal / create-subscription) recebe o `plan_code` correto da variação selecionada.
 
-## Banco de dados (incremental, novas tabelas)
+## Backend edge functions
+- `create-subscription`: ler `billing_interval` + `interval_count` do plano e enviar ao Mercado Pago em `auto_recurring.frequency` / `frequency_type` (ex.: 3 months, 6 months, 12 months). Preservar validação payer/collector.
+- `create-pix-payment`: derivar `days` a partir de `interval_count * 30` quando disponível, mantendo `funder` como vitalício.
+- `payment-webhook`: ao renovar/ativar, gravar `plan_code` da variação selecionada e `next_billing_at` de acordo com o intervalo.
 
-- `documents` — id, slug único, tipo (`policy` | `terms` | `cookies` | `about` | `changelog` | `custom`), titulo, subtitulo, conteudo (JSONB do editor), icon, cover_image, status (`published` | `draft` | `archived`), versao, seo_title, seo_description, seo_image, autor (uuid), published_at, timestamps.
-- `document_versions` — histórico completo (document_id, versao, conteudo snapshot, autor, resumo_alteracao, created_at).
-- `changelog_entries` — versao, titulo, descricao (JSONB), categoria (enum: novidade/melhoria/correcao/seguranca/performance/premium/planejamento/investimentos/cartoes/ia), icon, image, tags[], published_at, is_highlight, status.
-- `changelog_views` — user_id + entry_id (para remover destaque após visualização).
+## Admin — `src/components/admin/PlansManager.tsx`
+Adicionar campos editáveis:
+- `plan_group`, `billing_interval` (select), `interval_count`, `badge_label`, `badge_color`, `discount_percent`.
+- Manter switch `is_active` e `sort_order` para controlar visibilidade sem alterar código.
 
-RLS: `SELECT` público em linhas `published`; `INSERT/UPDATE/DELETE` apenas admin (via `has_role`). GRANTs completos + trigger de auto-versionamento em `documents` (INSERT em `document_versions` a cada UPDATE).
+## Validações
+- Frontend só lista variações `is_active`.
+- `create-subscription` / `create-pix-payment` recusam plano `is_active=false` (já implementado) e usam o valor `price_monthly` do banco (nunca do cliente).
+- `user_subscriptions.plan_code` guarda o código exato da variação escolhida; `metadata` inclui `billing_interval`.
 
-## Editor rico (admin)
+## Responsividade
+Seletor segmentado full-width no mobile (scroll horizontal se >3 opções), pill group centralizado em desktop. Sem mudanças na identidade visual.
 
-Uso `@tiptap/react` + extensões: StarterKit, Underline, Link, Image, Table, TaskList, CodeBlockLowlight, Placeholder, TextAlign, Highlight, Blockquote, HorizontalRule, Headings H1-H6. Toolbar flutuante estilo Notion. Callouts/alertas via nó customizado.
-
-Salvamento automático com debounce 800ms → indicador "Salvando... / ✓ Salvo". Cada save cria uma versão nova via trigger. Painel lateral com histórico de versões e botão "Restaurar".
-
-## Painel Administrativo
-
-Nova aba em `AdminDashboard.tsx`: **📑 Documentos**
-- Lista de documentos (busca, filtro por tipo/status)
-- Botão "Novo documento"
-- Editor em tela cheia com: título, subtítulo, ícone (emoji picker), imagem de capa (upload no bucket `document-assets`), corpo (Tiptap), painel lateral com SEO, status, versões
-- Aba secundária **🚀 Changelog** — CRUD de entradas com categoria, tags, versão, destaque.
-
-## Rotas públicas (novas, não conflitam)
-
-- `/politica-de-privacidade`
-- `/termos-de-uso`
-- `/politica-de-cookies`
-- `/sobre`
-- `/novidades` (lista de changelog com filtros por versão/categoria/ano/busca)
-- `/documentos/:slug` (fallback genérico para documentos customizados)
-
-Cada página renderiza o JSON do Tiptap com o mesmo schema (componente `DocumentRenderer`). Meta tags via `react-helmet-async` (instalar), canonical + OG. Sumário (TOC) gerado automaticamente a partir dos headings, com scroll suave. Botões: Baixar PDF (jsPDF já instalado), Imprimir, Copiar link, Compartilhar (Web Share API).
-
-## Home — destaque de novidade
-
-Card discreto no Dashboard quando existir `changelog_entries.is_highlight = true` que o usuário ainda não visualizou. Ao clicar em "Ver Novidades" → registra em `changelog_views` e some.
-
-## Toast de atualização
-
-Ao logar, se houver changelog com versão > última vista → toast "🔔 O Finango foi atualizado!".
-
-## Acessibilidade / UX
-
-Controles de fonte (A- / A+) e alto contraste na página pública (persistido em localStorage). Navegação teclado nativa via Tiptap. Tema claro/escuro herda do ThemeContext.
-
-## Seed inicial
-
-Migração cria as 5 primeiras entradas em `documents` (Política, Termos, Cookies, Sobre) + 1 entrada de Changelog exemplo (v2.1.0 Dashboard Personalizável), todas com conteúdo padrão editável — nada hardcoded no front.
-
-## Segurança
-
-- RLS admin-only para escrita
-- Log em `security_events` a cada publicação/restauração
-- Bucket `document-assets` privado com policy: read público apenas para arquivos referenciados em documentos publicados; write só admin
-
-## Pacotes a instalar
-
-`@tiptap/react @tiptap/starter-kit @tiptap/extension-*` (underline, link, image, table, task-list, code-block-lowlight, placeholder, text-align, highlight), `lowlight`, `react-helmet-async`.
-
-## Fora de escopo (preservado, sem alteração)
-
-Dashboard, Perfil, Planejamento, Metas, IA, Investimentos, Parcelamentos, Auth, Family, categorias existentes, importador. Nenhum arquivo dessas áreas será tocado.
-
-## Detalhes técnicos
-
-- Conteúdo armazenado como JSON do Tiptap (não HTML) para segurança e portabilidade; PDF/renderização usa serializer próprio.
-- Auto-save: `useEffect` + debounce + `upsert` no Supabase; trigger PL/pgSQL cuida do versionamento (evita corrida).
-- Realtime: `documents` publica em `supabase_realtime` para que edições apareçam ao vivo em outras abas admin.
-- Busca full-text: coluna `tsvector` gerada + índice GIN sobre título/subtítulo/plaintext do conteúdo.
-
-Confirma que devo prosseguir com essa implementação?
+## Entregáveis
+1. Migração SQL (colunas + seed das 2 novas variações inativas).
+2. `useSubscription` tipado com os novos campos.
+3. `Plans.tsx` reescrito com agrupamento + seletor.
+4. Ajustes em `create-subscription` e `create-pix-payment`.
+5. `PlansManager.tsx` com os novos campos.
