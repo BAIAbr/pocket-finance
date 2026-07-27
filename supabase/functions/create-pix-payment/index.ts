@@ -15,17 +15,26 @@ const json = (status: number, body: unknown) =>
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 
+// Accept any plan_code — the plan row itself must be active in the DB.
+// This lets admins add new billing intervals without redeploying this function.
 const BodySchema = z.object({
-  plan_code: z.enum(['premium', 'premium_yearly', 'funder']),
+  plan_code: z.string().min(1).max(64),
 });
 
-// Days of Premium granted per plan on a one-time PIX payment.
-// funder = lifetime (0 → no expires_at)
-const PIX_DURATION_DAYS: Record<string, number> = {
-  premium: 30,
-  premium_yearly: 365,
-  funder: 0,
-};
+// Lifetime plans (never expire). Everything else derives days from
+// interval_count when available, otherwise from billing_interval.
+const LIFETIME_PLAN_CODES = new Set(['funder']);
+
+function deriveDays(planCode: string, plan: { billing_interval: string | null; interval_count: number | null }): number {
+  if (LIFETIME_PLAN_CODES.has(planCode)) return 0;
+  if (plan.interval_count && plan.interval_count > 0) return plan.interval_count * 30;
+  switch (plan.billing_interval) {
+    case 'quarter': return 90;
+    case 'semester': return 180;
+    case 'year': return 365;
+    default: return 30;
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -47,7 +56,7 @@ Deno.serve(async (req) => {
   // load plan
   const { data: plan } = await admin
     .from('subscription_plans')
-    .select('code, name, price_monthly, is_active')
+    .select('code, name, price_monthly, is_active, billing_interval, interval_count')
     .eq('code', plan_code)
     .maybeSingle();
   if (!plan || !plan.is_active) return json(400, { error: 'plan_unavailable' });
@@ -55,7 +64,10 @@ Deno.serve(async (req) => {
   const amount = Number(plan.price_monthly ?? 0);
   if (amount <= 0) return json(400, { error: 'invalid_amount' });
 
-  const days = PIX_DURATION_DAYS[plan_code] ?? 30;
+  const days = deriveDays(plan_code, {
+    billing_interval: (plan as any).billing_interval ?? null,
+    interval_count: (plan as any).interval_count ?? null,
+  });
   const externalRef = `pix:${user.id}:${plan_code}:${days}`;
   const payerEmail = user.email;
   if (!payerEmail) return json(400, { error: 'missing_email' });

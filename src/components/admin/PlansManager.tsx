@@ -21,7 +21,20 @@ interface Plan {
   is_highlighted: boolean;
   sort_order: number;
   is_active: boolean;
+  plan_group: string | null;
+  billing_interval: string | null;
+  interval_count: number | null;
+  badge_label: string | null;
+  badge_color: string | null;
+  discount_percent: number | null;
 }
+
+const INTERVAL_OPTIONS = [
+  { value: 'month', label: 'Mensal' },
+  { value: 'quarter', label: 'Trimestral' },
+  { value: 'semester', label: 'Semestral' },
+  { value: 'year', label: 'Anual' },
+];
 
 export default function PlansManager() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -101,7 +114,13 @@ export default function PlansManager() {
         is_highlighted: plan.is_highlighted,
         is_active: plan.is_active,
         sort_order: plan.sort_order,
-      })
+        plan_group: plan.plan_group?.trim() || null,
+        billing_interval: plan.billing_interval || null,
+        interval_count: plan.interval_count ?? null,
+        badge_label: plan.badge_label?.trim() || null,
+        badge_color: plan.badge_color?.trim() || null,
+        discount_percent: plan.discount_percent ?? null,
+      } as any)
       .eq('id', plan.id);
     setSavingId(null);
     if (error) {
@@ -230,6 +249,73 @@ export default function PlansManager() {
                 Use o interruptor para ativar/desativar cada benefício. Desativados aparecem riscados aos usuários.
               </p>
             </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2 border-t border-border">
+              <div>
+                <Label className="text-xs">Grupo (plan_group)</Label>
+                <Input
+                  value={plan.plan_group ?? ''}
+                  onChange={(e) => updateField(plan.id, { plan_group: e.target.value })}
+                  placeholder="ex.: premium"
+                  className="h-9"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Intervalo</Label>
+                <select
+                  value={plan.billing_interval ?? ''}
+                  onChange={(e) => updateField(plan.id, { billing_interval: e.target.value || null })}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">—</option>
+                  {INTERVAL_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs">Meses cobertos</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={plan.interval_count ?? ''}
+                  onChange={(e) => updateField(plan.id, { interval_count: e.target.value ? parseInt(e.target.value) : null })}
+                  placeholder="1 / 3 / 6 / 12"
+                  className="h-9"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Badge</Label>
+                <Input
+                  value={plan.badge_label ?? ''}
+                  onChange={(e) => updateField(plan.id, { badge_label: e.target.value })}
+                  placeholder="Mais Popular / Melhor Oferta"
+                  className="h-9"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Cor do badge</Label>
+                <Input
+                  type="color"
+                  value={plan.badge_color ?? '#7c3aed'}
+                  onChange={(e) => updateField(plan.id, { badge_color: e.target.value })}
+                  className="h-9 p-1"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Desconto vs mensal (%)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={99}
+                  value={plan.discount_percent ?? ''}
+                  onChange={(e) => updateField(plan.id, { discount_percent: e.target.value ? parseFloat(e.target.value) : null })}
+                  placeholder="Deixe vazio para calcular automaticamente"
+                  className="h-9"
+                />
+              </div>
+            </div>
+
 
             <div className="flex flex-wrap gap-4 pt-1">
               <div className="flex items-center gap-2">
