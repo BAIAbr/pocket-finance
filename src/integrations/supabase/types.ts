@@ -2312,13 +2312,18 @@ export type Database = {
       subscription_plans: {
         Row: {
           available_until: string | null
+          badge_color: string | null
+          badge_label: string | null
           billing_cycle: string
+          billing_interval: string | null
           code: string
           created_at: string
           currency: string
           description: string | null
+          discount_percent: number | null
           features: Json
           id: string
+          interval_count: number | null
           is_active: boolean
           is_highlighted: boolean
           is_lifetime: boolean
@@ -2326,6 +2331,7 @@ export type Database = {
           max_seats: number | null
           metadata: Json
           name: string
+          plan_group: string | null
           price_monthly: number
           price_yearly: number | null
           seats_taken: number
@@ -2336,13 +2342,18 @@ export type Database = {
         }
         Insert: {
           available_until?: string | null
+          badge_color?: string | null
+          badge_label?: string | null
           billing_cycle?: string
+          billing_interval?: string | null
           code: string
           created_at?: string
           currency?: string
           description?: string | null
+          discount_percent?: number | null
           features?: Json
           id?: string
+          interval_count?: number | null
           is_active?: boolean
           is_highlighted?: boolean
           is_lifetime?: boolean
@@ -2350,6 +2361,7 @@ export type Database = {
           max_seats?: number | null
           metadata?: Json
           name: string
+          plan_group?: string | null
           price_monthly?: number
           price_yearly?: number | null
           seats_taken?: number
@@ -2360,13 +2372,18 @@ export type Database = {
         }
         Update: {
           available_until?: string | null
+          badge_color?: string | null
+          badge_label?: string | null
           billing_cycle?: string
+          billing_interval?: string | null
           code?: string
           created_at?: string
           currency?: string
           description?: string | null
+          discount_percent?: number | null
           features?: Json
           id?: string
+          interval_count?: number | null
           is_active?: boolean
           is_highlighted?: boolean
           is_lifetime?: boolean
@@ -2374,6 +2391,7 @@ export type Database = {
           max_seats?: number | null
           metadata?: Json
           name?: string
+          plan_group?: string | null
           price_monthly?: number
           price_yearly?: number | null
           seats_taken?: number
