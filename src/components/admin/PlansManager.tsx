@@ -250,6 +250,73 @@ export default function PlansManager() {
               </p>
             </div>
 
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2 border-t border-border">
+              <div>
+                <Label className="text-xs">Grupo (plan_group)</Label>
+                <Input
+                  value={plan.plan_group ?? ''}
+                  onChange={(e) => updateField(plan.id, { plan_group: e.target.value })}
+                  placeholder="ex.: premium"
+                  className="h-9"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Intervalo</Label>
+                <select
+                  value={plan.billing_interval ?? ''}
+                  onChange={(e) => updateField(plan.id, { billing_interval: e.target.value || null })}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">—</option>
+                  {INTERVAL_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs">Meses cobertos</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={plan.interval_count ?? ''}
+                  onChange={(e) => updateField(plan.id, { interval_count: e.target.value ? parseInt(e.target.value) : null })}
+                  placeholder="1 / 3 / 6 / 12"
+                  className="h-9"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Badge</Label>
+                <Input
+                  value={plan.badge_label ?? ''}
+                  onChange={(e) => updateField(plan.id, { badge_label: e.target.value })}
+                  placeholder="Mais Popular / Melhor Oferta"
+                  className="h-9"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Cor do badge</Label>
+                <Input
+                  type="color"
+                  value={plan.badge_color ?? '#7c3aed'}
+                  onChange={(e) => updateField(plan.id, { badge_color: e.target.value })}
+                  className="h-9 p-1"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Desconto vs mensal (%)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={99}
+                  value={plan.discount_percent ?? ''}
+                  onChange={(e) => updateField(plan.id, { discount_percent: e.target.value ? parseFloat(e.target.value) : null })}
+                  placeholder="Deixe vazio para calcular automaticamente"
+                  className="h-9"
+                />
+              </div>
+            </div>
+
+
             <div className="flex flex-wrap gap-4 pt-1">
               <div className="flex items-center gap-2">
                 <Switch
