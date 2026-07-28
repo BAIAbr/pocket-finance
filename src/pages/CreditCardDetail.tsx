@@ -60,6 +60,20 @@ export default function CreditCardDetail() {
   const insights = useCardInsights(id ?? '');
   const { rules: allRules } = useCreditCardRules();
 
+  const cardPurchases = useMemo(() => card ? purchases.filter(p => p.card_id === card.id) : [], [purchases, card]);
+  const cardInstallments = useMemo(() => card ? installments.filter(i => i.card_id === card.id) : [], [installments, card]);
+  const currentInvoice = metrics?.currentInvoice;
+  const catName = (cid: string | null) => cid ? (cats.find(c => c.id === cid)?.name ?? '—') : '—';
+
+  const ruleAlerts = useCardRuleAlerts({
+    cardId: card?.id ?? '',
+    rules: allRules,
+    currentInvoice,
+    installments: cardInstallments,
+    purchases: cardPurchases,
+    categoryName: catName,
+  });
+
   if (!card || !metrics) {
     return (
       <div className="max-w-3xl mx-auto p-4">
@@ -69,24 +83,9 @@ export default function CreditCardDetail() {
     );
   }
 
-  const currentInvoice = metrics.currentInvoice;
-  const cardPurchases = purchases.filter(p => p.card_id === card.id);
-  const cardInstallments = installments.filter(i => i.card_id === card.id);
   const currentInstallments = currentInvoice ? cardInstallments.filter(i => i.invoice_id === currentInvoice.id) : [];
-
-  const catName = (cid: string | null) => cid ? (cats.find(c => c.id === cid)?.name ?? '—') : '—';
   const purchaseOf = (pid: string) => cardPurchases.find(p => p.id === pid);
-
   const invSorted = metrics.cardInvoices.slice().sort((a, b) => b.reference_month.localeCompare(a.reference_month));
-
-  const ruleAlerts = useCardRuleAlerts({
-    cardId: card.id,
-    rules: allRules,
-    currentInvoice,
-    installments: cardInstallments,
-    purchases: cardPurchases,
-    categoryName: catName,
-  });
 
   return (
     <div className="max-w-3xl mx-auto p-4 pb-24 space-y-4">
