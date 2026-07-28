@@ -31,14 +31,18 @@ Deno.serve(async (req) => {
   const code = (body.code ?? '').trim().toUpperCase();
   if (!code) return json(400, { error: 'missing_code' });
 
-  const { data: vip } = await admin
+  const { data: vip, error: vipErr } = await admin
     .from('vip_codes')
-    .select('id, code, plan_code, duration_days, max_uses, uses_count, active, expires_at')
+    .select('id, code, plan_code, duration_days, max_uses, uses_count, is_active, expires_at')
     .ilike('code', code)
     .maybeSingle();
 
+  if (vipErr) {
+    console.error('validate-vip lookup error', vipErr);
+    return json(500, { valid: false, error: 'lookup_failed', detail: vipErr.message });
+  }
   if (!vip) return json(404, { valid: false, error: 'not_found' });
-  if (!vip.active) return json(400, { valid: false, error: 'inactive' });
+  if (!vip.is_active) return json(400, { valid: false, error: 'inactive' });
   if (vip.expires_at && new Date(vip.expires_at) < new Date()) return json(400, { valid: false, error: 'expired' });
   if (vip.max_uses && vip.uses_count >= vip.max_uses) return json(400, { valid: false, error: 'exhausted' });
 
