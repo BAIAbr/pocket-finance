@@ -1,48 +1,78 @@
-## Objetivo
-Permitir escolher a periodicidade da assinatura Premium antes de pagar, com preço, economia e benefícios atualizando dinamicamente. Tudo configurável no admin, sem alterar código para novos intervalos.
+# Módulo de Códigos VIP — Sistema Profissional de Campanhas
 
-## Estrutura de dados
-Adicionar em `subscription_plans` (colunas novas, mantendo os planos existentes):
-- `plan_group` (text) — agrupa variações do mesmo plano (ex.: `premium`)
-- `billing_interval` (text) — `month | quarter | semester | year`
-- `interval_count` (int) — nº de meses cobertos (1, 3, 6, 12)
-- `badge_label` (text) — ex.: "Mais Popular", "Melhor Oferta"
-- `badge_color` (text) — cor de destaque (hex/token)
-- `discount_percent` (numeric) — economia vs mensal (auto-calculada ou manual)
+Evolução do módulo atual para plataforma completa de cupons, convites, influenciadores e campanhas Premium — mantendo identidade visual e layout base do Finango.
 
-Seed:
-- Manter `premium` (mensal) e `premium_yearly` (anual) já existentes → preencher `plan_group=premium`.
-- Criar `premium_quarterly` e `premium_semester` (inativos por padrão para o admin ativar quando quiser).
+## Escopo
 
-## Frontend — `src/pages/Plans.tsx`
-Agrupar planos por `plan_group`. Para cada grupo com >1 variação ativa:
-- Renderizar um card único com **seletor segmentado** (Mensal / Trimestral / Semestral / Anual) exibindo apenas as variações `is_active`.
-- Ao trocar, animar valores: preço total, `equivale a R$ X/mês`, economia %, badge, descrição e lista de benefícios.
-- Destacar automaticamente a variação com `is_highlighted` ou `badge_label`.
-- Manter o card `free` como está.
-- Fluxo de pagamento existente (PaymentMethodModal / create-subscription) recebe o `plan_code` correto da variação selecionada.
+Refatoração ampla (banco + edge functions + admin UI + fluxo público de resgate). Trabalho grande — vou executar em fases dentro deste único plano após aprovação.
 
-## Backend edge functions
-- `create-subscription`: ler `billing_interval` + `interval_count` do plano e enviar ao Mercado Pago em `auto_recurring.frequency` / `frequency_type` (ex.: 3 months, 6 months, 12 months). Preservar validação payer/collector.
-- `create-pix-payment`: derivar `days` a partir de `interval_count * 30` quando disponível, mantendo `funder` como vitalício.
-- `payment-webhook`: ao renovar/ativar, gravar `plan_code` da variação selecionada e `next_billing_at` de acordo com o intervalo.
+## Fase 1 — Banco de dados
 
-## Admin — `src/components/admin/PlansManager.tsx`
-Adicionar campos editáveis:
-- `plan_group`, `billing_interval` (select), `interval_count`, `badge_label`, `badge_color`, `discount_percent`.
-- Manter switch `is_active` e `sort_order` para controlar visibilidade sem alterar código.
+Estender `vip_codes` (sem quebrar dados existentes):
 
-## Validações
-- Frontend só lista variações `is_active`.
-- `create-subscription` / `create-pix-payment` recusam plano `is_active=false` (já implementado) e usam o valor `price_monthly` do banco (nunca do cliente).
-- `user_subscriptions.plan_code` guarda o código exato da variação escolhida; `metadata` inclui `billing_interval`.
+Novas colunas:
+- `internal_name text` — nome interno da campanha
+- `code_type text` — premium | discount | invite | influencer | partner | employee | beta
+- `benefit_type text` — days | percent_discount | fixed_discount | lifetime
+- `discount_percent numeric`, `discount_amount numeric` (usados quando benefit_type ≠ days)
+- `is_lifetime boolean default false`
+- `campaign_source text` — tiktok | instagram | youtube | facebook | google | influencer | affiliate | partner | organic | custom
+- `campaign_label text` — livre (ex: nome do influenciador)
+- `starts_at timestamptz`
+- `status text default 'active'` — active | paused | expired | archived (derivado + manual)
+- `single_use_per_user boolean default true`
+- `unlimited boolean default false`
+- `created_by uuid`, `updated_by uuid`, `archived_at timestamptz`
 
-## Responsividade
-Seletor segmentado full-width no mobile (scroll horizontal se >3 opções), pill group centralizado em desktop. Sem mudanças na identidade visual.
+Estender `vip_redemptions`:
+- `days_granted integer`
+- `source_campaign text`
+- `user_agent text`, `ip text`, `device text`
 
-## Entregáveis
-1. Migração SQL (colunas + seed das 2 novas variações inativas).
-2. `useSubscription` tipado com os novos campos.
-3. `Plans.tsx` reescrito com agrupamento + seletor.
-4. Ajustes em `create-subscription` e `create-pix-payment`.
-5. `PlansManager.tsx` com os novos campos.
+Nova tabela `vip_code_events` (audit log):
+- `id`, `vip_code_id`, `actor_id`, `action` (created | updated | archived | deleted | activated | paused | redeemed), `metadata jsonb`, `created_at`
+
+Índices: `vip_codes(status)`, `vip_codes(campaign_source)`, `vip_redemptions(vip_code_id, redeemed_at desc)`.
+
+RLS: admin gerencia tudo; usuário lê apenas o próprio redemption; eventos apenas admin.
+
+## Fase 2 — Edge functions
+
+- `vip-code-info`: já refatorada; adicionar mensagens de erro específicas (expirado, pausado, limite atingido, já utilizado, ainda não iniciado) e retornar tipo/benefício.
+- `redeem-vip-code`: aplicar todas as validações + registrar user_agent/ip/device + gravar `days_granted` + emitir evento `redeemed`.
+- Rate limit leve por IP+user (em memória com Deno KV ou tabela `security_events`): máx 5 tentativas/min.
+
+## Fase 3 — Admin UI (`VipCodesManager.tsx`)
+
+Mantém o card superior de criação, mas dividido em abas/passos:
+1. **Dashboard** (novo): cards com total criados / ativos / expirados / usos / dias Premium concedidos / novos usuários / taxa conversão + gráfico de ativações por dia (recharts Area) e top campanhas (Bar).
+2. **Códigos**: barra de pesquisa (código, nome, campanha), filtros (todos, ativos, expirados, mais usados, nunca usados, TikTok, Instagram, influenciadores), paginação (25/página).
+3. **Cadastro completo** (modal): nome interno, código, tipo, benefício (dias 30/90/180/365/vitalício OU % OU R$), origem da campanha, label, datas início/fim (ou sem expiração), limite de usos, single_use, status inicial.
+4. **Ações por card**: duplicar, pausar/reativar, arquivar, excluir, gerar novo aleatório, copiar código, copiar link `finango.online/c/CODIGO`, compartilhar (Web Share API).
+5. **Detalhe do código** (drawer): lista paginada de quem usou (nome, email, data/hora, plano, dias, origem, dispositivo) + mini gráficos.
+
+## Fase 4 — Fluxo público
+
+- Rota curta `/c/:code` (além de `/vip/:code` existente): aplica o código automaticamente após cadastro/login.
+- `VipRedeem.tsx`: mensagens específicas para cada falha; animação de sucesso com dias concedidos e data de validade formatada em pt-BR.
+
+## Fase 5 — Segurança & performance
+
+- Validação backend em todas as ações (nunca confiar em client).
+- Rate limit em `redeem-vip-code`.
+- Paginação server-side.
+- Índices adicionados.
+- Constraint UNIQUE `(vip_code_id, user_id)` em `vip_redemptions` para blindar dupla ativação.
+
+## Detalhes técnicos
+
+- Migrations: 1 grande, com GRANTs e políticas. Nenhuma alteração destrutiva; colunas novas com defaults.
+- Tipos: regenerados após migration; usar `.returns<T>()` em queries com joins.
+- Cliente Supabase: sem mudanças em `client.ts`.
+- Identidade visual: mesmos tokens (`bg-card`, `border`, `Badge`, `Card`), mesma tipografia mono para código, chips coloridos por tipo/origem seguindo palette existente (primary, secondary, muted).
+
+## Fora de escopo
+
+- E-mail de confirmação após resgate (fica para depois).
+- Integração com provedor de SMS/push específico para códigos.
+- A/B testing de campanhas.
