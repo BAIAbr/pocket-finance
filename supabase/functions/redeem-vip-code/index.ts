@@ -1,16 +1,28 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
-function json(status: number, body: unknown) {
-  return new Response(JSON.stringify(body), {
+const json = (status: number, body: unknown) =>
+  new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+
+// Lightweight in-memory rate limit (per isolate): 8 attempts / 60s per key.
+const attempts = new Map<string, number[]>();
+function rateLimited(key: string, max = 8, windowMs = 60_000) {
+  const now = Date.now();
+  const list = (attempts.get(key) ?? []).filter((t) => now - t < windowMs);
+  list.push(now);
+  attempts.set(key, list);
+  return list.length > max;
+}
+
+function detectDevice(ua: string): string {
+  const s = ua.toLowerCase();
+  if (/ipad|tablet/.test(s)) return 'Tablet';
+  if (/iphone|android|mobile/.test(s)) return 'Mobile';
+  if (/windows|macintosh|linux/.test(s)) return 'Desktop';
+  return 'Desconhecido';
 }
 
 Deno.serve(async (req) => {
@@ -32,6 +44,14 @@ Deno.serve(async (req) => {
   if (claimsErr || !claims?.claims?.sub) return json(401, { error: 'unauthorized' });
   const userId = claims.claims.sub as string;
 
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
+  const userAgent = req.headers.get('user-agent') ?? '';
+  const device = detectDevice(userAgent);
+
+  if (rateLimited(`${userId}:${ip ?? 'noip'}`)) {
+    return json(429, { error: 'rate_limited' });
+  }
+
   let body: { code?: string };
   try { body = await req.json(); } catch { return json(400, { error: 'invalid_body' }); }
   const rawCode = (body.code || '').trim();
@@ -41,7 +61,6 @@ Deno.serve(async (req) => {
 
   const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
-  // Load code (case-insensitive)
   const { data: codes, error: codeErr } = await admin
     .from('vip_codes')
     .select('*')
@@ -50,66 +69,91 @@ Deno.serve(async (req) => {
   if (codeErr) return json(500, { error: 'db_error' });
   const vip = codes?.[0];
   if (!vip) return json(404, { error: 'not_found' });
-  if (!vip.is_active) return json(400, { error: 'inactive' });
-  if (vip.expires_at && new Date(vip.expires_at) < new Date()) return json(400, { error: 'expired' });
-  if (vip.max_uses != null && vip.uses_count >= vip.max_uses) return json(400, { error: 'max_uses' });
-
-  // Already redeemed by this user?
-  const { data: existing } = await admin
-    .from('vip_redemptions')
-    .select('id')
-    .eq('vip_code_id', vip.id)
-    .eq('user_id', userId)
-    .maybeSingle();
-  if (existing) return json(409, { error: 'already_redeemed' });
 
   const now = new Date();
-  const expires = new Date(now.getTime() + vip.duration_days * 24 * 60 * 60 * 1000);
+  if (vip.status === 'archived') return json(400, { error: 'archived' });
+  if (vip.status === 'paused' || !vip.is_active) return json(400, { error: 'inactive' });
+  if (vip.starts_at && new Date(vip.starts_at) > now) return json(400, { error: 'not_started' });
+  if (vip.expires_at && new Date(vip.expires_at) < now) return json(400, { error: 'expired' });
+  if (!vip.unlimited && vip.max_uses != null && vip.uses_count >= vip.max_uses) {
+    return json(400, { error: 'max_uses' });
+  }
 
-  // Upsert subscription
+  if (vip.single_use_per_user !== false) {
+    const { data: existing } = await admin
+      .from('vip_redemptions')
+      .select('id')
+      .eq('vip_code_id', vip.id)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (existing) return json(409, { error: 'already_redeemed' });
+  }
+
+  // Plan compatibility
+  const { data: plan } = await admin
+    .from('subscription_plans')
+    .select('name, is_active')
+    .eq('code', vip.plan_code)
+    .maybeSingle();
+  if (!plan || plan.is_active === false) return json(400, { error: 'plan_unavailable' });
+
+  const isLifetime = vip.is_lifetime === true || vip.benefit_type === 'lifetime';
+  const days = isLifetime ? null : (vip.duration_days ?? 30);
+  const expires = isLifetime ? null : new Date(now.getTime() + (days as number) * 86400_000);
+
   const { error: subErr } = await admin
     .from('user_subscriptions')
     .upsert(
       {
         user_id: userId,
         plan_code: vip.plan_code,
-        status: 'active',
+        status: 'vip',
         started_at: now.toISOString(),
-        expires_at: expires.toISOString(),
+        expires_at: expires ? expires.toISOString() : null,
+        provider: 'vip_code',
+        metadata: { vip_code: vip.code, campaign_source: vip.campaign_source },
       },
       { onConflict: 'user_id' }
     );
   if (subErr) return json(500, { error: 'subscription_failed', detail: subErr.message });
 
-  // Record redemption
   const { error: redErr } = await admin.from('vip_redemptions').insert({
     vip_code_id: vip.id,
     code: vip.code,
     user_id: userId,
     plan_code: vip.plan_code,
-    expires_at: expires.toISOString(),
+    expires_at: expires ? expires.toISOString() : null,
+    days_granted: days,
+    source_campaign: vip.campaign_source,
+    user_agent: userAgent.slice(0, 500),
+    ip,
+    device,
   });
-  if (redErr) return json(500, { error: 'redemption_failed' });
+  if (redErr) {
+    if ((redErr as { code?: string }).code === '23505') return json(409, { error: 'already_redeemed' });
+    return json(500, { error: 'redemption_failed' });
+  }
 
-  // Increment uses_count
   await admin
     .from('vip_codes')
-    .update({ uses_count: vip.uses_count + 1 })
+    .update({ uses_count: (vip.uses_count ?? 0) + 1 })
     .eq('id', vip.id);
 
-  // Plan name for UI
-  const { data: plan } = await admin
-    .from('subscription_plans')
-    .select('name')
-    .eq('code', vip.plan_code)
-    .maybeSingle();
+  await admin.from('vip_code_events').insert({
+    vip_code_id: vip.id,
+    code: vip.code,
+    actor_id: userId,
+    action: 'redeemed',
+    metadata: { plan_code: vip.plan_code, days_granted: days, device, ip, campaign_source: vip.campaign_source },
+  });
 
   return json(200, {
     ok: true,
     code: vip.code,
     plan_code: vip.plan_code,
     plan_name: plan?.name ?? vip.plan_code,
-    duration_days: vip.duration_days,
-    expires_at: expires.toISOString(),
+    duration_days: days,
+    is_lifetime: isLifetime,
+    expires_at: expires ? expires.toISOString() : null,
   });
 });
