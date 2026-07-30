@@ -4,17 +4,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Crown, CheckCircle2, XCircle, LogIn } from 'lucide-react';
+import { Loader2, Crown, CheckCircle2, XCircle, LogIn, PartyPopper } from 'lucide-react';
 import { toast } from 'sonner';
 
 type LookupResult = {
   valid: boolean;
   reason: string;
   code: string;
+  internal_name?: string | null;
   description: string | null;
   plan_code: string | null;
   plan_name: string | null;
   duration_days: number | null;
+  benefit_type?: string | null;
+  discount_percent?: number | null;
+  discount_amount?: number | null;
+  is_lifetime?: boolean;
 };
 
 type RedeemResult = {
@@ -22,19 +27,33 @@ type RedeemResult = {
   code: string;
   plan_code: string;
   plan_name: string;
-  duration_days: number;
-  expires_at: string;
+  duration_days: number | null;
+  is_lifetime: boolean;
+  expires_at: string | null;
 } | null;
 
 const REASON_LABEL: Record<string, string> = {
-  not_found: 'Código não encontrado.',
-  inactive: 'Este código está inativo.',
-  expired: 'Este código expirou.',
-  max_uses: 'Este código atingiu o limite de usos.',
-  already_redeemed: 'Você já ativou este código.',
-  invalid_code_format: 'Formato de código inválido.',
+  not_found: 'Código inválido. Verifique se digitou corretamente.',
+  inactive: 'Código desativado.',
+  archived: 'Este código foi arquivado e não está mais disponível.',
+  expired: 'Código expirado.',
+  not_started: 'Este código ainda não está disponível. Tente novamente na data de início.',
+  max_uses: 'Limite de ativações atingido.',
+  already_redeemed: 'Código já utilizado por você.',
+  invalid_code_format: 'Código inválido.',
+  plan_unavailable: 'O plano deste código não está disponível no momento.',
+  rate_limited: 'Muitas tentativas. Aguarde um minuto e tente novamente.',
   subscription_failed: 'Falha ao atualizar sua assinatura.',
+  redemption_failed: 'Falha ao registrar a ativação.',
   unauthorized: 'Sessão inválida. Faça login novamente.',
+};
+
+const benefitText = (l: LookupResult) => {
+  if (l.is_lifetime || l.benefit_type === 'lifetime') return 'Acesso vitalício';
+  if (l.benefit_type === 'percent_discount') return `${l.discount_percent}% de desconto`;
+  if (l.benefit_type === 'fixed_discount')
+    return `${(l.discount_amount ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} de desconto`;
+  return `${l.duration_days} dias de Premium`;
 };
 
 export default function VipRedeem() {
@@ -47,15 +66,14 @@ export default function VipRedeem() {
   const [redeemed, setRedeemed] = useState<RedeemResult>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Public lookup + view tracking
   useEffect(() => {
     (async () => {
       setLoading(true);
       const { data, error } = await supabase.functions.invoke('vip-code-info', { body: { code } });
       if (error) {
         setError('Não foi possível consultar o código.');
-      } else if ((data as any)?.result) {
-        setLookup((data as any).result as LookupResult);
+      } else if ((data as { result?: LookupResult })?.result) {
+        setLookup((data as { result: LookupResult }).result);
       } else {
         setLookup({ valid: false, reason: 'not_found', code, description: null, plan_code: null, plan_name: null, duration_days: null });
       }
@@ -69,50 +87,42 @@ export default function VipRedeem() {
       navigate('/auth');
       return;
     }
+    setError(null);
     setRedeeming(true);
-    const { data, error } = await supabase.functions.invoke('redeem-vip-code', {
-      body: { code },
-    });
+    const { data, error } = await supabase.functions.invoke('redeem-vip-code', { body: { code } });
     setRedeeming(false);
-    if (error) {
-      // Try to read error body
-      const msg = (data as any)?.error || 'subscription_failed';
-      toast.error(REASON_LABEL[msg] || 'Falha ao ativar código.');
-      setError(REASON_LABEL[msg] || 'Falha ao ativar código.');
-      return;
-    }
-    if ((data as any)?.error) {
-      const msg = (data as any).error;
-      toast.error(REASON_LABEL[msg] || 'Falha ao ativar código.');
-      setError(REASON_LABEL[msg] || 'Falha ao ativar código.');
+
+    const payload = data as { error?: string } | null;
+    const failure = payload?.error ?? (error ? 'subscription_failed' : null);
+    if (failure) {
+      const msg = REASON_LABEL[failure] || 'Não foi possível ativar este código.';
+      toast.error(msg);
+      setError(msg);
       return;
     }
     setRedeemed(data as RedeemResult);
     sessionStorage.removeItem('pendingVipCode');
-    toast.success('Código ativado!');
+    toast.success('Código aplicado com sucesso!');
   };
 
-  // Auto-redeem if user just logged in with a pending code matching this one
   useEffect(() => {
     if (authLoading || !user || !lookup?.valid || redeemed || redeeming) return;
     const pending = sessionStorage.getItem('pendingVipCode');
-    if (pending && pending.toLowerCase() === code.toLowerCase()) {
-      handleRedeem();
-    }
+    if (pending && pending.toLowerCase() === code.toLowerCase()) handleRedeem();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user, lookup?.valid]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md overflow-hidden">
         <CardContent className="p-6 space-y-5">
           <div className="flex items-center gap-3">
             <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center">
               <Crown className="text-primary" size={22} />
             </div>
-            <div>
+            <div className="min-w-0">
               <h1 className="text-lg font-semibold">Código VIP</h1>
-              <p className="text-xs text-muted-foreground font-mono uppercase">{code}</p>
+              <p className="text-xs text-muted-foreground font-mono uppercase truncate">{code}</p>
             </div>
           </div>
 
@@ -121,15 +131,27 @@ export default function VipRedeem() {
               <Loader2 className="animate-spin" size={16} /> Validando código…
             </div>
           ) : redeemed ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle2 size={20} />
-                <span className="font-medium">Benefícios liberados!</span>
+            <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
+              <div className="rounded-2xl border border-primary/30 bg-primary/5 p-6 text-center space-y-2">
+                <div className="mx-auto h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center animate-in zoom-in duration-700">
+                  <PartyPopper className="text-primary" size={28} />
+                </div>
+                <p className="text-lg font-semibold">🎉 Parabéns!</p>
+                <p className="text-sm text-muted-foreground">Você desbloqueou</p>
+                <p className="text-2xl font-bold text-primary">
+                  {redeemed.is_lifetime ? 'Acesso vitalício' : `${redeemed.duration_days} dias de Premium`}
+                </p>
               </div>
               <div className="rounded-lg border p-4 space-y-1 text-sm">
-                <div><span className="text-muted-foreground">Plano ativado: </span><span className="font-medium">{redeemed.plan_name}</span></div>
-                <div><span className="text-muted-foreground">Duração: </span><span className="font-medium">{redeemed.duration_days} dias</span></div>
-                <div><span className="text-muted-foreground">Expira em: </span><span className="font-medium">{new Date(redeemed.expires_at).toLocaleDateString('pt-BR')}</span></div>
+                <div className="flex items-center gap-2 text-green-600 pb-1">
+                  <CheckCircle2 size={16} /> <span className="font-medium">Plano {redeemed.plan_name} ativado.</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Validade: </span>
+                  <span className="font-medium">
+                    {redeemed.expires_at ? new Date(redeemed.expires_at).toLocaleDateString('pt-BR') : 'Sem expiração'}
+                  </span>
+                </div>
               </div>
               <Button className="w-full" onClick={() => navigate('/')}>Ir para o Dashboard</Button>
             </div>
@@ -137,12 +159,12 @@ export default function VipRedeem() {
             <div className="space-y-4">
               <div className="rounded-lg border p-4 space-y-1 text-sm">
                 <div><span className="text-muted-foreground">Plano: </span><span className="font-medium">{lookup.plan_name}</span></div>
-                <div><span className="text-muted-foreground">Duração: </span><span className="font-medium">{lookup.duration_days} dias</span></div>
+                <div><span className="text-muted-foreground">Benefício: </span><span className="font-medium">{benefitText(lookup)}</span></div>
                 {lookup.description && <p className="text-muted-foreground pt-2">{lookup.description}</p>}
               </div>
               <Button className="w-full" onClick={handleRedeem} disabled={redeeming}>
                 {redeeming ? <Loader2 className="animate-spin mr-2" size={16} /> : !user ? <LogIn className="mr-2" size={16} /> : <Crown className="mr-2" size={16} />}
-                {!user ? 'Entrar para ativar' : 'Ativar benefícios'}
+                {!user ? 'Criar conta / entrar para ativar' : 'Ativar benefícios'}
               </Button>
               {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
