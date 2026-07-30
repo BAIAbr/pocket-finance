@@ -2864,49 +2864,121 @@ export type Database = {
         }
         Relationships: []
       }
+      vip_code_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          code: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          vip_code_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          code?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          vip_code_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          code?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          vip_code_id?: string | null
+        }
+        Relationships: []
+      }
       vip_codes: {
         Row: {
+          archived_at: string | null
+          benefit_type: string
+          campaign_label: string | null
+          campaign_source: string
           code: string
+          code_type: string
           created_at: string
           created_by: string | null
           description: string | null
+          discount_amount: number | null
+          discount_percent: number | null
           duration_days: number
           expires_at: string | null
           id: string
+          internal_name: string | null
           is_active: boolean
+          is_lifetime: boolean
           max_uses: number | null
           plan_code: string
+          single_use_per_user: boolean
+          starts_at: string | null
+          status: string
+          unlimited: boolean
           updated_at: string
+          updated_by: string | null
           uses_count: number
           views_count: number
         }
         Insert: {
+          archived_at?: string | null
+          benefit_type?: string
+          campaign_label?: string | null
+          campaign_source?: string
           code: string
+          code_type?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
+          discount_amount?: number | null
+          discount_percent?: number | null
           duration_days?: number
           expires_at?: string | null
           id?: string
+          internal_name?: string | null
           is_active?: boolean
+          is_lifetime?: boolean
           max_uses?: number | null
           plan_code: string
+          single_use_per_user?: boolean
+          starts_at?: string | null
+          status?: string
+          unlimited?: boolean
           updated_at?: string
+          updated_by?: string | null
           uses_count?: number
           views_count?: number
         }
         Update: {
+          archived_at?: string | null
+          benefit_type?: string
+          campaign_label?: string | null
+          campaign_source?: string
           code?: string
+          code_type?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
+          discount_amount?: number | null
+          discount_percent?: number | null
           duration_days?: number
           expires_at?: string | null
           id?: string
+          internal_name?: string | null
           is_active?: boolean
+          is_lifetime?: boolean
           max_uses?: number | null
           plan_code?: string
+          single_use_per_user?: boolean
+          starts_at?: string | null
+          status?: string
+          unlimited?: boolean
           updated_at?: string
+          updated_by?: string | null
           uses_count?: number
           views_count?: number
         }
@@ -2923,28 +2995,43 @@ export type Database = {
       vip_redemptions: {
         Row: {
           code: string
+          days_granted: number | null
+          device: string | null
           expires_at: string | null
           id: string
+          ip: string | null
           plan_code: string
           redeemed_at: string
+          source_campaign: string | null
+          user_agent: string | null
           user_id: string
           vip_code_id: string
         }
         Insert: {
           code: string
+          days_granted?: number | null
+          device?: string | null
           expires_at?: string | null
           id?: string
+          ip?: string | null
           plan_code: string
           redeemed_at?: string
+          source_campaign?: string | null
+          user_agent?: string | null
           user_id: string
           vip_code_id: string
         }
         Update: {
           code?: string
+          days_granted?: number | null
+          device?: string | null
           expires_at?: string | null
           id?: string
+          ip?: string | null
           plan_code?: string
           redeemed_at?: string
+          source_campaign?: string | null
+          user_agent?: string | null
           user_id?: string
           vip_code_id?: string
         }
