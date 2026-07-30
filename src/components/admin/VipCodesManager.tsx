@@ -293,9 +293,13 @@ export default function VipCodesManager() {
 
   const logEvent = async (id: string | null, code: string, action: string, metadata: Record<string, unknown> = {}) => {
     const { data: userRes } = await supabase.auth.getUser();
-    await supabase.from('vip_code_events').insert({
-      vip_code_id: id, code, actor_id: userRes?.user?.id ?? null, action, metadata,
-    });
+    await supabase.from('vip_code_events').insert([{
+      vip_code_id: id ?? undefined,
+      code,
+      actor_id: userRes?.user?.id ?? undefined,
+      action,
+      metadata: metadata as never,
+    }]);
   };
 
   const setStatus = async (c: VipCode, status: string) => {
