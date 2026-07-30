@@ -73,6 +73,7 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
                 <Route path="/vip/:code" element={<VipRedeem />} />
+                <Route path="/c/:code" element={<VipRedeem />} />
                 <Route path="/d/:slug" element={<PublicDocument />} />
                 <Route path="/novidades" element={<Changelog />} />
                 <Route element={<AppLayout />}>
