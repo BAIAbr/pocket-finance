@@ -81,6 +81,18 @@ export default function VipRedeem() {
     })();
   }, [code]);
 
+  const formatWait = (s: number) => {
+    if (s >= 3600) {
+      const h = Math.round(s / 3600);
+      return `${h} hora${h > 1 ? 's' : ''}`;
+    }
+    if (s >= 60) {
+      const m = Math.ceil(s / 60);
+      return `${m} minuto${m > 1 ? 's' : ''}`;
+    }
+    return `${s} segundos`;
+  };
+
   const handleRedeem = async () => {
     if (!user) {
       sessionStorage.setItem('pendingVipCode', code);
@@ -92,10 +104,32 @@ export default function VipRedeem() {
     const { data, error } = await supabase.functions.invoke('redeem-vip-code', { body: { code } });
     setRedeeming(false);
 
-    const payload = data as { error?: string } | null;
+    let payload = data as RedeemPayload | null;
+    if (!payload && error) {
+      const ctx = (error as { context?: Response }).context;
+      if (ctx && typeof ctx.json === 'function') {
+        try { payload = (await ctx.json()) as RedeemPayload; } catch { /* ignore */ }
+      }
+    }
+
+    if (payload?.error === 'rate_limited') {
+      const wait = payload.retry_after_seconds ?? 60;
+      setBlockedUntil(payload.blocked_until ?? new Date(Date.now() + wait * 1000).toISOString());
+      setSecondsLeft(wait);
+      const msg = `Muitas tentativas. Aguarde ${formatWait(wait)} antes de tentar novamente.`;
+      toast.error(msg);
+      setError(msg);
+      return;
+    }
+
     const failure = payload?.error ?? (error ? 'subscription_failed' : null);
     if (failure) {
-      const msg = REASON_LABEL[failure] || 'Não foi possível ativar este código.';
+      const base = REASON_LABEL[failure] || 'Não foi possível ativar este código.';
+      const remaining = payload?.remaining_attempts;
+      const msg =
+        typeof remaining === 'number' && remaining > 0
+          ? `${base} Você ainda tem ${remaining} tentativa${remaining > 1 ? 's' : ''} antes do bloqueio temporário.`
+          : base;
       toast.error(msg);
       setError(msg);
       return;
@@ -106,11 +140,27 @@ export default function VipRedeem() {
   };
 
   useEffect(() => {
-    if (authLoading || !user || !lookup?.valid || redeemed || redeeming) return;
+    if (!blockedUntil) return;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((new Date(blockedUntil).getTime() - Date.now()) / 1000));
+      setSecondsLeft(left);
+      if (left === 0) {
+        setBlockedUntil(null);
+        setError(null);
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [blockedUntil]);
+
+  useEffect(() => {
+    if (authLoading || !user || !lookup?.valid || redeemed || redeeming || blockedUntil) return;
     const pending = sessionStorage.getItem('pendingVipCode');
     if (pending && pending.toLowerCase() === code.toLowerCase()) handleRedeem();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user, lookup?.valid]);
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
