@@ -74,6 +74,9 @@ export default function VipRedeem() {
   const [redeeming, setRedeeming] = useState(false);
   const [redeemed, setRedeemed] = useState<RedeemResult>(null);
   const [error, setError] = useState<string | null>(null);
+  const [blockedUntil, setBlockedUntil] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+
 
   useEffect(() => {
     (async () => {
