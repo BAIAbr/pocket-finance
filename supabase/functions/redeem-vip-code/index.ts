@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { checkThrottle, registerFailure, clearThrottle } from '../_shared/redeemThrottle.ts';
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -7,7 +8,7 @@ const json = (status: number, body: unknown) =>
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 
-// Lightweight in-memory rate limit (per isolate): 8 attempts / 60s per key.
+// Lightweight in-memory burst guard (per isolate): 8 attempts / 60s per key.
 const attempts = new Map<string, number[]>();
 function rateLimited(key: string, max = 8, windowMs = 60_000) {
   const now = Date.now();
@@ -24,6 +25,7 @@ function detectDevice(ua: string): string {
   if (/windows|macintosh|linux/.test(s)) return 'Desktop';
   return 'Desconhecido';
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
