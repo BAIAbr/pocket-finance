@@ -152,9 +152,13 @@ Deno.serve(async (req) => {
     device,
   });
   if (redErr) {
-    if ((redErr as { code?: string }).code === '23505') return json(409, { error: 'already_redeemed' });
+    if ((redErr as { code?: string }).code === '23505') return await fail(409, 'already_redeemed');
     return json(500, { error: 'redemption_failed' });
   }
+
+  await clearThrottle(admin, identity);
+
+
 
   await admin
     .from('vip_codes')
