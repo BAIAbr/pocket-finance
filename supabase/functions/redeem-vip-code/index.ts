@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { checkThrottle, registerFailure, clearThrottle } from '../_shared/redeemThrottle.ts';
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -7,7 +8,7 @@ const json = (status: number, body: unknown) =>
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 
-// Lightweight in-memory rate limit (per isolate): 8 attempts / 60s per key.
+// Lightweight in-memory burst guard (per isolate): 8 attempts / 60s per key.
 const attempts = new Map<string, number[]>();
 function rateLimited(key: string, max = 8, windowMs = 60_000) {
   const now = Date.now();
@@ -24,6 +25,7 @@ function detectDevice(ua: string): string {
   if (/windows|macintosh|linux/.test(s)) return 'Desktop';
   return 'Desconhecido';
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -48,18 +50,37 @@ Deno.serve(async (req) => {
   const userAgent = req.headers.get('user-agent') ?? '';
   const device = detectDevice(userAgent);
 
-  if (rateLimited(`${userId}:${ip ?? 'noip'}`)) {
-    return json(429, { error: 'rate_limited' });
+  const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+  const identity = `${userId}:${ip ?? 'noip'}`;
+
+  const throttleBody = (state: { retryAfterSeconds: number; blockedUntil: string | null; level: number }) => ({
+    error: 'rate_limited',
+    retry_after_seconds: state.retryAfterSeconds,
+    blocked_until: state.blockedUntil,
+    block_level: state.level,
+  });
+
+  if (rateLimited(identity)) {
+    return json(429, { error: 'rate_limited', retry_after_seconds: 60, blocked_until: null, block_level: 0 });
   }
+
+  // Persistent progressive throttle
+  const state = await checkThrottle(admin, identity, { user_id: userId, ip });
+  if (state.blocked) return json(429, throttleBody(state));
+
+  // Any invalid/failed attempt escalates the progressive block.
+  const fail = async (status: number, error: string) => {
+    const after = await registerFailure(admin, identity);
+    if (after.blocked) return json(429, throttleBody(after));
+    return json(status, { error, remaining_attempts: after.remainingAttempts });
+  };
 
   let body: { code?: string };
   try { body = await req.json(); } catch { return json(400, { error: 'invalid_body' }); }
   const rawCode = (body.code || '').trim();
   if (!rawCode || rawCode.length > 64 || !/^[A-Za-z0-9_-]+$/.test(rawCode)) {
-    return json(400, { error: 'invalid_code_format' });
+    return await fail(400, 'invalid_code_format');
   }
-
-  const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
   const { data: codes, error: codeErr } = await admin
     .from('vip_codes')
@@ -68,15 +89,15 @@ Deno.serve(async (req) => {
     .limit(1);
   if (codeErr) return json(500, { error: 'db_error' });
   const vip = codes?.[0];
-  if (!vip) return json(404, { error: 'not_found' });
+  if (!vip) return await fail(404, 'not_found');
 
   const now = new Date();
-  if (vip.status === 'archived') return json(400, { error: 'archived' });
-  if (vip.status === 'paused' || !vip.is_active) return json(400, { error: 'inactive' });
-  if (vip.starts_at && new Date(vip.starts_at) > now) return json(400, { error: 'not_started' });
-  if (vip.expires_at && new Date(vip.expires_at) < now) return json(400, { error: 'expired' });
+  if (vip.status === 'archived') return await fail(400, 'archived');
+  if (vip.status === 'paused' || !vip.is_active) return await fail(400, 'inactive');
+  if (vip.starts_at && new Date(vip.starts_at) > now) return await fail(400, 'not_started');
+  if (vip.expires_at && new Date(vip.expires_at) < now) return await fail(400, 'expired');
   if (!vip.unlimited && vip.max_uses != null && vip.uses_count >= vip.max_uses) {
-    return json(400, { error: 'max_uses' });
+    return await fail(400, 'max_uses');
   }
 
   if (vip.single_use_per_user !== false) {
@@ -86,7 +107,7 @@ Deno.serve(async (req) => {
       .eq('vip_code_id', vip.id)
       .eq('user_id', userId)
       .maybeSingle();
-    if (existing) return json(409, { error: 'already_redeemed' });
+    if (existing) return await fail(409, 'already_redeemed');
   }
 
   // Plan compatibility
@@ -95,7 +116,8 @@ Deno.serve(async (req) => {
     .select('name, is_active')
     .eq('code', vip.plan_code)
     .maybeSingle();
-  if (!plan || plan.is_active === false) return json(400, { error: 'plan_unavailable' });
+  if (!plan || plan.is_active === false) return await fail(400, 'plan_unavailable');
+
 
   const isLifetime = vip.is_lifetime === true || vip.benefit_type === 'lifetime';
   const days = isLifetime ? null : (vip.duration_days ?? 30);
@@ -130,9 +152,13 @@ Deno.serve(async (req) => {
     device,
   });
   if (redErr) {
-    if ((redErr as { code?: string }).code === '23505') return json(409, { error: 'already_redeemed' });
+    if ((redErr as { code?: string }).code === '23505') return await fail(409, 'already_redeemed');
     return json(500, { error: 'redemption_failed' });
   }
+
+  await clearThrottle(admin, identity);
+
+
 
   await admin
     .from('vip_codes')

@@ -32,6 +32,15 @@ type RedeemResult = {
   expires_at: string | null;
 } | null;
 
+type RedeemPayload = {
+  error?: string;
+  retry_after_seconds?: number;
+  blocked_until?: string | null;
+  block_level?: number;
+  remaining_attempts?: number;
+};
+
+
 const REASON_LABEL: Record<string, string> = {
   not_found: 'Código inválido. Verifique se digitou corretamente.',
   inactive: 'Código desativado.',
@@ -65,6 +74,9 @@ export default function VipRedeem() {
   const [redeeming, setRedeeming] = useState(false);
   const [redeemed, setRedeemed] = useState<RedeemResult>(null);
   const [error, setError] = useState<string | null>(null);
+  const [blockedUntil, setBlockedUntil] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+
 
   useEffect(() => {
     (async () => {
@@ -81,6 +93,18 @@ export default function VipRedeem() {
     })();
   }, [code]);
 
+  const formatWait = (s: number) => {
+    if (s >= 3600) {
+      const h = Math.round(s / 3600);
+      return `${h} hora${h > 1 ? 's' : ''}`;
+    }
+    if (s >= 60) {
+      const m = Math.ceil(s / 60);
+      return `${m} minuto${m > 1 ? 's' : ''}`;
+    }
+    return `${s} segundos`;
+  };
+
   const handleRedeem = async () => {
     if (!user) {
       sessionStorage.setItem('pendingVipCode', code);
@@ -92,10 +116,32 @@ export default function VipRedeem() {
     const { data, error } = await supabase.functions.invoke('redeem-vip-code', { body: { code } });
     setRedeeming(false);
 
-    const payload = data as { error?: string } | null;
+    let payload = data as RedeemPayload | null;
+    if (!payload && error) {
+      const ctx = (error as { context?: Response }).context;
+      if (ctx && typeof ctx.json === 'function') {
+        try { payload = (await ctx.json()) as RedeemPayload; } catch { /* ignore */ }
+      }
+    }
+
+    if (payload?.error === 'rate_limited') {
+      const wait = payload.retry_after_seconds ?? 60;
+      setBlockedUntil(payload.blocked_until ?? new Date(Date.now() + wait * 1000).toISOString());
+      setSecondsLeft(wait);
+      const msg = `Muitas tentativas. Aguarde ${formatWait(wait)} antes de tentar novamente.`;
+      toast.error(msg);
+      setError(msg);
+      return;
+    }
+
     const failure = payload?.error ?? (error ? 'subscription_failed' : null);
     if (failure) {
-      const msg = REASON_LABEL[failure] || 'Não foi possível ativar este código.';
+      const base = REASON_LABEL[failure] || 'Não foi possível ativar este código.';
+      const remaining = payload?.remaining_attempts;
+      const msg =
+        typeof remaining === 'number' && remaining > 0
+          ? `${base} Você ainda tem ${remaining} tentativa${remaining > 1 ? 's' : ''} antes do bloqueio temporário.`
+          : base;
       toast.error(msg);
       setError(msg);
       return;
@@ -106,11 +152,27 @@ export default function VipRedeem() {
   };
 
   useEffect(() => {
-    if (authLoading || !user || !lookup?.valid || redeemed || redeeming) return;
+    if (!blockedUntil) return;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((new Date(blockedUntil).getTime() - Date.now()) / 1000));
+      setSecondsLeft(left);
+      if (left === 0) {
+        setBlockedUntil(null);
+        setError(null);
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [blockedUntil]);
+
+  useEffect(() => {
+    if (authLoading || !user || !lookup?.valid || redeemed || redeeming || blockedUntil) return;
     const pending = sessionStorage.getItem('pendingVipCode');
     if (pending && pending.toLowerCase() === code.toLowerCase()) handleRedeem();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user, lookup?.valid]);
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
@@ -162,11 +224,24 @@ export default function VipRedeem() {
                 <div><span className="text-muted-foreground">Benefício: </span><span className="font-medium">{benefitText(lookup)}</span></div>
                 {lookup.description && <p className="text-muted-foreground pt-2">{lookup.description}</p>}
               </div>
-              <Button className="w-full" onClick={handleRedeem} disabled={redeeming}>
+              {blockedUntil && secondsLeft > 0 && (
+                <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm space-y-1">
+                  <p className="font-medium text-destructive">Tentativas bloqueadas temporariamente</p>
+                  <p className="text-muted-foreground">
+                    Detectamos muitas tentativas seguidas. Tente novamente em{' '}
+                    <span className="font-mono font-semibold">
+                      {String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:{String(secondsLeft % 60).padStart(2, '0')}
+                    </span>
+                    . Bloqueios aumentam a cada nova sequência de erros.
+                  </p>
+                </div>
+              )}
+              <Button className="w-full" onClick={handleRedeem} disabled={redeeming || secondsLeft > 0}>
                 {redeeming ? <Loader2 className="animate-spin mr-2" size={16} /> : !user ? <LogIn className="mr-2" size={16} /> : <Crown className="mr-2" size={16} />}
-                {!user ? 'Criar conta / entrar para ativar' : 'Ativar benefícios'}
+                {secondsLeft > 0 ? 'Aguarde para tentar novamente' : !user ? 'Criar conta / entrar para ativar' : 'Ativar benefícios'}
               </Button>
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {error && !blockedUntil && <p className="text-sm text-destructive">{error}</p>}
+
             </div>
           ) : (
             <div className="space-y-4">
