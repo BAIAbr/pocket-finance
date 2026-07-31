@@ -32,6 +32,15 @@ type RedeemResult = {
   expires_at: string | null;
 } | null;
 
+type RedeemPayload = {
+  error?: string;
+  retry_after_seconds?: number;
+  blocked_until?: string | null;
+  block_level?: number;
+  remaining_attempts?: number;
+};
+
+
 const REASON_LABEL: Record<string, string> = {
   not_found: 'Código inválido. Verifique se digitou corretamente.',
   inactive: 'Código desativado.',
