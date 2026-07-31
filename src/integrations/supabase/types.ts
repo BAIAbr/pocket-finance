@@ -2992,6 +2992,51 @@ export type Database = {
           },
         ]
       }
+      vip_redeem_throttle: {
+        Row: {
+          attempts: number
+          block_level: number
+          blocked_until: string | null
+          created_at: string
+          failures: number
+          id: string
+          identity: string
+          ip: string | null
+          last_attempt_at: string
+          updated_at: string
+          user_id: string | null
+          window_started_at: string
+        }
+        Insert: {
+          attempts?: number
+          block_level?: number
+          blocked_until?: string | null
+          created_at?: string
+          failures?: number
+          id?: string
+          identity: string
+          ip?: string | null
+          last_attempt_at?: string
+          updated_at?: string
+          user_id?: string | null
+          window_started_at?: string
+        }
+        Update: {
+          attempts?: number
+          block_level?: number
+          blocked_until?: string | null
+          created_at?: string
+          failures?: number
+          id?: string
+          identity?: string
+          ip?: string | null
+          last_attempt_at?: string
+          updated_at?: string
+          user_id?: string | null
+          window_started_at?: string
+        }
+        Relationships: []
+      }
       vip_redemptions: {
         Row: {
           code: string
