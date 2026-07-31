@@ -224,11 +224,24 @@ export default function VipRedeem() {
                 <div><span className="text-muted-foreground">Benefício: </span><span className="font-medium">{benefitText(lookup)}</span></div>
                 {lookup.description && <p className="text-muted-foreground pt-2">{lookup.description}</p>}
               </div>
-              <Button className="w-full" onClick={handleRedeem} disabled={redeeming}>
+              {blockedUntil && secondsLeft > 0 && (
+                <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm space-y-1">
+                  <p className="font-medium text-destructive">Tentativas bloqueadas temporariamente</p>
+                  <p className="text-muted-foreground">
+                    Detectamos muitas tentativas seguidas. Tente novamente em{' '}
+                    <span className="font-mono font-semibold">
+                      {String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:{String(secondsLeft % 60).padStart(2, '0')}
+                    </span>
+                    . Bloqueios aumentam a cada nova sequência de erros.
+                  </p>
+                </div>
+              )}
+              <Button className="w-full" onClick={handleRedeem} disabled={redeeming || secondsLeft > 0}>
                 {redeeming ? <Loader2 className="animate-spin mr-2" size={16} /> : !user ? <LogIn className="mr-2" size={16} /> : <Crown className="mr-2" size={16} />}
-                {!user ? 'Criar conta / entrar para ativar' : 'Ativar benefícios'}
+                {secondsLeft > 0 ? 'Aguarde para tentar novamente' : !user ? 'Criar conta / entrar para ativar' : 'Ativar benefícios'}
               </Button>
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {error && !blockedUntil && <p className="text-sm text-destructive">{error}</p>}
+
             </div>
           ) : (
             <div className="space-y-4">
