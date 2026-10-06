@@ -13,6 +13,7 @@ const groups: { label?: string; items: Item[] }[] = [
   {
     label: 'Dinheiro',
     items: [
+      { path: '/money', icon: Wallet, label: 'Visão geral' },
       { path: '/history', icon: History, label: 'Transações' },
       { path: '/cards', icon: CreditCard, label: 'Cartões' },
       { path: '/recurring', icon: Repeat, label: 'Recorrências' },

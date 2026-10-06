@@ -89,9 +89,9 @@ export default function Money() {
               {cards.slice(0, 2).map(card => {
                 const m = getCardMetrics(card.id);
                 return (
-                  <button key={card.id} onClick={() => navigate(`/cards/${card.id}`)} className="text-left">
-                    <CreditCardVisual card={card} used={m?.used ?? 0} available={m?.available ?? 0} percent={m?.percent ?? 0} currentInvoice={m?.currentInvoice ?? null} />
-                  </button>
+                  <CreditCardVisual key={card.id} card={card} used={m.used} available={m.available} percent={m.percent}
+                    invoiceAmount={m.currentInvoice ? Number(m.currentInvoice.total_amount) - Number(m.currentInvoice.paid_amount) : 0}
+                    dueDate={m.currentInvoice?.due_date} onClick={() => navigate(`/cards/${card.id}`)} />
                 );
               })}
             </div>

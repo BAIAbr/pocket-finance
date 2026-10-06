@@ -51,6 +51,7 @@ import VipRedeem from "./pages/VipRedeem";
 import Profile from "./pages/Profile";
 import PublicDocument from "./pages/PublicDocument";
 import Changelog from "./pages/Changelog";
+import Money from "./pages/Money";
 
 
 const queryClient = new QueryClient();
@@ -95,6 +96,7 @@ const App = () => (
                   <Route path="/settings/help" element={<HelpSettings />} />
                   <Route path="/settings/about" element={<AboutSettings />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/money" element={<Money />} />
                   <Route path="/history" element={<FinancialHistory />} />
                   <Route path="/calendar" element={<FinancialCalendar />} />
                   <Route path="/recurring" element={<PlanGate feature="recurring"><Recurring /></PlanGate>} />
