@@ -24,6 +24,7 @@ export function SettingsSubPageHeader({ title, description, icon }: Props) {
           </div>
         )}
         <div className="min-w-0">
+          <p className="text-[11px] font-mono font-semibold uppercase tracking-[0.18em] text-primary">Configurações</p>
           <h1 className="text-2xl font-bold">{title}</h1>
           {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
         </div>
