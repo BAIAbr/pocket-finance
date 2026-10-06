@@ -144,11 +144,11 @@ export default function AuthPage() {
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
               A plataforma completa para organizar receitas, despesas, metas e metas —
-              com inteligência artificial e visão de família.
+              com inteligência artificial.
             </p>
 
             <div className="flex flex-wrap gap-2 pt-2">
-              {['Metas', 'Modo família', 'IA financeira', 'Metas'].map((tag) => (
+              {['Metas', 'IA financeira'].map((tag) => (
                 <span
                   key={tag}
                   className="text-xs font-medium px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground border border-border"

@@ -241,8 +241,8 @@ export function AddTransactionModal({ isOpen, onClose, initialType = 'expense' }
                   />
                 </div>
 
-                {/* Share with Family */}
-                {family && (
+                {/* Share with Family — removido da interface */}
+                {false && family && (
                   <button
                     type="button"
                     onClick={() => setShareWithFamily(!shareWithFamily)}
