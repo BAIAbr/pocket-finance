@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import {
   X, TrendingUp, Bot, Camera, ArrowDownUp, BarChart3,
   Crown, Settings as SettingsIcon, User, HelpCircle, Sparkles, ChevronRight, Lock,
-  Search, Bell, CalendarDays, CreditCard,
+  Search, Bell, CalendarDays, CreditCard, Wallet, Receipt, FileText, Repeat,
 } from 'lucide-react';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -78,11 +78,20 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
       ],
     },
     {
+      title: 'Dinheiro',
+      items: [
+        { icon: Wallet, label: 'Visão geral', description: 'Saldo, faturas e próximos vencimentos', badge: 'Novo', action: go('/money') },
+        { icon: Receipt, label: 'Transações', description: 'Histórico com filtros', action: go('/history') },
+        { icon: CreditCard, label: 'Cartões', description: 'Limites e parcelas', action: go('/cards') },
+        { icon: FileText, label: 'Faturas', description: 'Relatórios de faturas dos cartões', action: go('/cards/reports') },
+        { icon: Repeat, label: 'Recorrências', description: 'Contas e assinaturas fixas', premium: true, action: goPremiumOr('/recurring') },
+      ],
+    },
+    {
       title: 'Finanças',
       items: [
         { icon: CalendarDays, label: 'Calendário Financeiro', description: 'Contas, prazos e movimentações por dia', badge: 'Novo', action: go('/calendar') },
         { icon: TrendingUp, label: 'Investimentos', description: 'Acompanhe rendimentos e carteira', badge: 'Novo', action: go('/investments') },
-        { icon: CreditCard, label: 'Cartões de crédito', description: 'Limites, faturas e parcelas', badge: 'Novo', action: go('/cards') },
         { icon: ArrowDownUp, label: 'Importar e Exportar', description: 'CSV, OFX, Excel, PDF e backup', action: go('/settings/data') },
       ],
     },
