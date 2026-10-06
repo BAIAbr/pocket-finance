@@ -3,11 +3,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useSimulatedPlan } from '@/hooks/useSimulatedPlan';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
-import { getCapabilities, PlanFeature } from '@/lib/planCapabilities';
+import { getCapabilities, entitledPlanCode, PlanFeature } from '@/lib/planCapabilities';
 
 export function usePlanAccess() {
   const { user } = useAuth();
-  const { currentPlanCode, loading } = useSubscription(user?.id);
+  const { subscription, loading } = useSubscription(user?.id);
+  // Only active/trial/vip, non-expired subscriptions grant benefits (same rule as backend user_plan_code)
+  const currentPlanCode = entitledPlanCode(subscription as any);
   const { simulatedPlan } = useSimulatedPlan();
   const { isAdmin } = useAdminCheck(user?.id);
 
