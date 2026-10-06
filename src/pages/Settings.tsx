@@ -2,181 +2,182 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { useFinanceContext } from '@/contexts/FinanceContext';
+import { useSubscription } from '@/hooks/useSubscription';
+import { entitledPlanCode } from '@/lib/planCapabilities';
 import { useNavigate } from 'react-router-dom';
 import {
-  Palette, Bell, Shield, CreditCard, Download, Globe, FlaskConical,
-  HelpCircle, Info, Users, ShieldCheck, Trash2, ChevronRight,
+  Palette, Bell, Shield, CreditCard, Globe, FlaskConical,
+  HelpCircle, Info, ShieldCheck, Trash2, User, Database, Crown, ChevronRight,
 } from 'lucide-react';
-import { SettingsCategoryCard } from '@/components/settings/SettingsCategoryCard';
-import { FamilySettings } from '@/components/FamilySettings';
-import { PlanGate } from '@/components/PlanGate';
+import { SettingRow } from '@/components/settings/SettingRow';
 import { toast } from 'sonner';
 
-interface Category {
+interface Row {
   id: string;
-  title: string;
+  label: string;
   description: string;
   icon: React.ReactNode;
-  onClick: () => void;
-  accentClass: string;
+  to: string;
+  badge?: string;
+}
+
+interface Group {
+  title: string;
+  rows: Row[];
 }
 
 export default function SettingsPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
   const { isAdmin } = useAdminCheck(user?.id);
   const { clearAllData } = useFinanceContext();
+  const { plans, subscription } = useSubscription(user?.id);
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const [showFamily, setShowFamily] = useState(false);
 
-  const categories: Category[] = [
+  const planCode = entitledPlanCode(subscription as any);
+  const planName = plans.find(p => p.code === planCode)?.name ?? (planCode === 'free' ? 'Gratuito' : planCode);
+  const displayName = profile?.name || user?.email?.split('@')[0] || 'Usuário';
+  const initial = displayName.charAt(0).toUpperCase();
+
+  const groups: Group[] = [
     {
-      id: 'appearance',
-      title: 'Personalização',
-      description: 'Customize a aparência e a organização do Finango.',
-      icon: <Palette size={26} />,
-      onClick: () => navigate('/settings/appearance'),
-      accentClass: 'bg-primary/15 text-primary',
+      title: 'Conta',
+      rows: [
+        { id: 'profile', label: 'Perfil', description: 'Nome, foto e conquistas.', icon: <User size={18} />, to: '/profile' },
+        { id: 'data', label: 'Dados', description: 'Importação e exportação dos seus dados.', icon: <Database size={18} />, to: '/settings/data' },
+      ],
     },
     {
-      id: 'notifications',
-      title: 'Notificações',
-      description: 'Push, resumos e categorias.',
-      icon: <Bell size={26} />,
-      onClick: () => navigate('/settings/notifications'),
-      accentClass: 'bg-warning/15 text-warning',
-    },
-    {
-      id: 'security',
-      title: 'Segurança',
-      description: 'Senha, 2FA, sessões e dispositivos.',
-      icon: <Shield size={26} />,
-      onClick: () => navigate('/security'),
-      accentClass: 'bg-success/15 text-success',
-    },
-    {
-      id: 'subscription',
-      title: 'Assinatura e Contas',
-      description: 'Plano Finango, pagamentos e conexões.',
-      icon: <CreditCard size={26} />,
-      onClick: () => navigate('/settings/subscription'),
-      accentClass: 'bg-primary/15 text-primary',
-    },
-    {
-      id: 'preferences',
       title: 'Preferências',
-      description: 'Idioma, moeda, formato de data e fuso.',
-      icon: <Globe size={26} />,
-      onClick: () => navigate('/settings/preferences'),
-      accentClass: 'bg-secondary text-foreground',
+      rows: [
+        { id: 'appearance', label: 'Aparência e tema', description: 'Temas, cores e organização do Finango.', icon: <Palette size={18} />, to: '/settings/appearance' },
+        { id: 'preferences', label: 'Preferências da aplicação', description: 'Idioma, moeda, formato de data e fuso.', icon: <Globe size={18} />, to: '/settings/preferences' },
+        { id: 'notifications', label: 'Notificações', description: 'Push, resumos e categorias.', icon: <Bell size={18} />, to: '/settings/notifications' },
+      ],
     },
     {
-      id: 'labs',
-      title: 'Laboratório Finango',
-      description: 'Recursos experimentais em teste.',
-      icon: <FlaskConical size={26} />,
-      onClick: () => navigate('/settings/labs'),
-      accentClass: 'bg-primary/15 text-primary',
+      title: 'Segurança',
+      rows: [
+        { id: 'security', label: 'Segurança', description: 'Senha, sessões e dispositivos.', icon: <Shield size={18} />, to: '/security' },
+      ],
     },
     {
-      id: 'help',
-      title: 'Ajuda e Suporte',
-      description: 'Central de ajuda, contato e feedback.',
-      icon: <HelpCircle size={26} />,
-      onClick: () => navigate('/settings/help'),
-      accentClass: 'bg-secondary text-foreground',
+      title: 'Assinatura',
+      rows: [
+        { id: 'subscription', label: 'Meu plano', description: 'Status, pagamentos e cupons.', icon: <CreditCard size={18} />, to: '/settings/subscription' },
+        { id: 'plans', label: 'Planos', description: 'Compare os planos do Finango.', icon: <Crown size={18} />, to: '/plans' },
+      ],
     },
     {
-      id: 'about',
-      title: 'Sobre',
-      description: 'Versão, changelog, políticas e licenças.',
-      icon: <Info size={26} />,
-      onClick: () => navigate('/settings/about'),
-      accentClass: 'bg-secondary text-foreground',
+      title: 'Outros',
+      rows: [
+        { id: 'labs', label: 'Laboratório Finango', description: 'Recursos experimentais em teste.', icon: <FlaskConical size={18} />, to: '/settings/labs' },
+        { id: 'help', label: 'Ajuda e suporte', description: 'Central de ajuda, contato e feedback.', icon: <HelpCircle size={18} />, to: '/settings/help' },
+        { id: 'about', label: 'Sobre', description: 'Versão, changelog, políticas e licenças.', icon: <Info size={18} />, to: '/settings/about' },
+        ...(isAuthenticated && isAdmin
+          ? [{ id: 'admin', label: 'Painel administrativo', description: 'Ferramentas de admin do Finango.', icon: <ShieldCheck size={18} />, to: '/admin', badge: 'Admin' }]
+          : []),
+      ],
     },
   ];
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
-      <header className="px-4 pt-6 pb-4 max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold">Configurações</h1>
+      <header className="px-4 pt-6 pb-4 max-w-3xl mx-auto">
+        <p className="text-[11px] font-mono font-semibold uppercase tracking-[0.18em] text-primary">Configurações</p>
+        <h1 className="text-2xl font-bold mt-1">Sua conta</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Central de configuração completa do seu Finango.
+          Gerencie sua conta, preferências e segurança.
         </p>
       </header>
 
-      <main className="px-4 space-y-5 max-w-4xl mx-auto">
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {categories.map(c => (
-            <SettingsCategoryCard
-              key={c.id}
-              icon={c.icon}
-              title={c.title}
-              description={c.description}
-              accentClass={c.accentClass}
-              onClick={c.onClick}
-            />
-          ))}
-        </section>
+      <main className="px-4 space-y-6 max-w-3xl mx-auto">
+        {isAuthenticated && (
+          <button
+            onClick={() => navigate('/profile')}
+            className="card-finance w-full flex items-center gap-4 text-left touch-scale hover:border-primary/40 transition-colors"
+          >
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-primary/30 shrink-0" />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xl font-bold shrink-0">
+                {initial}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold truncate">{displayName}</p>
+              <p className="text-xs text-muted-foreground truncate">{profile?.email || user?.email}</p>
+              <span className="inline-block mt-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary/15 text-primary">
+                {planName}
+              </span>
+            </div>
+            <ChevronRight size={18} className="text-muted-foreground shrink-0" />
+          </button>
+        )}
+
+        {groups.map(g => (
+          <section key={g.title}>
+            <h2 className="px-1 mb-2 text-[11px] font-mono font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              {g.title}
+            </h2>
+            <div className="card-finance p-1.5 divide-y divide-border/50">
+              {g.rows.map(r => (
+                <SettingRow
+                  key={r.id}
+                  icon={r.icon}
+                  label={r.label}
+                  description={r.description}
+                  badge={r.badge}
+                  onClick={() => navigate(r.to)}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
 
         {/* Família: removida da interface (backend preservado) */}
 
-        {/* Admin */}
-        {isAuthenticated && isAdmin && (
-          <SettingsCategoryCard
-            icon={<ShieldCheck size={26} />}
-            title="Painel Administrativo"
-            description="Ferramentas de admin do Finango."
-            accentClass="bg-primary/15 text-primary"
-            onClick={() => navigate('/admin')}
-            badge="Admin"
-          />
-        )}
-
-        {/* Zona de perigo */}
         {isAuthenticated && (
-          <section className="card-finance border border-destructive/20">
-            <h2 className="font-semibold mb-3 flex items-center gap-2 text-destructive">
-              <Trash2 size={18} /> Zona de perigo
+          <section>
+            <h2 className="px-1 mb-2 text-[11px] font-mono font-semibold uppercase tracking-[0.16em] text-destructive">
+              Zona de perigo
             </h2>
-            {showConfirmClear ? (
-              <div className="space-y-3">
-                <p className="text-sm text-destructive">
-                  ⚠️ Isso apagará todas as suas transações e metas. Esta ação não pode ser desfeita.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowConfirmClear(false)}
-                    className="flex-1 py-3 rounded-xl bg-secondary font-medium touch-scale"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={async () => {
-                      await clearAllData();
-                      setShowConfirmClear(false);
-                      toast.success('Dados limpos');
-                    }}
-                    className="flex-1 py-3 rounded-xl bg-destructive text-destructive-foreground font-medium touch-scale"
-                  >
-                    Confirmar
-                  </button>
+            <div className="card-finance p-1.5 border border-destructive/20">
+              {showConfirmClear ? (
+                <div className="space-y-3 p-2">
+                  <p className="text-sm text-destructive">
+                    Isso apagará todas as suas transações e metas. Esta ação não pode ser desfeita.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowConfirmClear(false)}
+                      className="flex-1 py-3 rounded-xl bg-secondary font-medium touch-scale"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await clearAllData();
+                        setShowConfirmClear(false);
+                        toast.success('Dados limpos');
+                      }}
+                      className="flex-1 py-3 rounded-xl bg-destructive text-destructive-foreground font-medium touch-scale"
+                    >
+                      Confirmar
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowConfirmClear(true)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 touch-scale text-destructive text-left"
-              >
-                <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
-                  <Trash2 size={18} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium">Limpar todos os dados</p>
-                  <p className="text-xs text-destructive/70">Ação irreversível</p>
-                </div>
-              </button>
-            )}
+              ) : (
+                <SettingRow
+                  danger
+                  icon={<Trash2 size={18} />}
+                  label="Limpar todos os dados"
+                  description="Ação irreversível"
+                  onClick={() => setShowConfirmClear(true)}
+                  trailing={null as any}
+                />
+              )}
+            </div>
           </section>
         )}
       </main>
