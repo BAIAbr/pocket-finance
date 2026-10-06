@@ -7,6 +7,8 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import finangoLogo from '@/assets/finango-logo.png.asset.json';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { Globe, ChevronRight } from 'lucide-react';
 
 const DASHBOARD_CARDS: { id: string; label: string }[] = [
   { id: 'smartInsights', label: 'Assistente inteligente' },
@@ -102,6 +104,7 @@ export default function AppearanceSettings() {
       />
 
       <main className="px-4 space-y-5 max-w-3xl mx-auto">
+        <PreferencesLink />
         {/* Dashboard */}
         <section className="card-finance">
           <div className="flex items-center justify-between mb-3">
@@ -292,5 +295,22 @@ export default function AppearanceSettings() {
         </section>
       </main>
     </div>
+  );
+}
+
+function PreferencesLink() {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => navigate('/settings/preferences')}
+      className="card-finance w-full flex items-center gap-3 text-left hover:border-primary/40 transition-colors"
+    >
+      <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"><Globe size={17} /></div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-sm">Preferências da aplicação</p>
+        <p className="text-xs text-muted-foreground">Idioma, moeda, formato de data e fuso.</p>
+      </div>
+      <ChevronRight size={16} className="text-muted-foreground shrink-0" />
+    </button>
   );
 }
