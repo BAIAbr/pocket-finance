@@ -1,4 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { entitledPlanCode } from '@/lib/planCapabilities';
 import { useSubscription, type SubscriptionPlan, type BillingInterval } from '@/hooks/useSubscription';
 import { AlertTriangle, Check, Crown, Sparkles, Loader2, ArrowLeft, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -44,7 +45,9 @@ function equivalentPerMonth(p: SubscriptionPlan): number {
 export default function PlansPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { plans: rawPlans, currentPlanCode, loading } = useSubscription(user?.id);
+  const { plans: rawPlans, subscription, loading } = useSubscription(user?.id);
+  // Plano atual = plano que realmente concede acesso (pendente/cancelado/expirado = gratuito).
+  const currentPlanCode = entitledPlanCode(subscription as any);
   // Modo Família está fora da experiência do usuário: não comercializar (dados no banco preservados).
   const plans = useMemo(() => rawPlans.map(p => ({
     ...p,

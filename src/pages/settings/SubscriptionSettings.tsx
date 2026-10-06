@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { formatBRL } from '@/lib/currency';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { entitledPlanCode } from '@/lib/planCapabilities';
 
 interface PaymentRow {
   id: string;
@@ -162,8 +163,11 @@ export default function SubscriptionSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
-  const currentPlan = plans.find(p => p.code === currentPlanCode);
-  const isPaid = currentPlanCode !== 'free';
+  // Acesso real segue a regra do backend (entitledPlanCode): assinatura pendente não concede benefícios.
+  const accessPlanCode = entitledPlanCode(subscription as any);
+  const currentPlan = plans.find(p => p.code === accessPlanCode);
+  const isPaid = accessPlanCode !== 'free';
+  const isPending = !isPaid && !!subscription && currentPlanCode !== 'free' && subscription.status === 'pending';
   const premiumPlan = useMemo(
     () => plans.find(p => p.code !== 'free' && p.price_monthly > 0) ?? plans.find(p => p.code !== 'free'),
     [plans],
@@ -180,9 +184,10 @@ export default function SubscriptionSettings() {
       : status === 'pending' ? 'Pendente'
       : status === 'trial' ? 'Em teste'
       : 'Em análise'
-    : 'Plano gratuito';
+    : isPending ? 'Assinatura pendente' : 'Plano gratuito';
   const statusBadgeClass =
-    !isPaid ? 'bg-muted text-muted-foreground'
+    isPending ? 'bg-warning/15 text-warning'
+    : !isPaid ? 'bg-muted text-muted-foreground'
     : status === 'active' ? 'bg-success/15 text-success'
     : status === 'pending' || status === 'trial' ? 'bg-warning/15 text-warning'
     : status === 'cancelled' || status === 'expired' ? 'bg-destructive/15 text-destructive'
@@ -273,7 +278,7 @@ export default function SubscriptionSettings() {
                         statusBadgeClass,
                       )}
                     >
-                      <StatusDot status={isPaid ? status : 'free'} />
+                      <StatusDot status={isPaid || isPending ? status : 'free'} />
                       {statusLabel}
                     </span>
                   </div>
@@ -316,7 +321,9 @@ export default function SubscriptionSettings() {
               {!isPaid && (
                 <div className="relative mt-4">
                   <p className="text-sm text-muted-foreground">
-                    Você está utilizando o plano gratuito. Conheça os benefícios do Premium.
+                    {isPending
+                      ? 'Sua assinatura ainda não está ativa. Enquanto isso, você continua com os recursos do plano gratuito.'
+                      : 'Você está utilizando o plano gratuito. Conheça os benefícios do Premium.'}
                   </p>
                   <button
                     onClick={() => { trackEvent('subscribe_click'); navigate('/plans'); }}
@@ -364,7 +371,7 @@ export default function SubscriptionSettings() {
             )}
 
             {/* Manage subscription */}
-            {isPaid && (
+            {(isPaid || isPending) && (
               <motion.section
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -384,10 +391,10 @@ export default function SubscriptionSettings() {
                     >
                       <p className="font-semibold text-sm">Tem certeza que deseja cancelar?</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Ao cancelar, você perderá o acesso a:
+                        {isPending ? 'A assinatura pendente será cancelada.' : 'Ao cancelar, você perderá o acesso a:'}
                       </p>
                       <ul className="mt-2 space-y-1">
-                        {featuresToShow.slice(0, 5).map((f, i) => (
+                        {!isPending && featuresToShow.slice(0, 5).map((f, i) => (
                           <li key={i} className="flex items-center gap-2 text-xs">
                             <X size={12} className="text-destructive" />
                             <span>{f.label}</span>
@@ -442,8 +449,8 @@ export default function SubscriptionSettings() {
                           <X size={18} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm">Cancelar assinatura</p>
-                          <p className="text-xs text-destructive/70">Voltar ao plano gratuito</p>
+                          <p className="font-medium text-sm">{isPending ? 'Cancelar assinatura pendente' : 'Cancelar assinatura'}</p>
+                          <p className="text-xs text-destructive/70">{isPending ? 'Você continua no plano gratuito' : 'Voltar ao plano gratuito'}</p>
                         </div>
                       </button>
                     </motion.div>
