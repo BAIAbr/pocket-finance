@@ -165,12 +165,15 @@ export default function FinancialCalendar() {
               <h2 className="text-lg font-semibold capitalize">
                 {format(cursor, 'MMMM', { locale: ptBR })}
               </h2>
+              {!isSameMonth(cursor, new Date()) && (
+                <button
+                  onClick={() => { setCursor(new Date()); setSelected(new Date()); }}
+                  className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-primary hover:underline"
+                >
+                  Mês atual
+                </button>
+              )}
             </div>
-            <button
-              onClick={() => { setCursor(new Date()); setSelected(new Date()); }}
-              className="hidden"
-              aria-hidden
-            />
             <button
               onClick={() => setCursor(addMonths(cursor, 1))}
               className="w-9 h-9 rounded-lg hover:bg-secondary flex items-center justify-center touch-scale"
