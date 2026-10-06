@@ -58,16 +58,18 @@ export default function Investments() {
 
   return (
     <div className="min-h-screen bg-background pb-28 lg:pb-8 safe-top">
-      <header className="px-4 lg:px-8 pt-6 pb-4 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none" />
-        <div className="relative flex items-start justify-between gap-3">
-          <div>
-            <p className="text-muted-foreground text-sm font-medium">Carteira Inteligente</p>
-            <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Finango Invest</h1>
+      <header className="px-4 lg:px-8 pt-6 pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight text-foreground">Finango Invest</h1>
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-primary border border-primary/30 bg-primary/10 rounded px-1.5 py-0.5">Carteira consolidada</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">Ativos, proventos e simulações da sua carteira.</p>
           </div>
           <button
             onClick={() => inv.refreshQuotes()}
-            className="p-2 rounded-xl bg-secondary hover:bg-secondary/80"
+            className="p-2 rounded-lg border border-border bg-card hover:bg-secondary text-muted-foreground hover:text-foreground"
             aria-label="Atualizar cotações"
             title="Atualizar cotações"
           >
@@ -87,59 +89,60 @@ export default function Investments() {
             sub={formatBRL(p.totalProfit)}
             tone={p.totalProfit >= 0 ? 'green' : 'red'}
           />
-          <StatCard icon={<DollarSign size={16} />} label="Prov. mensais" value={formatBRL(p.monthlyDividends)} tone="green" />
-          <StatCard icon={<DollarSign size={16} />} label="Prov. anuais" value={formatBRL(p.yearlyDividends)} sub={`DY ${p.portfolioDy.toFixed(2)}%`} tone="green" />
+          <StatCard icon={<DollarSign size={16} />} label="Proventos mensais" value={formatBRL(p.monthlyDividends)} tone="green" />
+          <StatCard icon={<DollarSign size={16} />} label="Proventos anuais" value={formatBRL(p.yearlyDividends)} sub={`DY ${p.portfolioDy.toFixed(2)}%`} tone="green" />
         </div>
 
         {p.best && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-xs text-muted-foreground flex items-center gap-1"><Trophy size={12} /> Melhor ativo</p>
-              <p className="font-bold text-lg mt-1">{p.best.asset.ticker}</p>
-              <p className="text-sm text-emerald-500 font-semibold tabular-nums">{p.best.metrics.profitPct.toFixed(2)}% · {formatBRL(p.best.metrics.profit)}</p>
+            <div className="p-4 rounded-xl bg-card border border-border">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground flex items-center gap-1"><Trophy size={12} className="text-income" /> Melhor ativo</p>
+              <p className="font-semibold text-lg mt-1">{p.best.asset.ticker}</p>
+              <p className="font-mono text-sm text-income font-semibold tabular-nums">{p.best.metrics.profitPct.toFixed(2)}% · {formatBRL(p.best.metrics.profit)}</p>
             </div>
             {p.worst && p.worst.asset.id !== p.best.asset.id && (
-              <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20">
-                <p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingDown size={12} /> Pior ativo</p>
-                <p className="font-bold text-lg mt-1">{p.worst.asset.ticker}</p>
-                <p className="text-sm text-red-500 font-semibold tabular-nums">{p.worst.metrics.profitPct.toFixed(2)}% · {formatBRL(p.worst.metrics.profit)}</p>
+              <div className="p-4 rounded-xl bg-card border border-border">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground flex items-center gap-1"><TrendingDown size={12} className="text-expense" /> Pior ativo</p>
+                <p className="font-semibold text-lg mt-1">{p.worst.asset.ticker}</p>
+                <p className="font-mono text-sm text-expense font-semibold tabular-nums">{p.worst.metrics.profitPct.toFixed(2)}% · {formatBRL(p.worst.metrics.profit)}</p>
               </div>
             )}
           </div>
         )}
 
         {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-wrap">
+        <nav aria-label="Seções de investimentos" className="flex gap-1 overflow-x-auto scrollbar-hide rounded-xl border border-border bg-card p-1">
           {TABS.map((t) => {
             const active = tab === t.id;
             return (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`shrink-0 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${active ? 'bg-primary text-primary-foreground' : 'bg-secondary/60 text-muted-foreground hover:bg-secondary'}`}
+                aria-current={active ? 'page' : undefined}
+                className={`shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${active ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
               >
                 <t.icon size={13} />
                 {t.label}
               </button>
             );
           })}
-        </div>
+        </nav>
 
         {/* Actions */}
         {tab !== 'simulator' && tab !== 'history' && tab !== 'dividends' && (
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => { setAddType(tab === 'wallet' || tab === 'overview' ? 'fii' : (tab as AssetType)); setAddOpen(true); }}
-              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold flex items-center gap-1"
+              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold flex items-center gap-1 hover:bg-primary/90"
             >
               <Plus size={14} /> Adicionar ativo
             </button>
             {inv.assets.length > 0 && (
               <>
-                <button onClick={() => { setPreselected(undefined); setContribOpen(true); }} className="px-4 py-2 rounded-xl bg-secondary text-sm font-semibold flex items-center gap-1">
+                <button onClick={() => { setPreselected(undefined); setContribOpen(true); }} className="px-4 py-2 rounded-lg border border-border bg-card hover:bg-secondary text-sm font-semibold flex items-center gap-1">
                   <Plus size={14} /> Novo aporte
                 </button>
-                <button onClick={() => setDivOpen(true)} className="px-4 py-2 rounded-xl bg-secondary text-sm font-semibold flex items-center gap-1">
+                <button onClick={() => setDivOpen(true)} className="px-4 py-2 rounded-lg border border-border bg-card hover:bg-secondary text-sm font-semibold flex items-center gap-1">
                   <DollarSign size={14} /> Registrar provento
                 </button>
               </>
@@ -201,14 +204,15 @@ export default function Investments() {
 }
 
 function StatCard({ icon, label, value, sub, tone }: { icon: any; label: string; value: string; sub?: string; tone?: 'primary' | 'green' | 'red' }) {
-  const bg = tone === 'green' ? 'bg-emerald-500/10' : tone === 'red' ? 'bg-red-500/10' : 'bg-primary/10';
-  const color = tone === 'green' ? 'text-emerald-500' : tone === 'red' ? 'text-red-500' : 'text-primary';
+  const color = tone === 'green' ? 'text-income' : tone === 'red' ? 'text-expense' : 'text-foreground';
   return (
-    <div className="p-3 rounded-2xl bg-card border border-border">
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${bg} ${color} mb-2`}>{icon}</div>
-      <p className="text-[11px] text-muted-foreground">{label}</p>
-      <p className="font-bold text-base tabular-nums">{value}</p>
-      {sub && <p className="text-[10px] text-muted-foreground tabular-nums">{sub}</p>}
+    <div className="p-3 lg:p-4 rounded-xl bg-card border border-border">
+      <div className="flex items-center justify-between gap-1.5 mb-2">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground truncate">{label}</p>
+        <span className="text-primary shrink-0">{icon}</span>
+      </div>
+      <p className={`font-mono font-semibold text-base lg:text-xl tabular-nums truncate ${color}`}>{value}</p>
+      {sub && <p className="font-mono text-[11px] text-muted-foreground tabular-nums mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -244,12 +248,12 @@ function HistoryPanel({ inv }: { inv: ReturnType<typeof useInvestments> }) {
   return (
     <div className="space-y-2">
       {items.map((it, i) => (
-        <div key={i} className="p-3 rounded-xl bg-card border border-border flex items-center justify-between">
+        <div key={i} className="p-3 rounded-xl bg-card border border-border flex items-center justify-between gap-3">
           <div>
             <p className="font-semibold text-sm">{it.ticker}</p>
             <p className="text-xs text-muted-foreground">{it.label} · {new Date(it.date).toLocaleDateString('pt-BR')}</p>
           </div>
-          <p className={`font-bold tabular-nums text-sm ${it.tone === 'buy' ? 'text-primary' : it.tone === 'sell' ? 'text-red-500' : 'text-emerald-500'}`}>
+          <p className={`font-bold tabular-nums text-sm font-mono ${it.tone === 'buy' ? 'text-primary' : it.tone === 'sell' ? 'text-expense' : 'text-income'}`}>
             {it.tone === 'div' ? '+' : it.tone === 'sell' ? '−' : ''} {formatBRL(it.value)}
           </p>
         </div>
