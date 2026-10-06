@@ -58,7 +58,7 @@ export default function SettingsPage() {
       title: 'Segurança e plano',
       rows: [
         { id: 'security', label: 'Segurança', description: 'Senha, sessões e dispositivos.', icon: <Shield size={18} />, to: '/security' },
-        { id: 'subscription', label: 'Meu plano', description: 'Plano atual, benefícios, assinatura e troca de plano.', icon: <CreditCard size={18} />, to: '/settings/subscription', badge: planName },
+        { id: 'subscription', label: 'Meu plano', description: 'Plano atual, benefícios e assinatura.', icon: <CreditCard size={18} />, to: '/settings/subscription', badge: planName },
       ],
     },
     {
@@ -72,8 +72,8 @@ export default function SettingsPage() {
 
   // Laboratório e Painel administrativo: visíveis apenas para administradores (regra existente useAdminCheck).
   const adminRows: Row[] = isAuthenticated && isAdmin ? [
-    { id: 'labs', label: 'Laboratório Finango', description: 'Recursos experimentais em teste.', icon: <FlaskConical size={18} />, to: '/settings/labs' },
     { id: 'admin', label: 'Painel administrativo', description: 'Ferramentas de admin do Finango.', icon: <ShieldCheck size={18} />, to: '/admin', badge: 'Admin' },
+    { id: 'labs', label: 'Laboratório Finango', description: 'Recursos experimentais em teste.', icon: <FlaskConical size={18} />, to: '/settings/labs' },
   ] : [];
 
   return (
