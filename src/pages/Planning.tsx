@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { NavLink } from 'react-router-dom';
 import { Plus, TrendingUp, PiggyBank, Wallet, Target, Star, Trash2, Pencil, AlertTriangle, Sparkles } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { GoalFormModal } from '@/components/planning/GoalFormModal';
@@ -132,7 +133,7 @@ export default function Planning() {
         {/* Goals list + evolution: two cols on desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           <section className="animate-fade-in">
-            <h2 className="font-semibold text-lg mb-3">Meus Objetivos</h2>
+            <h2 className="font-semibold text-lg mb-3 tracking-tight">Meus objetivos</h2>
             {isLoading ? (
               <div className="text-sm text-muted-foreground">Carregando...</div>
             ) : goals.length === 0 ? (
@@ -148,7 +149,7 @@ export default function Planning() {
                 {goals.map(g => {
                   const progress = Math.min(100, (Number(g.initial_amount) / Number(g.target_amount)) * 100);
                   return (
-                    <div key={g.id} className="rounded-2xl border border-border bg-card p-3">
+                    <div key={g.id} className="rounded-xl border border-border bg-card p-3">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
@@ -192,7 +193,7 @@ export default function Planning() {
 
           <section className="animate-fade-in">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-lg">Evolução Patrimonial</h2>
+              <h2 className="font-semibold text-lg tracking-tight">Evolução patrimonial</h2>
               <div className="flex gap-1">
                 {HORIZONS.map(h => (
                   <button key={h.years} onClick={() => setHorizon(h.years)}
