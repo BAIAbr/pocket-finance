@@ -119,34 +119,7 @@ export default function SettingsPage() {
           ))}
         </section>
 
-        {/* Família */}
-        {isAuthenticated && (
-          <PlanGate feature="family" inline>
-            <section className="card-finance">
-              <button
-                onClick={() => setShowFamily(v => !v)}
-                className="w-full flex items-center gap-3 touch-scale"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-primary/15 text-primary flex items-center justify-center">
-                  <Users size={22} />
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="font-semibold">Família</p>
-                  <p className="text-xs text-muted-foreground">Compartilhe finanças com sua família</p>
-                </div>
-                <ChevronRight
-                  size={20}
-                  className={`text-muted-foreground transition-transform ${showFamily ? 'rotate-90' : ''}`}
-                />
-              </button>
-              {showFamily && (
-                <div className="mt-4 pt-4 border-t border-border animate-fade-in">
-                  <FamilySettings />
-                </div>
-              )}
-            </section>
-          </PlanGate>
-        )}
+        {/* Família: removida da interface (backend preservado) */}
 
         {/* Admin */}
         {isAuthenticated && isAdmin && (

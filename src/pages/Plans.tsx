@@ -44,7 +44,13 @@ function equivalentPerMonth(p: SubscriptionPlan): number {
 export default function PlansPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { plans, currentPlanCode, loading } = useSubscription(user?.id);
+  const { plans: rawPlans, currentPlanCode, loading } = useSubscription(user?.id);
+  // Modo Família está fora da experiência do usuário: não comercializar (dados no banco preservados).
+  const plans = useMemo(() => rawPlans.map(p => ({
+    ...p,
+    description: p.description && /famíli|familia/i.test(p.description) ? null : p.description,
+    features: (p.features ?? []).filter((f: any) => !/famíli|familia/i.test(String(f?.label ?? f ?? ''))),
+  })), [rawPlans]);
   const [busy, setBusy] = useState<string | null>(null);
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
   const [checkoutDebugJson, setCheckoutDebugJson] = useState<string | null>(null);
