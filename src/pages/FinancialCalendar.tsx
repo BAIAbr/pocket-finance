@@ -27,10 +27,10 @@ interface DayEvent {
 const KIND_META: Record<EventKind, { label: string; dot: string; text: string; bg: string; Icon: any }> = {
   income:  { label: 'Entrada',        dot: 'bg-income',      text: 'text-income',       bg: 'bg-income/10',      Icon: ArrowUpRight },
   expense: { label: 'Gasto',          dot: 'bg-expense',     text: 'text-expense',      bg: 'bg-expense/10',     Icon: ArrowDownRight },
-  bill:    { label: 'Conta prevista', dot: 'bg-orange-500',  text: 'text-orange-500',   bg: 'bg-orange-500/10',  Icon: CalendarClock },
+  bill:    { label: 'Conta prevista', dot: 'bg-warning',     text: 'text-warning',      bg: 'bg-warning/10',  Icon: CalendarClock },
   goal:    { label: 'Prazo de meta',  dot: 'bg-primary',     text: 'text-primary',      bg: 'bg-primary/10',     Icon: Flag },
   piggy:   { label: 'Cofrinho',       dot: 'bg-accent',      text: 'text-accent',       bg: 'bg-accent/10',      Icon: Target },
-  card:    { label: 'Fatura cartão',  dot: 'bg-violet-500',  text: 'text-violet-500',   bg: 'bg-violet-500/10',  Icon: CreditCardIcon },
+  card:    { label: 'Fatura cartão',  dot: 'bg-foreground/60', text: 'text-foreground', bg: 'bg-secondary',  Icon: CreditCardIcon },
 };
 
 export default function FinancialCalendar() {
@@ -140,20 +140,16 @@ export default function FinancialCalendar() {
   return (
     <div className="min-h-screen bg-background pb-28 safe-top">
       <header className="px-4 pt-6 pb-4 max-w-4xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
-            <CalendarIcon size={20} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Calendário Financeiro</h1>
-            <p className="text-sm text-muted-foreground">Visualize entradas, gastos, contas e prazos em um só lugar.</p>
-          </div>
-        </div>
+        <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.16em] text-primary border border-primary/30 bg-primary/10 rounded px-1.5 py-0.5">
+          <CalendarIcon size={11} /> Compromissos
+        </span>
+        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight mt-2">Calendário</h1>
+        <p className="text-sm text-muted-foreground mt-1">Veja seus compromissos financeiros e próximos vencimentos.</p>
       </header>
 
       <main className="px-4 space-y-4 max-w-4xl mx-auto">
         {/* Month header */}
-        <div className="card-finance">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center justify-between mb-3">
             <button
               onClick={() => setCursor(subMonths(cursor, 1))}
@@ -163,12 +159,20 @@ export default function FinancialCalendar() {
               <ChevronLeft size={18} />
             </button>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                 {format(cursor, 'yyyy')}
               </p>
               <h2 className="text-lg font-semibold capitalize">
                 {format(cursor, 'MMMM', { locale: ptBR })}
               </h2>
+              {!isSameMonth(cursor, new Date()) && (
+                <button
+                  onClick={() => { setCursor(new Date()); setSelected(new Date()); }}
+                  className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-primary hover:underline"
+                >
+                  Mês atual
+                </button>
+              )}
             </div>
             <button
               onClick={() => setCursor(addMonths(cursor, 1))}
@@ -182,7 +186,7 @@ export default function FinancialCalendar() {
           {/* Weekday header */}
           <div className="grid grid-cols-7 gap-1 mb-1">
             {weekDays.map((d, i) => (
-              <div key={i} className="text-center text-[11px] font-semibold text-muted-foreground py-1">
+              <div key={i} className="text-center font-mono text-[10px] uppercase text-muted-foreground py-1">
                 {d}
               </div>
             ))}
@@ -202,7 +206,7 @@ export default function FinancialCalendar() {
                   key={key}
                   onClick={() => setSelected(d)}
                   className={cn(
-                    'aspect-square rounded-lg flex flex-col items-center justify-start pt-1.5 gap-0.5 transition-all',
+                    'aspect-square rounded-xl flex flex-col items-center justify-start pt-1.5 gap-0.5 transition-all',
                     inMonth ? 'text-foreground' : 'text-muted-foreground/40',
                     isSel && 'bg-primary text-primary-foreground shadow-sm',
                     !isSel && today && 'bg-primary/15 text-primary font-semibold',
@@ -233,15 +237,15 @@ export default function FinancialCalendar() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <SummaryTile label="Entradas" value={formatCurrency(monthTotals.income)} cls="text-income" />
           <SummaryTile label="Gastos" value={formatCurrency(monthTotals.expense)} cls="text-expense" />
-          <SummaryTile label="Contas previstas" value={formatCurrency(monthTotals.upcoming)} cls="text-orange-500" />
+          <SummaryTile label="Contas previstas" value={formatCurrency(monthTotals.upcoming)} cls="text-warning" />
           <SummaryTile label="Saldo do mês" value={formatCurrency(monthTotals.balance)} cls={monthTotals.balance >= 0 ? 'text-income' : 'text-expense'} />
         </div>
 
         {/* Selected day events */}
-        <div className="card-finance">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-xs text-muted-foreground">Dia selecionado</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Eventos do dia</p>
               <h3 className="font-semibold text-base capitalize">
                 {format(selected, "EEEE, dd 'de' MMMM", { locale: ptBR })}
               </h3>
@@ -253,7 +257,7 @@ export default function FinancialCalendar() {
 
           {selectedEvents.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              Nenhum evento neste dia.
+              Nenhum compromisso financeiro neste dia.
             </div>
           ) : (
             <ul className="space-y-2">
@@ -274,7 +278,7 @@ export default function FinancialCalendar() {
                         <p className="text-[11px] text-muted-foreground">{meta.label}</p>
                       </div>
                       {typeof ev.amount === 'number' && (
-                        <p className={cn('font-semibold text-sm shrink-0', meta.text)}>
+                        <p className={cn('font-mono font-semibold text-sm tabular-nums shrink-0', meta.text)}>
                           {formatCurrency(ev.amount)}
                         </p>
                       )}
@@ -287,7 +291,7 @@ export default function FinancialCalendar() {
         </div>
 
         {/* Legend */}
-        <div className="card-finance">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Legenda</p>
           <div className="flex flex-wrap gap-3">
             {(Object.keys(KIND_META) as EventKind[]).map(k => (
@@ -305,9 +309,9 @@ export default function FinancialCalendar() {
 
 function SummaryTile({ label, value, cls }: { label: string; value: string; cls: string }) {
   return (
-    <div className="card-finance !p-3">
-      <p className="text-[11px] text-muted-foreground">{label}</p>
-      <p className={cn('text-base font-bold mt-0.5', cls)}>{value}</p>
+    <div className="rounded-2xl border border-border bg-card p-3 min-w-0">
+      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground truncate">{label}</p>
+      <p className={cn('font-mono text-base font-semibold tabular-nums mt-1 truncate', cls)}>{value}</p>
     </div>
   );
 }
