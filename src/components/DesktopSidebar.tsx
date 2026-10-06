@@ -102,7 +102,7 @@ export function DesktopSidebar() {
 
       <button
         onClick={() => navigate('/profile')}
-        className="m-3 flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 text-left hover:bg-secondary transition-colors"
+        className="m-3 mb-16 flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 text-left hover:bg-secondary transition-colors"
       >
         <span className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0"><User size={16} /></span>
         <span className="min-w-0">
