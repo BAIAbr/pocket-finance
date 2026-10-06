@@ -56,7 +56,7 @@ export default function Money() {
       </header>
 
       <main className="px-4 lg:px-8 space-y-6">
-        <nav className="flex gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1 no-scrollbar">
+        <nav className="flex gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1 scrollbar-hide">
           {tabs.map(t => {
             const active = t.to === '/money';
             return (
