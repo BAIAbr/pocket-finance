@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { NavLink } from 'react-router-dom';
 import { Plus, TrendingUp, PiggyBank, Wallet, Target, Star, Trash2, Pencil, AlertTriangle, Sparkles } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { GoalFormModal } from '@/components/planning/GoalFormModal';
@@ -73,54 +74,66 @@ export default function Planning() {
 
   return (
     <div className="min-h-screen bg-background pb-28 lg:pb-8 safe-top">
-      <header className="px-4 lg:px-8 pt-6 pb-4 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
-        <div className="relative flex items-start justify-between">
-          <div>
-            <p className="text-muted-foreground text-sm font-medium flex items-center gap-1.5">
-              <Sparkles size={12} className="text-primary" /> 100% calculado localmente — sem IA
+      <header className="px-4 lg:px-8 pt-6 pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary flex items-center gap-1.5">
+              <Sparkles size={11} /> 100% calculado localmente — sem IA
             </p>
-            <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            <h1 className="mt-1 text-2xl lg:text-3xl font-semibold tracking-tight text-foreground">
               Planejamento Financeiro
             </h1>
+            <p className="text-sm text-muted-foreground mt-1">Objetivos, reserva e evolução do seu patrimônio.</p>
           </div>
           <button onClick={openNew}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 shadow-lg shadow-primary/20">
+            className="inline-flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90">
             <Plus size={16} /> <span className="hidden sm:inline">Novo objetivo</span>
           </button>
         </div>
+        <nav aria-label="Seções de planejamento" className="mt-4 flex gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1 scrollbar-hide">
+          <NavLink to="/planning" end className={({ isActive }) => cn('flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors', isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground')}>
+            <TrendingUp size={14} /> Visão integrada
+          </NavLink>
+          <NavLink to="/savings" className={({ isActive }) => cn('flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors', isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground')}>
+            <PiggyBank size={14} /> Metas e Reserva
+          </NavLink>
+        </nav>
       </header>
 
       <main className="px-4 lg:px-8 space-y-5">
         {/* Stats grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 animate-fade-in">
-          <StatCard icon={<Wallet size={16} />} label="Patrimônio Atual" value={fmt(stats.patrimony)} />
-          <StatCard icon={<TrendingUp size={16} />} label="Economia média/mês" value={fmt(stats.avgSavings)} tone={stats.avgSavings >= 0 ? 'ok' : 'warn'} />
-          <StatCard icon={<PiggyBank size={16} />} label="Reserva de emergência" value={fmt(stats.emergencyRecommended)} subtext={`Cobre ${stats.emergencyCoverageMonths.toFixed(1)}m`} />
-          <StatCard icon={<Target size={16} />} label="Capacidade investir" value={fmt(stats.investmentCapacity)} />
+          <StatCard icon={<Wallet size={14} />} label="Patrimônio atual" value={fmt(stats.patrimony)} />
+          <StatCard icon={<TrendingUp size={14} />} label="Economia média/mês" value={fmt(stats.avgSavings)} tone={stats.avgSavings >= 0 ? 'ok' : 'warn'} />
+          <StatCard icon={<PiggyBank size={14} />} label="Reserva de emergência" value={fmt(stats.emergencyRecommended)} subtext={`Cobre ${stats.emergencyCoverageMonths.toFixed(1)} meses`}
+            progress={stats.emergencyRecommended > 0 ? Math.min(100, (stats.emergencyCoverageMonths / 6) * 100) : undefined} />
+          <StatCard icon={<Target size={14} />} label="Capacidade de investir" value={fmt(stats.investmentCapacity)} />
         </div>
 
         {/* Alerts */}
         {alerts.length > 0 && (
-          <div className="space-y-2 animate-fade-in">
-            {alerts.map((a, i) => (
-              <div key={i} className={cn(
-                'flex items-start gap-2 p-3 rounded-xl border text-sm',
-                a.type === 'warn' && 'border-orange-500/40 bg-orange-500/10 text-orange-200',
-                a.type === 'info' && 'border-primary/30 bg-primary/10',
-                a.type === 'ok' && 'border-green-500/40 bg-green-500/10 text-green-200',
-              )}>
-                <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                <span>{a.text}</span>
-              </div>
-            ))}
+          <div className="rounded-xl border border-primary/30 bg-card p-4 animate-fade-in">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary mb-2">Copiloto Fox · Recomendações</p>
+            <div className="space-y-2">
+              {alerts.map((a, i) => (
+                <div key={i} className={cn(
+                  'flex items-start gap-2 p-2.5 rounded-lg border text-sm text-foreground',
+                  a.type === 'warn' && 'border-warning/40 bg-warning/10',
+                  a.type === 'info' && 'border-primary/30 bg-primary/10',
+                  a.type === 'ok' && 'border-income/40 bg-income/10',
+                )}>
+                  <AlertTriangle size={16} className={cn('shrink-0 mt-0.5', a.type === 'warn' ? 'text-warning' : a.type === 'ok' ? 'text-income' : 'text-primary')} />
+                  <span>{a.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {/* Goals list + evolution: two cols on desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           <section className="animate-fade-in">
-            <h2 className="font-semibold text-lg mb-3">Meus Objetivos</h2>
+            <h2 className="font-semibold text-lg mb-3 tracking-tight">Meus objetivos</h2>
             {isLoading ? (
               <div className="text-sm text-muted-foreground">Carregando...</div>
             ) : goals.length === 0 ? (
@@ -136,7 +149,7 @@ export default function Planning() {
                 {goals.map(g => {
                   const progress = Math.min(100, (Number(g.initial_amount) / Number(g.target_amount)) * 100);
                   return (
-                    <div key={g.id} className="rounded-2xl border border-border bg-card p-3">
+                    <div key={g.id} className="rounded-xl border border-border bg-card p-3">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
@@ -180,7 +193,7 @@ export default function Planning() {
 
           <section className="animate-fade-in">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-lg">Evolução Patrimonial</h2>
+              <h2 className="font-semibold text-lg tracking-tight">Evolução patrimonial</h2>
               <div className="flex gap-1">
                 {HORIZONS.map(h => (
                   <button key={h.years} onClick={() => setHorizon(h.years)}
@@ -225,14 +238,20 @@ export default function Planning() {
   );
 }
 
-function StatCard({ icon, label, value, subtext, tone }: { icon: React.ReactNode; label: string; value: string; subtext?: string; tone?: 'ok' | 'warn' }) {
+function StatCard({ icon, label, value, subtext, tone, progress }: { icon: React.ReactNode; label: string; value: string; subtext?: string; tone?: 'ok' | 'warn'; progress?: number }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-3">
-      <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-        {icon}<span className="text-[11px] uppercase tracking-wide">{label}</span>
+    <div className="rounded-xl border border-border bg-card p-3 lg:p-4">
+      <div className="flex items-center justify-between gap-1.5 text-muted-foreground mb-2">
+        <span className="font-mono text-[10px] uppercase tracking-[0.14em] truncate">{label}</span>
+        <span className="text-primary shrink-0">{icon}</span>
       </div>
-      <p className={cn('text-lg font-bold truncate', tone === 'warn' && 'text-orange-400', tone === 'ok' && 'text-green-400')}>{value}</p>
-      {subtext && <p className="text-[11px] text-muted-foreground">{subtext}</p>}
+      <p className={cn('font-mono text-base lg:text-xl font-semibold truncate text-foreground', tone === 'warn' && 'text-expense', tone === 'ok' && 'text-income')}>{value}</p>
+      {subtext && <p className="text-[11px] text-muted-foreground mt-0.5">{subtext}</p>}
+      {progress !== undefined && (
+        <div className="mt-2 h-1 rounded-full bg-secondary overflow-hidden">
+          <div className="h-full bg-primary" style={{ width: `${progress}%` }} />
+        </div>
+      )}
     </div>
   );
 }
