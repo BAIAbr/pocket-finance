@@ -498,7 +498,7 @@ function MiniStat({ label, value, icon, tone }: { label: string; value: string; 
 // -------- Chat drawer --------
 function ChatDrawer({ onClose }: { onClose: () => void }) {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string; error?: boolean }[]>([
-    { role: 'assistant', content: 'Oi! Sou a Finango IA. Pergunte sobre seus gastos, metas, categorias ou economia. 💬' },
+    { role: 'assistant', content: 'Oi! Sou o FOX. Pergunte sobre seus gastos, metas, categorias ou economia. 💬' },
   ]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -677,7 +677,7 @@ function ChatDrawer({ onClose }: { onClose: () => void }) {
               )} />
             </div>
             <div>
-              <p className="font-bold text-sm leading-tight">Finango IA</p>
+              <p className="font-bold text-sm leading-tight">FOX</p>
               <div className="flex items-center gap-1 text-[10px]">
                 <span className={cn(
                   'inline-block w-1.5 h-1.5 rounded-full',
@@ -765,7 +765,7 @@ function ChatDrawer({ onClose }: { onClose: () => void }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-            placeholder="Pergunte algo à Finango IA..."
+            placeholder="Pergunte algo ao FOX..."
             rows={1}
             className="flex-1 resize-none rounded-2xl bg-secondary px-3.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-primary/60 max-h-24 placeholder:text-muted-foreground/70"
             disabled={sending}

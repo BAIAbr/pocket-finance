@@ -29,7 +29,7 @@ const groups: { label?: string; items: Item[] }[] = [
   {
     items: [
       { path: '/investments', icon: Wallet, label: 'Investimentos' },
-      { path: '/ai-insights', icon: Brain, label: 'Finango IA', badge: true },
+      { path: '/ai-insights', icon: Brain, label: 'FOX', badge: true },
     ],
   },
   {
