@@ -49,7 +49,7 @@ export default function PlansPage() {
   const plans = useMemo(() => rawPlans.map(p => ({
     ...p,
     description: p.description && /famíli|familia/i.test(p.description) ? null : p.description,
-    features: (p.features ?? []).filter((f: any) => !/famíli|familia/i.test(String(f?.label ?? f ?? ''))),
+    features: (p.features ?? []).filter((f: any) => !/famíli|familia|compartilhad|em grupo|multi-usu|consolidad/i.test(String(f?.label ?? f ?? ""))),
   })), [rawPlans]);
   const [busy, setBusy] = useState<string | null>(null);
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
