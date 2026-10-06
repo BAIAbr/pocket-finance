@@ -22,11 +22,11 @@ export function ExecutiveOverview() {
   }
 
   const kpis = [
-    { label: isFamily ? 'Saldo familiar' : 'Saldo disponível', value: formatCurrency(totalBalance), hint: 'Entradas − saídas registradas', icon: Wallet, tone: totalBalance >= 0 ? '' : 'text-expense' },
-    { label: 'Entradas do mês', value: `+${formatCurrency(income)}`, hint: currentMonthStats.month, icon: TrendingUp, tone: 'text-income' },
-    { label: 'Saídas do mês', value: `-${formatCurrency(expense)}`, hint: currentMonthStats.month, icon: TrendingDown, tone: 'text-expense' },
+    { label: 'Saldo disponível', value: formatCurrency(totalBalance), hint: 'Entradas − saídas registradas', icon: Wallet, tone: totalBalance >= 0 ? '' : 'text-expense' },
+    { label: 'Entradas', value: `+${formatCurrency(income)}`, hint: currentMonthStats.month, icon: TrendingUp, tone: 'text-income' },
+    { label: 'Saídas', value: `-${formatCurrency(expense)}`, hint: currentMonthStats.month, icon: TrendingDown, tone: 'text-expense' },
     {
-      label: 'Taxa de poupança',
+      label: 'Economia',
       value: savingsRate === null ? '—' : `${savingsRate.toFixed(1).replace('.', ',')}%`,
       hint: savingsRate === null ? 'Sem entradas no mês' : 'Do que entrou, sobrou',
       icon: PiggyBank,
@@ -35,7 +35,7 @@ export function ExecutiveOverview() {
   ];
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
+    <section className="rounded-2xl border border-border/60 bg-card p-5 lg:p-7">
       <div className="flex items-center gap-2">
         <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
           {isFamily ? 'Patrimônio familiar' : 'Patrimônio líquido'}
@@ -45,7 +45,7 @@ export function ExecutiveOverview() {
         </button>
       </div>
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
-        <p className={cn('font-mono text-4xl xl:text-5xl font-semibold tracking-tight tabular-nums', net < 0 && 'text-expense')}>
+        <p className={cn('font-mono text-4xl lg:text-5xl xl:text-6xl font-semibold tracking-tight tabular-nums', net < 0 && 'text-expense')}>
           {mask(formatCurrency(net))}
         </p>
         {!isFamily && saved > 0 && (
@@ -56,15 +56,14 @@ export function ExecutiveOverview() {
         )}
       </div>
 
-      <div className="mt-6 grid grid-cols-2 xl:grid-cols-4 gap-3">
+      <div className="mt-6 lg:mt-8 grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-4 pt-5 border-t border-border/50">
         {kpis.map(k => (
-          <div key={k.label} className="rounded-xl border border-border bg-background/40 p-4 min-w-0">
+          <div key={k.label} className="min-w-0">
             <div className="flex items-center justify-between gap-2">
               <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground truncate">{k.label}</span>
-              <k.icon size={14} className="text-muted-foreground shrink-0" />
+              <k.icon size={12} className="text-muted-foreground/70 shrink-0" />
             </div>
-            <p className={cn('mt-2 font-mono text-xl font-medium tabular-nums truncate', k.tone)}>{mask(k.value)}</p>
-            <p className="mt-1 text-xs text-muted-foreground truncate capitalize">{k.hint}</p>
+            <p className={cn('mt-1.5 font-mono text-base lg:text-lg font-medium tabular-nums truncate', k.tone)}>{mask(k.value)}</p>
           </div>
         ))}
       </div>
