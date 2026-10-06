@@ -73,6 +73,35 @@ export const FEATURE_LABELS: Record<PlanFeature, string> = {
   investments: 'Central de Investimentos',
 };
 
+/**
+ * Billing variations that share the capabilities of a base plan.
+ * Only codes listed here are reclassified; any other code keeps its own entry (or falls back to free).
+ */
+export const PLAN_FAMILY: Record<string, string> = {
+  premium: 'premium',
+  premium_yearly: 'premium',
+  premium_quarterly: 'premium',
+  premium_semester: 'premium',
+};
+
+export function resolvePlanFamily(planCode: string | undefined): string {
+  const code = planCode ?? 'free';
+  return PLAN_FAMILY[code] ?? code;
+}
+
+/** Statuses that grant paid benefits — mirrors the backend `user_plan_code()` rule. */
+export const ENTITLED_STATUSES = ['active', 'trial', 'vip'];
+
+/** Plan code whose benefits a subscription actually grants (free when pending/cancelled/expired). */
+export function entitledPlanCode(
+  sub: { plan_code?: string | null; status?: string | null; expires_at?: string | null } | null | undefined,
+): string {
+  if (!sub?.plan_code) return 'free';
+  if (!ENTITLED_STATUSES.includes(sub.status ?? '')) return 'free';
+  if (sub.expires_at && new Date(sub.expires_at).getTime() <= Date.now()) return 'free';
+  return sub.plan_code;
+}
+
 export function getCapabilities(planCode: string | undefined): PlanCapabilities {
-  return PLAN_CAPABILITIES[planCode ?? 'free'] ?? PLAN_CAPABILITIES.free;
+  return PLAN_CAPABILITIES[resolvePlanFamily(planCode)] ?? PLAN_CAPABILITIES.free;
 }
