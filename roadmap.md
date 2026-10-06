@@ -11,3 +11,7 @@
 
 ## Fora do escopo (Stitch — Investimentos)
 - Retorno de 12 meses, comparação de benchmarks, calendário de dividendos, tabela completa com filtros, exportação PDF/DARF. Não criar dados, tabelas ou regras para eles.
+
+## Futuro
+- [ ] Limpeza estrutural do Modo Família (código, tabelas, RLS, funções) — só após estabilizar a remoção da interface.
+- [ ] Atualizar no admin os textos do plano "Premium ANUAL" (hoje só "Tudo do Premium" aparece, pois os demais itens falavam de família).
