@@ -286,7 +286,7 @@ export default function Profile() {
           className={cn(
             'relative overflow-hidden rounded-3xl p-6 mb-4 border',
             isPaid
-              ? 'border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-amber-500/10'
+              ? 'border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-accent/10'
               : 'border-border bg-gradient-to-br from-secondary/70 via-secondary/30 to-secondary/70'
           )}
           aria-label="Cabeçalho do perfil"

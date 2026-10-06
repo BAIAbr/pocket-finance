@@ -221,8 +221,8 @@ export default function SubscriptionSettings() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <SettingsSubPageHeader
-        title="Assinatura"
-        description="Gerencie seu plano Finango."
+        title="Seu plano"
+        description="Tenha clareza sobre os recursos disponíveis no seu Finango."
         icon={<CreditCard size={22} />}
       />
 
