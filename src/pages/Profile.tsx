@@ -81,6 +81,8 @@ export default function Profile() {
   const [name, setName] = useState(profile?.name ?? '');
   const [saving, setSaving] = useState(false);
   const [showConfirmLogout, setShowConfirmLogout] = useState(false);
+  const [showAllCriteria, setShowAllCriteria] = useState(false);
+  const [showAllMilestones, setShowAllMilestones] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setName(profile?.name ?? ''); }, [profile?.name]);
@@ -278,6 +280,7 @@ export default function Profile() {
           <ArrowLeft size={16} /> Voltar
         </button>
 
+        <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-primary mb-3">Perfil</p>
         {/* ================ HEADER ================ */}
         <motion.section
           initial={{ opacity: 0, y: 8 }}
@@ -286,8 +289,8 @@ export default function Profile() {
           className={cn(
             'relative overflow-hidden rounded-3xl p-6 mb-4 border',
             isPaid
-              ? 'border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-accent/10'
-              : 'border-border bg-gradient-to-br from-secondary/70 via-secondary/30 to-secondary/70'
+              ? 'border-primary/30 bg-card'
+              : 'border-border bg-card'
           )}
           aria-label="Cabeçalho do perfil"
         >
@@ -307,13 +310,18 @@ export default function Profile() {
 
           <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 text-center sm:text-left">
             <div className="relative shrink-0">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="w-24 h-24 rounded-full object-cover ring-4 ring-primary/25" />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground flex items-center justify-center font-semibold text-3xl ring-4 ring-primary/25">
-                  {initials}
+              {/* Moldura Fox: anel grafite + detalhe laranja */}
+              <div className="rounded-full p-[3px] bg-[conic-gradient(from_210deg,hsl(var(--primary))_0deg,hsl(var(--primary)/0.15)_90deg,hsl(var(--border))_180deg,hsl(var(--primary)/0.15)_270deg,hsl(var(--primary))_360deg)]">
+                <div className="rounded-full p-[3px] bg-background">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="w-24 h-24 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-secondary text-primary flex items-center justify-center font-semibold text-3xl">
+                      {initials}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
               <button
                 onClick={openFile}
                 disabled={uploading}
@@ -327,11 +335,6 @@ export default function Profile() {
                 {uploading ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
               </button>
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleAvatarUpload} />
-              {isPaid && (
-                <div className="absolute -top-1 -left-1 w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-primary flex items-center justify-center ring-2 ring-background">
-                  <Crown size={14} className="text-white" />
-                </div>
-              )}
             </div>
 
             <div className="flex-1 min-w-0 w-full">
@@ -371,12 +374,11 @@ export default function Profile() {
 
                   <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2">
                     <span className={cn(
-                      'inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full',
-                      isPaid
-                        ? 'bg-gradient-to-r from-amber-400/25 to-primary/25 text-primary border border-primary/40'
-                        : 'bg-muted text-muted-foreground border border-border'
+                      'inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] px-3 py-1.5 rounded-md border',
+                      isPaid ? 'bg-primary/10 text-primary border-primary/40' : 'bg-secondary text-foreground border-border'
                     )}>
-                      {isPaid ? <><Crown size={12} /> {currentPlan?.name ?? 'Plano Premium'}</> : <><Sparkles size={12} /> Plano Free</>}
+                      {isPaid ? <Crown size={12} /> : <Sparkles size={12} className="text-primary" />}
+                      {isPaid ? (currentPlan?.name?.toUpperCase().startsWith('FINANGO') ? currentPlan.name : `Finango ${currentPlan?.name ?? 'Premium'}`) : 'Finango Free'}
                     </span>
                   </div>
 
@@ -403,127 +405,127 @@ export default function Profile() {
           </div>
         </motion.section>
 
-        {/* ================ CONTA ================ */}
-        <SectionTitle>Conta</SectionTitle>
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <InfoCard
-            icon={<Calendar size={16} />}
-            label="Membro desde"
-            value={memberSince}
-          />
-          <InfoCard
-            icon={<Sparkles size={16} />}
-            label="Tempo utilizando o Finango"
-            value={usingTime}
-          />
-        </div>
-
-        {/* ================ ORGANIZAÇÃO FINANCEIRA ================ */}
-        <SectionTitle>Organização Financeira</SectionTitle>
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="rounded-2xl border border-border bg-card p-5 mb-4"
-        >
-          <div className="flex items-baseline justify-between mb-2">
-            <p className="text-sm font-semibold">Sua organização</p>
-            <p className="text-2xl font-bold text-primary tabular-nums">{score}%</p>
-          </div>
-          <div className="h-2 rounded-full bg-secondary overflow-hidden" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}>
-            <motion.div
-              className="h-full bg-gradient-to-r from-primary to-amber-400"
-              initial={{ width: 0 }}
-              animate={{ width: `${score}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">{organizationMessage(score)}</p>
-
-          <ul className="mt-4 space-y-2">
-            {criteria.list.map((c) => (
-              <li key={c.key} className="flex items-center gap-2 text-sm">
-                {c.done
-                  ? <CheckCircle2 size={16} className="text-primary shrink-0" />
-                  : <Circle size={16} className="text-muted-foreground/50 shrink-0" />}
-                <span className={cn('truncate', c.done ? 'text-foreground' : 'text-muted-foreground')}>{c.label}</span>
-              </li>
-            ))}
-          </ul>
-        </motion.div>
-
-        {/* ================ RESUMO FINANCEIRO ================ */}
-        <SectionTitle>Resumo Financeiro</SectionTitle>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-          {summary.map((s, i) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: i * 0.04 }}
-              className="rounded-2xl border border-border bg-card p-4"
-            >
-              <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-2">
-                <s.icon size={16} />
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-tight">{s.label}</p>
-              <p className="text-sm font-semibold mt-1 truncate">{s.value}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* ================ CONSISTÊNCIA ================ */}
-        <div className="rounded-2xl border border-border bg-card p-4 mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold">Dias consecutivos registrando movimentações</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Informação estatística de uso.</p>
-          </div>
-          <p className="text-2xl font-bold text-primary tabular-nums">{consecutive}</p>
-        </div>
-
-        {/* ================ MARCOS FINANCEIROS ================ */}
-        <SectionTitle>Marcos Financeiros</SectionTitle>
-        <div className="rounded-2xl border border-border bg-card p-4 mb-4">
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {milestones.map((m) => (
-              <li key={m.label} className={cn(
-                'flex items-center gap-2 text-sm p-2 rounded-lg',
-                m.done ? 'bg-primary/5' : 'opacity-70'
-              )}>
-                {m.done
-                  ? <CheckCircle2 size={16} className="text-primary shrink-0" />
-                  : <Circle size={16} className="text-muted-foreground/50 shrink-0" />}
-                <span className={cn('truncate', m.done ? 'text-foreground' : 'text-muted-foreground')}>{m.label}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
         {/* ================ PLANO ================ */}
-        <SectionTitle>Plano</SectionTitle>
-        <div className={cn(
-          'rounded-2xl border p-4 mb-4 flex items-center gap-3',
-          isPaid ? 'border-primary/30 bg-gradient-to-br from-primary/10 to-amber-500/10' : 'border-border bg-card'
-        )}>
+        <div className={cn('rounded-2xl border p-4 mb-6 flex items-center gap-3', isPaid ? 'border-primary/30 bg-primary/5' : 'border-border bg-card')}>
           <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
             {isPaid ? <Crown size={20} /> : <Sparkles size={20} />}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm truncate">{isPaid ? (currentPlan?.name ?? 'Plano Premium') : 'Plano Free'}</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Plano atual</p>
+            <p className="font-semibold text-sm truncate">{isPaid ? (currentPlan?.name ?? 'Premium') : 'Finango Free'}</p>
             <p className="text-xs text-muted-foreground truncate">
               {isPaid
-                ? subscription?.started_at
-                  ? `Ativo desde ${new Date(subscription.started_at).toLocaleDateString('pt-BR')}`
-                  : 'Benefícios ativos'
+                ? subscription?.started_at ? `Ativo desde ${new Date(subscription.started_at).toLocaleDateString('pt-BR')}` : 'Benefícios ativos'
                 : 'Conheça os recursos exclusivos do Premium.'}
             </p>
           </div>
-          <button
-            onClick={() => navigate('/plans')}
-            className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold touch-scale shrink-0"
-          >
-            {isPaid ? 'Gerenciar' : 'Conhecer'}
+          <button onClick={() => navigate('/settings/subscription')} className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold touch-scale shrink-0">
+            Gerenciar
           </button>
+        </div>
+
+        {/* ================ PERFIL COMPLETO ================ */}
+        <div className="rounded-2xl border border-border bg-card p-5 mb-6">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Perfil completo</p>
+            <p className="font-mono text-2xl font-semibold text-primary tabular-nums">{score}%</p>
+          </div>
+          <div className="mt-3 h-1.5 rounded-full bg-secondary overflow-hidden" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}>
+            <motion.div className="h-full bg-primary" initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ duration: 0.6, ease: 'easeOut' }} />
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">{organizationMessage(score)}</p>
+          {(() => {
+            const pending = criteria.list.filter(c => !c.done);
+            const shown = showAllCriteria ? criteria.list : pending.slice(0, 3);
+            return (
+              <>
+                {shown.length > 0 && (
+                  <ul className="mt-4 space-y-2">
+                    {shown.map(c => (
+                      <li key={c.key} className="flex items-center gap-2 text-sm">
+                        {c.done ? <CheckCircle2 size={15} className="text-primary shrink-0" /> : <Circle size={15} className="text-muted-foreground/50 shrink-0" />}
+                        <span className={cn('truncate', c.done ? 'text-foreground' : 'text-muted-foreground')}>{c.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <button onClick={() => setShowAllCriteria(v => !v)} className="mt-3 text-xs text-primary font-medium inline-flex items-center gap-1">
+                  {showAllCriteria ? 'Mostrar menos' : `${pending.length} ${pending.length === 1 ? 'pendência' : 'pendências'} · Ver detalhes`} <ChevronRight size={12} />
+                </button>
+              </>
+            );
+          })()}
+        </div>
+
+        {/* ================ RESUMO FINANCEIRO ================ */}
+        <SectionTitle>Resumo financeiro</SectionTitle>
+        <div className="rounded-2xl border border-border bg-card p-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {summary.map(s => (
+            <div key={s.label} className="min-w-0">
+              <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1.5"><s.icon size={12} /> {s.label}</p>
+              <p className="font-mono text-sm font-medium mt-1 truncate tabular-nums">{s.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ================ CONQUISTAS ================ */}
+        <div className="flex items-center justify-between px-1 mb-2 mt-1">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Conquistas</h2>
+          <span className="font-mono text-[11px] text-muted-foreground">{milestones.filter(m => m.done).length}/{milestones.length} desbloqueadas</span>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4 mb-6">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {(showAllMilestones ? milestones : [...milestones].sort((a, b) => Number(b.done) - Number(a.done)).slice(0, 4)).map(m => (
+              <li key={m.label} className={cn('flex items-center gap-2 text-sm p-2 rounded-lg', m.done ? 'bg-primary/5' : 'opacity-70')}>
+                {m.done ? <CheckCircle2 size={15} className="text-primary shrink-0" /> : <Circle size={15} className="text-muted-foreground/50 shrink-0" />}
+                <span className={cn('truncate', m.done ? 'text-foreground' : 'text-muted-foreground')}>{m.label}</span>
+              </li>
+            ))}
+          </ul>
+          {milestones.length > 4 && (
+            <button onClick={() => setShowAllMilestones(v => !v)} className="mt-3 text-xs text-primary font-medium inline-flex items-center gap-1">
+              {showAllMilestones ? 'Mostrar menos' : 'Ver todas'} <ChevronRight size={12} />
+            </button>
+          )}
+        </div>
+
+        {/* ================ OBJETIVOS ================ */}
+        {(() => {
+          const objs = (piggyBanks as any[]).filter(p => Number(p.target_amount) > 0).slice(0, 3);
+          if (objs.length === 0) return null;
+          return (
+            <>
+              <div className="flex items-center justify-between px-1 mb-2 mt-1">
+                <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Objetivos</h2>
+                <button onClick={() => navigate('/savings')} className="text-xs text-primary font-medium inline-flex items-center gap-1">Ver todos <ChevronRight size={12} /></button>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-4 mb-6 space-y-3">
+                {objs.map(p => {
+                  const pct = Math.min(100, Math.round((Number(p.balance || 0) / Number(p.target_amount)) * 100));
+                  return (
+                    <div key={p.id}>
+                      <div className="flex items-center justify-between gap-2 text-sm">
+                        <span className="truncate">{p.name}</span>
+                        <span className="font-mono text-xs text-muted-foreground tabular-nums shrink-0">{pct}%</span>
+                      </div>
+                      <div className="mt-1.5 h-1 rounded-full bg-secondary overflow-hidden"><div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} /></div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          );
+        })()}
+
+        {/* ================ CONTA ================ */}
+        <SectionTitle>Conta</SectionTitle>
+        <div className="rounded-2xl border border-border bg-card p-4 mb-6 grid grid-cols-2 gap-4">
+          <div className="min-w-0"><p className="text-[11px] text-muted-foreground">Membro desde</p><p className="text-sm font-medium mt-1 truncate">{memberSince}</p></div>
+          <div className="min-w-0"><p className="text-[11px] text-muted-foreground">Usando o Finango há</p><p className="text-sm font-medium mt-1 truncate">{usingTime}</p></div>
+          <div className="min-w-0 col-span-2 pt-3 border-t border-border/50 flex items-center justify-between gap-2">
+            <p className="text-[11px] text-muted-foreground">Dias consecutivos registrando</p>
+            <p className="font-mono text-sm font-semibold text-primary tabular-nums">{consecutive}</p>
+          </div>
         </div>
 
         {/* ================ SEGURANÇA ================ */}
