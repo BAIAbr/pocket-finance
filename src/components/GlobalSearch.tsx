@@ -16,7 +16,7 @@ import { ptBR } from 'date-fns/locale';
 const routes = [
   { path: '/', icon: Home, label: 'Início', hint: 'Dashboard' },
   { path: '/history', icon: History, label: 'Histórico', hint: 'Todos os lançamentos' },
-  { path: '/ai-insights', icon: Brain, label: 'Finango IA', hint: 'Assistente inteligente' },
+  { path: '/ai-insights', icon: Brain, label: 'FOX', hint: 'Assistente inteligente' },
   { path: '/savings', icon: Target, label: 'Metas / Cofrinho', hint: 'Piggy banks' },
   { path: '/planning', icon: TrendingUp, label: 'Planejamento', hint: 'Simulações e projeções' },
   { path: '/investments', icon: TrendingUp, label: 'Investimentos', hint: 'Carteira e ativos' },

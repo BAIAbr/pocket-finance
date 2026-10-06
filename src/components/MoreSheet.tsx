@@ -72,7 +72,7 @@ export function MoreSheet({ open, onClose }: MoreSheetProps) {
     {
       title: 'Inteligência',
       items: [
-        { icon: Bot, label: 'Finango IA', description: 'Copiloto financeiro inteligente', premium: true, action: goPremiumOr('/ai-insights') },
+        { icon: Bot, label: 'FOX', description: 'Copiloto financeiro inteligente', premium: true, action: goPremiumOr('/ai-insights') },
         { icon: Camera, label: 'Scanner Inteligente', description: 'Leia notas fiscais com a câmera', premium: true, action: premiumSoon('Scanner Inteligente') },
         { icon: BarChart3, label: 'Relatórios', description: 'Análises detalhadas por período', premium: true, action: goPremiumOr('/reports') },
       ],
