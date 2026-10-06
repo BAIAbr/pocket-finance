@@ -6,8 +6,8 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { entitledPlanCode } from '@/lib/planCapabilities';
 import { useNavigate } from 'react-router-dom';
 import {
-  Palette, Bell, Shield, CreditCard, Globe, FlaskConical,
-  HelpCircle, Info, ShieldCheck, Trash2, User, Database, Crown, ChevronRight,
+  Palette, Bell, Shield, CreditCard, FlaskConical,
+  HelpCircle, Info, ShieldCheck, Trash2, User, Database, ChevronRight,
 } from 'lucide-react';
 import { SettingRow } from '@/components/settings/SettingRow';
 import { toast } from 'sonner';
@@ -50,36 +50,31 @@ export default function SettingsPage() {
     {
       title: 'Preferências',
       rows: [
-        { id: 'appearance', label: 'Aparência e tema', description: 'Temas, cores e organização do Finango.', icon: <Palette size={18} />, to: '/settings/appearance' },
-        { id: 'preferences', label: 'Preferências da aplicação', description: 'Idioma, moeda, formato de data e fuso.', icon: <Globe size={18} />, to: '/settings/preferences' },
+        { id: 'appearance', label: 'Aparência e preferências', description: 'Tema, idioma, moeda, formato de data e outras preferências.', icon: <Palette size={18} />, to: '/settings/appearance' },
         { id: 'notifications', label: 'Notificações', description: 'Push, resumos e categorias.', icon: <Bell size={18} />, to: '/settings/notifications' },
       ],
     },
     {
-      title: 'Segurança',
+      title: 'Segurança e plano',
       rows: [
         { id: 'security', label: 'Segurança', description: 'Senha, sessões e dispositivos.', icon: <Shield size={18} />, to: '/security' },
+        { id: 'subscription', label: 'Meu plano', description: 'Plano atual, benefícios, assinatura e troca de plano.', icon: <CreditCard size={18} />, to: '/settings/subscription', badge: planName },
       ],
     },
     {
-      title: 'Assinatura',
+      title: 'Ajuda',
       rows: [
-        { id: 'subscription', label: 'Meu plano', description: 'Status, pagamentos e cupons.', icon: <CreditCard size={18} />, to: '/settings/subscription' },
-        { id: 'plans', label: 'Planos', description: 'Compare os planos do Finango.', icon: <Crown size={18} />, to: '/plans' },
-      ],
-    },
-    {
-      title: 'Outros',
-      rows: [
-        { id: 'labs', label: 'Laboratório Finango', description: 'Recursos experimentais em teste.', icon: <FlaskConical size={18} />, to: '/settings/labs' },
         { id: 'help', label: 'Ajuda e suporte', description: 'Central de ajuda, contato e feedback.', icon: <HelpCircle size={18} />, to: '/settings/help' },
         { id: 'about', label: 'Sobre', description: 'Versão, changelog, políticas e licenças.', icon: <Info size={18} />, to: '/settings/about' },
-        ...(isAuthenticated && isAdmin
-          ? [{ id: 'admin', label: 'Painel administrativo', description: 'Ferramentas de admin do Finango.', icon: <ShieldCheck size={18} />, to: '/admin', badge: 'Admin' }]
-          : []),
       ],
     },
   ];
+
+  // Laboratório e Painel administrativo: visíveis apenas para administradores (regra existente useAdminCheck).
+  const adminRows: Row[] = isAuthenticated && isAdmin ? [
+    { id: 'labs', label: 'Laboratório Finango', description: 'Recursos experimentais em teste.', icon: <FlaskConical size={18} />, to: '/settings/labs' },
+    { id: 'admin', label: 'Painel administrativo', description: 'Ferramentas de admin do Finango.', icon: <ShieldCheck size={18} />, to: '/admin', badge: 'Admin' },
+  ] : [];
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
@@ -135,10 +130,23 @@ export default function SettingsPage() {
           </section>
         ))}
 
+        {adminRows.length > 0 && (
+          <section className="pt-2">
+            <h2 className="px-1 mb-2 text-[11px] font-mono font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
+              Administração
+            </h2>
+            <div className="rounded-2xl border border-dashed border-border p-1.5 divide-y divide-border/50">
+              {adminRows.map(r => (
+                <SettingRow key={r.id} icon={r.icon} label={r.label} description={r.description} badge={r.badge} onClick={() => navigate(r.to)} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Família: removida da interface (backend preservado) */}
 
         {isAuthenticated && (
-          <section>
+          <section className="pt-6 mt-2 border-t border-border/50">
             <h2 className="px-1 mb-2 text-[11px] font-mono font-semibold uppercase tracking-[0.16em] text-destructive">
               Zona de perigo
             </h2>
