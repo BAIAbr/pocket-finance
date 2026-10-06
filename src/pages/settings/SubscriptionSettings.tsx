@@ -173,7 +173,7 @@ export default function SubscriptionSettings() {
     [plans],
   );
   // Família removida da interface: oculta apenas a exibição desses benefícios (dados no banco intactos)
-  const featuresToShow = (currentPlan?.features?.length ? currentPlan.features : premiumPlan?.features ?? [])
+  const featuresToShow = (isPaid && currentPlan?.features?.length ? currentPlan.features : premiumPlan?.features ?? [])
     .filter(f => !/famíli|familia|compartilhad|em grupo|multi-usu|consolidad/i.test(f.label));
 
   const rawStatus = subscription?.status ?? (isPaid ? 'active' : 'free');
