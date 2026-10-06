@@ -113,7 +113,7 @@ export function FinancialEvolutionCard() {
             <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.08em]">6 meses</span>
           </div>
           <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={stats} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
+            <AreaChart data={all} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
               <defs>
                 <linearGradient id="foxIncome" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.28} />
