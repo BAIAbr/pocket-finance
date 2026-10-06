@@ -8,7 +8,7 @@ import { useSmartInsights, type InsightTone } from '@/hooks/useSmartInsights';
 const toneClasses: Record<InsightTone, { bg: string; text: string; ring: string; icon: string }> = {
   positive: { bg: 'bg-income/10', text: 'text-income', ring: 'ring-income/20', icon: 'text-income' },
   negative: { bg: 'bg-expense/10', text: 'text-expense', ring: 'ring-expense/20', icon: 'text-expense' },
-  warning:  { bg: 'bg-orange-500/10', text: 'text-orange-500', ring: 'ring-orange-500/20', icon: 'text-orange-500' },
+  warning:  { bg: 'bg-warning/10', text: 'text-warning', ring: 'ring-warning/20', icon: 'text-warning' },
   neutral:  { bg: 'bg-primary/10', text: 'text-primary', ring: 'ring-primary/20', icon: 'text-primary' },
 };
 
@@ -48,9 +48,9 @@ export function SmartInsightsSection() {
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-1.5">
             <Sparkles size={14} className="text-primary" />
-            <h3 className="text-sm font-semibold">Insights da semana</h3>
+            <h3 className="font-mono text-[10px] uppercase tracking-[0.08em] text-primary">Copiloto Fox · Insights da semana</h3>
           </div>
-          <span className="text-[10px] text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground border border-border px-2 py-0.5 rounded">
             Automático
           </span>
         </div>

@@ -15,6 +15,7 @@ import { ChangelogHighlight } from '@/components/ChangelogHighlight';
 import { SmartInsightsSection } from '@/components/SmartInsightsSection';
 import { PixExpirationBanner } from '@/components/PixExpirationBanner';
 import CreditCardsDashboardCard from '@/components/CreditCardsDashboardCard';
+import { ExecutiveOverview } from '@/components/dashboard/ExecutiveOverview';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStreak } from '@/hooks/useStreak';
@@ -34,10 +35,10 @@ export default function Dashboard() {
       <header className="px-4 lg:px-8 pt-6 pb-4 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         <div className="relative">
-          <p className="text-muted-foreground text-sm font-medium">
+          <p className="text-muted-foreground text-sm font-medium lg:font-mono lg:text-[10px] lg:uppercase lg:tracking-[0.08em]">
             {isFamily ? 'Resumo familiar' : 'Resumo financeiro'}
           </p>
-          <h1 className="text-2xl lg:text-3xl font-bold capitalize bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+          <h1 className="text-2xl lg:text-4xl font-bold lg:font-semibold lg:tracking-tight capitalize">
             {currentMonthStats.month}
           </h1>
         </div>
@@ -57,7 +58,8 @@ export default function Dashboard() {
         {/* Balance is always highlighted at the top */}
         {!isHidden('balance') && (
           <div className="animate-fade-in">
-            <BalanceCard />
+            <div className="lg:hidden"><BalanceCard /></div>
+            <div className="hidden lg:block"><ExecutiveOverview /></div>
           </div>
         )}
 
