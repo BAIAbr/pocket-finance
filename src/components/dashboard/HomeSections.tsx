@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, CreditCard, CalendarClock, Flag, Target, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from 'recharts';
 import { parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
@@ -59,6 +59,24 @@ export function FoxHighlightCard() {
 }
 
 /* ---------- Evolução ---------- */
+const compactBRL = (v: number) => {
+  const a = Math.abs(v);
+  if (a >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace('.', ',')}M`;
+  if (a >= 1000) return `${(v / 1000).toFixed(a >= 10000 ? 0 : 1).replace('.', ',')}k`;
+  return `${Math.round(v)}`;
+};
+
+function FoxTooltip({ active, payload, label, fmt }: any) {
+  if (!active || !payload?.length) return null;
+  const get = (k: string) => Number(payload.find((p: any) => p.dataKey === k)?.value ?? 0);
+  return (
+    <div className="rounded-xl border border-border bg-popover/95 backdrop-blur px-3 py-2.5 shadow-lg min-w-[150px]">
+      <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground mb-1.5 capitalize">{label}</p>
+      <div className="flex items-center justify-between gap-4 text-xs"><span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-primary" />Entradas</span><span className="font-mono tabular-nums">{fmt(get('income'))}</span></div>
+      <div className="flex items-center justify-between gap-4 text-xs mt-1"><span className="flex items-center gap-1.5 text-muted-foreground"><span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />Saídas</span><span className="font-mono tabular-nums">{fmt(get('expense'))}</span></div>
+    </div>
+  );
+}
 function Delta({ name, cur, prev, invert }: { name: string; cur: number; prev: number; invert?: boolean }) {
   const has = prev !== 0;
   const pct = has ? ((cur - prev) / Math.abs(prev)) * 100 : 0;
@@ -89,24 +107,30 @@ export function FinancialEvolutionCard() {
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-4 mb-2 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-income" />Entradas</span>
-            <span className="inline-flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-expense" />Saídas</span>
-            <span className="ml-auto">Últimos 6 meses</span>
+          <div className="flex items-center gap-4 mb-3 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5"><span className="w-3 h-0.5 rounded-full bg-primary" />Entradas</span>
+            <span className="inline-flex items-center gap-1.5"><span className="w-3 h-0.5 rounded-full bg-muted-foreground/60" />Saídas</span>
+            <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.08em]">6 meses</span>
           </div>
-          <ResponsiveContainer width="100%" height={170}>
-            <BarChart data={stats} barGap={3} margin={{ left: 0, right: 0, top: 8, bottom: 0 }}>
-              <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
-              <YAxis hide />
-              <Tooltip
-                cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
-                contentStyle={{ backgroundColor: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12, color: 'hsl(var(--foreground))' }}
-                formatter={(v: any, n: any) => [formatCurrency(Number(v)), n === 'income' ? 'Entradas' : 'Saídas']}
-              />
-              <Bar dataKey="income" fill="hsl(var(--income))" radius={[4, 4, 0, 0]} maxBarSize={18} />
-              <Bar dataKey="expense" fill="hsl(var(--expense))" radius={[4, 4, 0, 0]} maxBarSize={18} />
-            </BarChart>
+          <ResponsiveContainer width="100%" height={180}>
+            <AreaChart data={stats} margin={{ left: 0, right: 4, top: 8, bottom: 0 }}>
+              <defs>
+                <linearGradient id="foxIncome" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.28} />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.35} strokeDasharray="2 6" />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tickMargin={8}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontFamily: 'JetBrains Mono, monospace' }}
+                tickFormatter={(v: string) => v ? v.charAt(0).toUpperCase() + v.slice(1, 3) : v} />
+              <YAxis width={44} axisLine={false} tickLine={false} tickCount={4}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontFamily: 'JetBrains Mono, monospace', opacity: 0.7 }}
+                tickFormatter={compactBRL} />
+              <Tooltip cursor={{ stroke: 'hsl(var(--primary))', strokeOpacity: 0.3, strokeWidth: 1 }} content={<FoxTooltip fmt={formatCurrency} />} />
+              <Area type="monotone" dataKey="expense" stroke="hsl(var(--muted-foreground))" strokeOpacity={0.6} strokeWidth={1.5} strokeDasharray="4 4" fill="transparent" dot={false} activeDot={{ r: 3 }} animationDuration={600} />
+              <Area type="monotone" dataKey="income" stroke="hsl(var(--primary))" strokeWidth={2.25} fill="url(#foxIncome)" dot={false} activeDot={{ r: 4, stroke: 'hsl(var(--background))', strokeWidth: 2 }} animationDuration={600} />
+            </AreaChart>
           </ResponsiveContainer>
           {cur && prev && (
             <div className="mt-4 pt-4 border-t border-border/50">
