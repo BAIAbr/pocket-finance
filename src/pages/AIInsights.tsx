@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useFinanceContext } from '@/contexts/FinanceContext';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Brain, Sparkles, RefreshCw, AlertTriangle, Lightbulb, ArrowDownRight, ArrowUpRight,
+  Brain, Sparkles, RefreshCw, AlertTriangle, Lightbulb, ArrowUpRight,
   Wallet, TrendingUp, Target, Calendar, MessageCircle, Send, X, CheckCircle2,
-  ShieldAlert, Star, Loader2,
+  ShieldAlert, Star, Loader2, ArrowRight, Repeat, Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -40,13 +41,34 @@ interface FinangoReport {
 
 const CACHE_KEY = 'finango_ia_report_v1';
 
+/** Maps a piece of AI text to an EXISTING page of the app (presentation only). */
+function actionFor(text: string): { label: string; to: string } {
+  const t = (text || '').toLowerCase();
+  if (/recorr|assinatura|mensalidade/.test(t)) return { label: 'Ver recorrências', to: '/recurring' };
+  if (/cart[aã]o|fatura|cr[eé]dito/.test(t)) return { label: 'Ver cartões', to: '/cards' };
+  if (/invest|aporte|a[cç][aã]o|fii|renda fixa/.test(t)) return { label: 'Ver investimentos', to: '/investments' };
+  if (/reserva|emerg|planej|patrim/.test(t)) return { label: 'Ver planejamento', to: '/planning' };
+  if (/meta|cofrinho|objetivo|guardar|poupa/.test(t)) return { label: 'Ver metas', to: '/savings' };
+  if (/receita|entrada|sal[aá]rio|renda/.test(t)) return { label: 'Ver entradas', to: '/history' };
+  return { label: 'Ver despesas', to: '/history' };
+}
+
+function categoryFor(text: string): string {
+  const to = actionFor(text).to;
+  return to === '/investments' ? 'Investimentos'
+    : to === '/savings' || to === '/planning' ? 'Metas'
+    : to === '/recurring' || to === '/cards' ? 'Gastos'
+    : 'Economia';
+}
+
 export default function AIInsights() {
   const { formatCurrency, transactions } = useFinanceContext();
+  const navigate = useNavigate();
   const [report, setReport] = useState<FinangoReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [chatOpen, setChatOpen] = useState(false);
   const [lastSignature, setLastSignature] = useState<string | null>(null);
+  const [lastAt, setLastAt] = useState<number | null>(null);
 
   // Signature = number of transactions + latest date; recomputes only on real changes
   const currentSignature = `${transactions?.length ?? 0}::${transactions?.[0]?.date ?? ''}`;
@@ -64,10 +86,12 @@ export default function AIInsights() {
 
       if (response.error) throw response.error;
       if (response.data?.error) throw new Error(response.data.error);
+      const at = Date.now();
       setReport(response.data);
       setLastSignature(currentSignature);
+      setLastAt(at);
       try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ report: response.data, signature: currentSignature, at: Date.now() }));
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ report: response.data, signature: currentSignature, at }));
       } catch {}
     } catch (err: any) {
       setError(err.message || 'Erro ao gerar análise');
@@ -84,7 +108,7 @@ export default function AIInsights() {
         const parsed = JSON.parse(raw);
         setReport(parsed.report);
         setLastSignature(parsed.signature);
-        // Auto-refresh if data changed (>1min old and signature differs)
+        setLastAt(parsed.at ?? null);
         if (parsed.signature !== currentSignature && Date.now() - parsed.at > 60_000) {
           analyze();
         }
@@ -98,219 +122,247 @@ export default function AIInsights() {
   }, []);
 
   const isStale = lastSignature !== null && lastSignature !== currentSignature;
+  const valid = report && !('error' in (report as any));
+  const lastLabel = lastAt
+    ? new Date(lastAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    : null;
+
+  // Fox Insights = existing diagnosis + alerts from analyze-finances (no new data)
+  const insights: { kind: 'attention' | 'positive' | 'alert'; title: string; desc: string; value?: string; severity?: string }[] = valid
+    ? [
+        ...(report!.alertas ?? []).map(a => ({ kind: 'alert' as const, title: a.titulo, desc: a.descricao, severity: a.severidade })),
+        ...(report!.diagnostico?.atencao ?? []).map(d => ({ kind: 'attention' as const, title: d.titulo, desc: d.descricao, value: d.valor })),
+        ...(report!.diagnostico?.positivos ?? []).map(d => ({ kind: 'positive' as const, title: d.titulo, desc: d.descricao, value: d.valor })),
+      ]
+    : [];
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
-      {/* Header */}
-      <header className="px-4 pt-6 pb-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/30">
-              <Brain size={22} className="text-primary-foreground" />
+      <main className="px-4 lg:px-8 pt-6 space-y-6 max-w-6xl mx-auto">
+        {/* ===== Copiloto Fox ===== */}
+        <section className="card-finance relative overflow-hidden" aria-labelledby="fox-title">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-primary flex items-center gap-1.5">
+                <Sparkles size={12} /> Copiloto Fox
+              </p>
+              <h1 id="fox-title" className="text-2xl lg:text-3xl font-bold tracking-tight mt-1">Seu panorama financeiro</h1>
+              <p className="text-sm text-muted-foreground mt-1">Inteligência para entender seu dinheiro e tomar decisões melhores.</p>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Finango IA</h1>
-              <p className="text-xs text-muted-foreground">Seu copiloto financeiro inteligente</p>
-            </div>
+            <button
+              onClick={analyze}
+              disabled={loading}
+              className="shrink-0 h-10 px-3 rounded-xl border border-border bg-secondary/60 hover:bg-secondary flex items-center gap-2 text-xs font-medium touch-scale disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Atualizar análise"
+            >
+              <RefreshCw size={15} className={cn(loading && 'animate-spin')} />
+              <span className="hidden sm:inline">Atualizar análise</span>
+            </button>
           </div>
-          <button
-            onClick={analyze}
-            disabled={loading}
-            className="w-10 h-10 rounded-xl bg-secondary hover:bg-secondary/70 flex items-center justify-center touch-scale disabled:opacity-50"
-            aria-label="Atualizar análise"
-          >
-            <RefreshCw size={18} className={cn(loading && 'animate-spin')} />
-          </button>
-        </div>
-      </header>
 
-      <main className="px-4 space-y-4">
-        {loading && !report && <LoadingState />}
+          <div className="flex flex-wrap items-center gap-2 mt-4">
+            <FoxStatusPill loading={loading} error={!!error} stale={isStale} ready={!!valid} />
+            {lastLabel && (
+              <span className="text-[11px] font-mono text-muted-foreground flex items-center gap-1">
+                <Clock size={11} /> Última análise · {lastLabel}
+              </span>
+            )}
+          </div>
+
+          <div className="grid lg:grid-cols-[1fr_280px] gap-4 mt-5">
+            <div className="rounded-xl border border-border bg-background/40 p-4 min-h-[96px]">
+              {valid ? (
+                <>
+                  <p className="font-semibold">{report!.saudacao}</p>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{report!.resumo_intro}</p>
+                </>
+              ) : loading ? (
+                <p className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> O Fox está analisando suas finanças…</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Seu Fox ainda está analisando seus dados.</p>
+              )}
+            </div>
+            <FoxScoreCard score={valid ? report!.finango_score : undefined} loading={loading && !valid} />
+          </div>
+        </section>
+
         {error && (
-          <div className="card-finance border-destructive/30 bg-destructive/5 p-4">
-            <p className="text-sm text-destructive">{error}</p>
-            <button onClick={analyze} className="text-sm text-primary mt-2 underline">Tentar novamente</button>
+          <div role="alert" className="card-finance border-destructive/30 bg-destructive/5 flex items-start gap-3">
+            <AlertTriangle size={18} className="text-destructive shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold">Não foi possível atualizar sua análise agora.</p>
+              <p className="text-xs text-muted-foreground mt-0.5 break-words">{error}</p>
+              <button onClick={analyze} className="text-sm text-primary font-medium mt-2 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">Tentar novamente</button>
+            </div>
           </div>
         )}
 
-        {isStale && report && !loading && (
+        {isStale && valid && !loading && (
           <button
             onClick={analyze}
-            className="w-full card-finance bg-primary/5 border-primary/30 flex items-center justify-center gap-2 py-3 text-sm text-primary font-medium touch-scale"
+            className="w-full card-finance border-primary/30 flex items-center justify-center gap-2 py-3 text-sm text-primary font-medium touch-scale"
           >
             <Sparkles size={16} /> Novos lançamentos detectados — atualizar análise
           </button>
         )}
 
         <AnimatePresence mode="wait">
-          {report && !('error' in (report as any)) && (
-            <motion.div
-              key="report"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
-            >
-              {/* Greeting */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                className="card-finance bg-gradient-to-br from-primary/10 via-background to-background border-primary/20"
-              >
-                <p className="text-lg font-semibold">{report.saudacao}</p>
-                <p className="text-sm text-muted-foreground mt-1">{report.resumo_intro}</p>
-              </motion.div>
-
-              {/* Finango Score */}
-              {report.finango_score && (
-                <ScoreCard score={report.finango_score} />
-              )}
-
-              {/* Diagnóstico */}
-              <div className="grid gap-3">
-                {report.diagnostico?.positivos?.length > 0 && (
-                  <DiagnosisSection
-                    title="Pontos positivos"
-                    icon={<CheckCircle2 size={16} />}
-                    tone="income"
-                    items={report.diagnostico.positivos}
-                  />
-                )}
-                {report.diagnostico?.atencao?.length > 0 && (
-                  <DiagnosisSection
-                    title="Pontos de atenção"
-                    icon={<ShieldAlert size={16} />}
-                    tone="warning"
-                    items={report.diagnostico.atencao}
-                  />
-                )}
-              </div>
-
-              {/* Alertas */}
-              {report.alertas?.length > 0 && (
-                <Section title="Alertas inteligentes" icon={<AlertTriangle size={16} className="text-warning" />}>
-                  <div className="space-y-2">
-                    {report.alertas.map((a, i) => (
-                      <AlertCard key={i} alert={a} />
-                    ))}
+          {valid && (
+            <motion.div key="report" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              {/* ===== Resumo inteligente ===== */}
+              {(report!.comparativos || report!.previsao_mes) && (
+                <FoxSection label="Resumo inteligente" title="O que está acontecendo com seu dinheiro">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {report!.comparativos?.['3_meses'] && (
+                      <>
+                        <Kpi label="Receitas · 3 meses" value={formatCurrency(report!.comparativos['3_meses'].receita || 0)} tone="income" />
+                        <Kpi label="Despesas · 3 meses" value={formatCurrency(report!.comparativos['3_meses'].despesa || 0)} tone="expense" />
+                        <Kpi
+                          label="Economia · 3 meses"
+                          value={formatCurrency(report!.comparativos['3_meses'].economia || 0)}
+                          tone={(report!.comparativos['3_meses'].economia || 0) >= 0 ? 'income' : 'expense'}
+                        />
+                      </>
+                    )}
+                    {report!.previsao_mes && (
+                      <Kpi label="Saldo previsto do mês" value={formatCurrency(report!.previsao_mes.saldo_previsto || 0)} />
+                    )}
                   </div>
-                </Section>
-              )}
-
-              {/* Recomendações */}
-              {report.recomendacoes?.length > 0 && (
-                <Section title="Recomendações" icon={<Lightbulb size={16} className="text-primary" />}>
-                  <div className="space-y-2">
-                    {report.recomendacoes.map((r, i) => (
-                      <div key={i} className="p-3 rounded-xl bg-secondary/40 border border-border/40">
-                        <p className="font-semibold text-sm">{r.acao}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{r.motivo}</p>
-                        {r.impacto && (
-                          <p className="text-xs text-primary mt-1.5 font-medium">💡 {r.impacto}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </Section>
-              )}
-
-              {/* Comparativos */}
-              {report.comparativos && (
-                <Section title="Comparativos" icon={<TrendingUp size={16} className="text-primary" />}>
-                  <div className="space-y-2">
-                    {(['3_meses', '6_meses', '12_meses'] as const).map((k) => {
-                      const c = report.comparativos[k];
-                      if (!c) return null;
-                      const label = k.replace('_', ' ');
-                      return (
-                        <div key={k} className="p-3 rounded-xl bg-secondary/40">
-                          <p className="text-xs uppercase text-muted-foreground mb-2">Últimos {label}</p>
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            <div>
-                              <p className="text-muted-foreground">Receita</p>
-                              <p className="font-mono font-semibold text-income">{formatCurrency(c.receita || 0)}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Despesa</p>
-                              <p className="font-mono font-semibold text-expense">{formatCurrency(c.despesa || 0)}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Economia</p>
-                              <p className={cn('font-mono font-semibold', (c.economia || 0) >= 0 ? 'text-income' : 'text-expense')}>
+                  {report!.comparativos && (
+                    <div className="mt-3 grid sm:grid-cols-3 gap-2">
+                      {(['3_meses', '6_meses', '12_meses'] as const).map(k => {
+                        const c = report!.comparativos[k];
+                        if (!c) return null;
+                        return (
+                          <div key={k} className="rounded-xl border border-border bg-background/40 p-3">
+                            <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Últimos {k.replace('_', ' ')}</p>
+                            <div className="flex justify-between gap-2 mt-1.5 text-xs">
+                              <span className="text-muted-foreground">Economia</span>
+                              <span className={cn('font-mono font-semibold', (c.economia || 0) >= 0 ? 'text-income' : 'text-expense')}>
                                 {formatCurrency(c.economia || 0)}
-                              </p>
+                              </span>
                             </div>
                           </div>
-                        </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </FoxSection>
+              )}
+
+              {/* ===== Fox Insights ===== */}
+              <FoxSection label="Fox Insights" title="O que merece sua atenção">
+                {insights.length === 0 ? (
+                  <EmptyFox />
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {insights.map((it, i) => (
+                      <FoxInsightCard key={i} {...it} onAction={(to) => navigate(to)} />
+                    ))}
+                  </div>
+                )}
+              </FoxSection>
+
+              {/* ===== Recomendações do Fox ===== */}
+              {report!.recomendacoes?.length > 0 && (
+                <FoxSection label="Recomendações do Fox" title="O que fazer agora">
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {report!.recomendacoes.map((r, i) => {
+                      const act = actionFor(`${r.acao} ${r.motivo}`);
+                      return (
+                        <article key={i} className="rounded-xl border border-border bg-card p-4 flex flex-col">
+                          <div className="flex items-center gap-2 text-primary">
+                            <Lightbulb size={15} aria-hidden />
+                            <span className="text-[10px] font-mono uppercase tracking-wider">Recomendação</span>
+                          </div>
+                          <p className="font-semibold text-sm mt-2">{r.acao}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{r.motivo}</p>
+                          {r.impacto && (
+                            <p className="text-xs mt-2"><span className="font-mono uppercase text-[10px] text-muted-foreground mr-1">Impacto</span>{r.impacto}</p>
+                          )}
+                          <button
+                            onClick={() => navigate(act.to)}
+                            className="mt-3 self-start min-h-[40px] inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                          >
+                            {act.label} <ArrowRight size={13} />
+                          </button>
+                        </article>
                       );
                     })}
                   </div>
-                </Section>
+                </FoxSection>
               )}
 
-              {/* Metas */}
-              {report.metas_analise?.length > 0 && (
-                <Section title="Metas e cofrinhos" icon={<Target size={16} className="text-primary" />}>
-                  <div className="space-y-3">
-                    {report.metas_analise.map((m, i) => (
-                      <div key={i} className="p-3 rounded-xl bg-secondary/40">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <p className="font-semibold text-sm">{m.nome}</p>
-                          <span className="text-xs text-muted-foreground">{m.tempo_estimado}</span>
-                        </div>
-                        <div className="h-2 bg-background rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-primary to-primary/60 transition-all"
-                            style={{ width: `${Math.min(100, Math.max(0, m.progresso_percentual || 0))}%` }}
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-2">{m.sugestao}</p>
-                      </div>
-                    ))}
-                  </div>
-                </Section>
-              )}
-
-              {/* Previsão do mês */}
-              {report.previsao_mes && (
-                <Section title="Previsão do mês" icon={<Calendar size={16} className="text-primary" />}>
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <MiniStat label="Saldo previsto" value={formatCurrency(report.previsao_mes.saldo_previsto || 0)} icon={<Wallet size={14} />} />
-                    <MiniStat label="Economia prevista" value={formatCurrency(report.previsao_mes.economia_prevista || 0)} icon={<ArrowUpRight size={14} />} tone="income" />
-                  </div>
-                  {report.previsao_mes.proximos_vencimentos?.length > 0 && (
-                    <div className="space-y-1.5 mb-2">
-                      <p className="text-xs text-muted-foreground font-medium">Próximos vencimentos</p>
-                      {report.previsao_mes.proximos_vencimentos.map((v, i) => (
-                        <div key={i} className="flex items-center justify-between text-sm py-1">
-                          <span>{v.descricao} <span className="text-xs text-muted-foreground">· {v.quando}</span></span>
-                          <span className="font-mono font-semibold">{formatCurrency(v.valor)}</span>
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* Metas */}
+                {report!.metas_analise?.length > 0 && (
+                  <FoxSection label="Metas" title="Seus objetivos">
+                    <div className="space-y-3">
+                      {report!.metas_analise.map((m, i) => (
+                        <div key={i} className="rounded-xl border border-border bg-background/40 p-3">
+                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                            <p className="font-semibold text-sm truncate">{m.nome}</p>
+                            <span className="text-[11px] font-mono text-muted-foreground shrink-0">{Math.round(m.progresso_percentual || 0)}% · {m.tempo_estimado}</span>
+                          </div>
+                          <div className="h-1.5 bg-secondary rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(m.progresso_percentual || 0)} aria-valuemin={0} aria-valuemax={100}>
+                            <div className="h-full bg-primary" style={{ width: `${Math.min(100, Math.max(0, m.progresso_percentual || 0))}%` }} />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2">{m.sugestao}</p>
                         </div>
                       ))}
+                      <button onClick={() => navigate('/savings')} className="min-h-[40px] inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4">
+                        Ver metas <ArrowRight size={13} />
+                      </button>
                     </div>
-                  )}
-                  {report.previsao_mes.maior_gasto_esperado?.categoria && (
-                    <div className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/30">
-                      Maior gasto esperado: <span className="text-foreground font-medium">{report.previsao_mes.maior_gasto_esperado.categoria}</span> — {formatCurrency(report.previsao_mes.maior_gasto_esperado.valor_estimado || 0)}
-                    </div>
-                  )}
-                  <p className="text-[10px] text-muted-foreground mt-3 italic">Projeções baseadas no seu histórico financeiro.</p>
-                </Section>
-              )}
+                  </FoxSection>
+                )}
 
-              {/* Assinaturas detectadas */}
-              {report.assinaturas_detectadas?.length > 0 && (
-                <Section title="Possíveis assinaturas" icon={<RefreshCw size={16} className="text-primary" />}>
-                  <div className="space-y-2">
-                    {report.assinaturas_detectadas.map((a, i) => (
-                      <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40">
-                        <div>
-                          <p className="text-sm font-medium">{a.descricao}</p>
+                {/* Previsão */}
+                {report!.previsao_mes && (
+                  <FoxSection label="Previsão do mês" title="Próximos movimentos">
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <MiniStat label="Saldo previsto" value={formatCurrency(report!.previsao_mes.saldo_previsto || 0)} icon={<Wallet size={14} />} />
+                      <MiniStat label="Economia prevista" value={formatCurrency(report!.previsao_mes.economia_prevista || 0)} icon={<ArrowUpRight size={14} />} tone="income" />
+                    </div>
+                    {report!.previsao_mes.proximos_vencimentos?.length > 0 && (
+                      <div className="space-y-1 mb-2">
+                        <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Próximos vencimentos</p>
+                        {report!.previsao_mes.proximos_vencimentos.map((v, i) => (
+                          <div key={i} className="flex items-center justify-between gap-2 text-sm py-1">
+                            <span className="min-w-0 truncate">{v.descricao} <span className="text-xs text-muted-foreground">· {v.quando}</span></span>
+                            <span className="font-mono font-semibold shrink-0">{formatCurrency(v.valor)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {report!.previsao_mes.maior_gasto_esperado?.categoria && (
+                      <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+                        Maior gasto esperado: <span className="text-foreground font-medium">{report!.previsao_mes.maior_gasto_esperado.categoria}</span> — <span className="font-mono">{formatCurrency(report!.previsao_mes.maior_gasto_esperado.valor_estimado || 0)}</span>
+                      </p>
+                    )}
+                    <p className="text-[10px] text-muted-foreground mt-3">Projeções baseadas no seu histórico financeiro.</p>
+                  </FoxSection>
+                )}
+              </div>
+
+              {/* Assinaturas */}
+              {report!.assinaturas_detectadas?.length > 0 && (
+                <FoxSection label="Gastos recorrentes" title="Possíveis assinaturas">
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    {report!.assinaturas_detectadas.map((a, i) => (
+                      <div key={i} className="flex items-center justify-between gap-2 p-3 rounded-xl border border-border bg-background/40">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{a.descricao}</p>
                           <p className="text-xs text-muted-foreground">{a.frequencia}</p>
                         </div>
-                        <span className="font-mono text-sm font-semibold">{formatCurrency(a.valor)}</span>
+                        <span className="font-mono text-sm font-semibold shrink-0">{formatCurrency(a.valor)}</span>
                       </div>
                     ))}
                   </div>
-                </Section>
+                  <button onClick={() => navigate('/recurring')} className="mt-3 min-h-[40px] inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4">
+                    <Repeat size={13} /> Ver recorrências
+                  </button>
+                </FoxSection>
               )}
             </motion.div>
           )}
@@ -322,130 +374,119 @@ export default function AIInsights() {
   );
 }
 
-function LoadingState() {
+function FoxStatusPill({ loading, error, stale, ready }: { loading: boolean; error: boolean; stale: boolean; ready: boolean }) {
+  const s = loading ? { t: 'Analisando', c: 'text-primary border-primary/30', i: <Loader2 size={11} className="animate-spin" /> }
+    : error ? { t: 'Erro na atualização', c: 'text-destructive border-destructive/30', i: <AlertTriangle size={11} /> }
+    : stale ? { t: 'Desatualizada', c: 'text-warning border-warning/30', i: <RefreshCw size={11} /> }
+    : ready ? { t: 'Análise disponível', c: 'text-income border-income/30', i: <CheckCircle2 size={11} /> }
+    : { t: 'Sem dados suficientes', c: 'text-muted-foreground border-border', i: <Brain size={11} /> };
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-finance text-center py-10 space-y-4">
-      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
-        <Brain size={32} className="text-primary" />
-      </div>
-      <p className="text-sm text-muted-foreground">A Finango IA está analisando suas finanças...</p>
-      <div className="w-48 h-1.5 bg-secondary rounded-full mx-auto overflow-hidden">
-        <div className="h-full bg-primary rounded-full animate-[shimmer_1.5s_ease-in-out_infinite]" style={{ width: '60%' }} />
-      </div>
-    </motion.div>
+    <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-mono uppercase tracking-wider', s.c)}>
+      {s.i}{s.t}
+    </span>
   );
 }
 
-function ScoreCard({ score }: { score: FinangoReport['finango_score'] }) {
-  const pct = Math.min(100, Math.max(0, score.pontuacao || 0));
-  const toneClass =
-    pct >= 80 ? 'text-income' :
-    pct >= 60 ? 'text-primary' :
-    pct >= 40 ? 'text-warning' : 'text-expense';
+function FoxScoreCard({ score, loading }: { score?: FinangoReport['finango_score']; loading: boolean }) {
+  const has = score && typeof score.pontuacao === 'number';
+  const pct = has ? Math.min(100, Math.max(0, score!.pontuacao)) : 0;
+  const toneClass = pct >= 80 ? 'text-income' : pct >= 60 ? 'text-primary' : pct >= 40 ? 'text-warning' : 'text-expense';
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-      className="card-finance bg-gradient-to-br from-primary/10 to-background border-primary/20"
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Star size={18} className="text-primary fill-primary" />
-          <h3 className="font-bold">Finango Score</h3>
-        </div>
-        <span className={cn('text-xs font-semibold px-2 py-1 rounded-full bg-secondary', toneClass)}>
-          {score.classificacao}
-        </span>
+    <div className="rounded-xl border border-border bg-background/40 p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <Star size={12} className="text-primary" /> Fox Score
+        </p>
+        {has && <span className={cn('text-[11px] font-semibold', toneClass)}>{score!.classificacao}</span>}
       </div>
-      <div className="flex items-end gap-2 mb-3">
-        <span className={cn('text-5xl font-bold font-mono', toneClass)}>{pct}</span>
-        <span className="text-lg text-muted-foreground mb-1">/ 100</span>
-      </div>
-      <div className="h-2 bg-secondary rounded-full overflow-hidden mb-3">
-        <motion.div
-          initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="h-full bg-gradient-to-r from-primary to-primary/60"
-        />
-      </div>
-      {score.fatores?.length > 0 && (
-        <ul className="space-y-1">
-          {score.fatores.map((f, i) => (
-            <li key={i} className="text-xs text-muted-foreground flex gap-1.5"><span className="text-primary">•</span>{f}</li>
-          ))}
-        </ul>
-      )}
-    </motion.div>
-  );
-}
-
-function DiagnosisSection({ title, icon, tone, items }: {
-  title: string; icon: React.ReactNode; tone: 'income' | 'warning';
-  items: { titulo: string; descricao: string; valor?: string }[];
-}) {
-  const toneClass = tone === 'income' ? 'text-income border-income/20 bg-income/5' : 'text-warning border-warning/20 bg-warning/5';
-  return (
-    <div className={cn('card-finance border', toneClass)}>
-      <div className="flex items-center gap-2 mb-3">
-        {icon}
-        <h3 className="font-semibold text-sm">{title}</h3>
-      </div>
-      <div className="space-y-2">
-        {items.map((it, i) => (
-          <div key={i} className="p-2.5 rounded-lg bg-background/60">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-start justify-between gap-2 flex-wrap">
-                <p className="text-sm font-medium text-foreground break-words min-w-0 flex-1">{it.titulo}</p>
-                {it.valor && (
-                  <span className={cn(
-                    'text-[11px] font-mono font-semibold shrink-0 px-2 py-0.5 rounded-md whitespace-nowrap',
-                    tone === 'income' ? 'bg-income/10 text-income' : 'bg-warning/10 text-warning'
-                  )}>
-                    {it.valor}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground break-words">{it.descricao}</p>
-            </div>
+      {has ? (
+        <>
+          <div className="flex items-end gap-1 mt-2">
+            <span className={cn('text-4xl font-bold font-mono', toneClass)}>{pct}</span>
+            <span className="text-sm text-muted-foreground mb-1 font-mono">/100</span>
           </div>
-        ))}
-      </div>
+          <div className="h-1.5 bg-secondary rounded-full overflow-hidden mt-2" role="progressbar" aria-label="Fox Score" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+            <div className="h-full bg-primary transition-all duration-700" style={{ width: `${pct}%` }} />
+          </div>
+          {score!.fatores?.length > 0 && (
+            <ul className="mt-3 space-y-1">
+              {score!.fatores.slice(0, 3).map((f, i) => (
+                <li key={i} className="text-[11px] text-muted-foreground flex gap-1.5"><span className="text-primary">•</span>{f}</li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : (
+        <p className="text-sm text-muted-foreground mt-3">{loading ? 'Calculando…' : 'Em análise'}</p>
+      )}
     </div>
   );
 }
 
-function AlertCard({ alert }: { alert: FinangoReport['alertas'][number] }) {
-  const tone =
-    alert.severidade === 'critical' ? 'border-destructive/30 bg-destructive/5' :
-    alert.severidade === 'warning' ? 'border-warning/30 bg-warning/5' :
-    'border-border bg-secondary/40';
-  const iconTone =
-    alert.severidade === 'critical' ? 'text-destructive' :
-    alert.severidade === 'warning' ? 'text-warning' : 'text-muted-foreground';
+function FoxInsightCard({ kind, title, desc, value, severity, onAction }: {
+  kind: 'attention' | 'positive' | 'alert'; title: string; desc: string; value?: string; severity?: string;
+  onAction: (to: string) => void;
+}) {
+  const act = actionFor(`${title} ${desc}`);
+  const critical = kind === 'alert' && severity === 'critical';
+  const meta = kind === 'positive'
+    ? { cat: 'Oportunidade', icon: <CheckCircle2 size={15} />, c: 'text-income' }
+    : kind === 'alert'
+      ? { cat: 'Atenção', icon: <AlertTriangle size={15} />, c: critical ? 'text-destructive' : 'text-warning' }
+      : { cat: categoryFor(`${title} ${desc}`), icon: <ShieldAlert size={15} />, c: 'text-warning' };
   return (
-    <div className={cn('p-3 rounded-xl border flex gap-2.5', tone)}>
-      <AlertTriangle size={16} className={cn('shrink-0 mt-0.5', iconTone)} />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold">{alert.titulo}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{alert.descricao}</p>
+    <article className="rounded-xl border border-border bg-card p-4 flex flex-col">
+      <div className="flex items-center justify-between gap-2">
+        <span className={cn('flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider', meta.c)}>
+          {meta.icon}{meta.cat}
+        </span>
+        {value && <span className="text-[11px] font-mono font-semibold text-foreground">{value}</span>}
       </div>
-    </div>
+      <p className="font-semibold text-sm mt-2">{title}</p>
+      <p className="text-xs text-muted-foreground mt-1">{desc}</p>
+      <button
+        onClick={() => onAction(act.to)}
+        className="mt-3 self-start min-h-[40px] inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+      >
+        {act.label} <ArrowRight size={13} />
+      </button>
+    </article>
   );
 }
 
-function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
+function FoxSection({ label, title, children }: { label: string; title: string; children: React.ReactNode }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-finance">
-      <div className="flex items-center gap-2 mb-3">
-        {icon}
-        <h3 className="font-semibold text-sm">{title}</h3>
+    <section className="space-y-3">
+      <div>
+        <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-primary">{label}</p>
+        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
       </div>
       {children}
-    </motion.div>
+    </section>
+  );
+}
+
+function Kpi({ label, value, tone }: { label: string; value: string; tone?: 'income' | 'expense' }) {
+  return (
+    <div className="card-finance p-3">
+      <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={cn('font-mono font-semibold text-base mt-1 truncate', tone === 'income' && 'text-income', tone === 'expense' && 'text-expense')}>{value}</p>
+    </div>
+  );
+}
+
+function EmptyFox() {
+  return (
+    <div className="card-finance text-center py-8">
+      <Brain size={24} className="text-primary mx-auto" />
+      <p className="text-sm text-muted-foreground mt-2">Seu Fox ainda está analisando seus dados.</p>
+    </div>
   );
 }
 
 function MiniStat({ label, value, icon, tone }: { label: string; value: string; icon: React.ReactNode; tone?: 'income' }) {
   return (
-    <div className="p-3 rounded-xl bg-secondary/40">
+    <div className="p-3 rounded-xl border border-border bg-background/40">
       <div className={cn('flex items-center gap-1.5 text-xs text-muted-foreground mb-1', tone === 'income' && 'text-income')}>
         {icon}<span>{label}</span>
       </div>
