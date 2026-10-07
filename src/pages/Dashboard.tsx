@@ -2,7 +2,7 @@ import { QuickActionsFab } from '@/components/QuickActionsFab';
 import { ChangelogHighlight } from '@/components/ChangelogHighlight';
 import { PixExpirationBanner } from '@/components/PixExpirationBanner';
 import { ExecutiveOverview } from '@/components/dashboard/ExecutiveOverview';
-import { FoxHighlightCard, FinancialEvolutionCard, AttentionCard, NextEventsCard } from '@/components/dashboard/HomeSections';
+import { FoxHighlightCard, FinancialEvolutionCard, UpcomingCommitmentsCard } from '@/components/dashboard/HomeSections';
 import { useEffectiveFinance } from '@/hooks/useEffectiveFinance';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
@@ -33,10 +33,7 @@ export default function Dashboard() {
           {!isHidden('chart') && <div className="lg:col-span-3 animate-fade-in stagger-2"><FinancialEvolutionCard /></div>}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 items-stretch">
-          <div className="animate-fade-in stagger-2"><AttentionCard /></div>
-          {!isHidden('upcomingEvents') && <div className="animate-fade-in stagger-3"><NextEventsCard /></div>}
-        </div>
+        {!isHidden('upcomingEvents') && <div className="animate-fade-in stagger-2"><UpcomingCommitmentsCard /></div>}
       </main>
 
       <QuickActionsFab />
