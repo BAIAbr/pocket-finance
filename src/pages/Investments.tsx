@@ -126,7 +126,7 @@ export default function Investments() {
                   key={t.id}
                   onClick={() => setTab(t.id)}
                   aria-current={active ? 'page' : undefined}
-                  className={`shrink-0 px-3 py-2.5 -mb-px border-b-2 text-sm font-medium transition-colors ${active ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                  className={`shrink-0 px-2.5 sm:px-3 py-2.5 -mb-px border-b-2 text-sm font-medium transition-colors ${active ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                 >
                   {t.label}
                 </button>
@@ -135,8 +135,8 @@ export default function Investments() {
           </nav>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="shrink-0 mb-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold flex items-center gap-1 hover:bg-primary/90">
-                <Plus size={14} /> Adicionar
+              <button aria-label="Adicionar" className="shrink-0 mb-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold flex items-center gap-1 hover:bg-primary/90">
+                <Plus size={14} /> <span className="hidden sm:inline">Adicionar</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
