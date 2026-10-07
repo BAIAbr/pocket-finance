@@ -187,7 +187,6 @@ function useHomeEvents() {
   }, [recurring, goals, piggyBanks, cards, invoices]);
 }
 
-const kindIcon = { invoice: CreditCard, bill: CalendarClock, goal: Flag, piggy: Target };
 const kindName = { invoice: 'Fatura', bill: 'Recorrência', goal: 'Meta', piggy: 'Cofrinho' };
 const whenLabel = (d: number) => (d < 0 ? `Atrasado ${Math.abs(d)}d` : d === 0 ? 'Vence hoje' : d === 1 ? 'Vence amanhã' : `Vence em ${d} dias`);
 
