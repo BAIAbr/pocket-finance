@@ -28,7 +28,7 @@ export default function Dashboard() {
 
         {!isHidden('balance') && <div className="animate-fade-in"><ExecutiveOverview /></div>}
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 lg:gap-6 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 lg:gap-6 items-start">
           {!isHidden('smartInsights') && <div className="lg:col-span-2 animate-fade-in stagger-1"><FoxHighlightCard /></div>}
           {!isHidden('chart') && <div className="lg:col-span-3 animate-fade-in stagger-2"><FinancialEvolutionCard /></div>}
         </div>
