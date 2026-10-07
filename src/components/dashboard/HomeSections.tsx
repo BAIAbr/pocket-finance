@@ -35,7 +35,7 @@ export function FoxHighlightCard() {
   const main = insights.find(i => i.tone === 'negative' || i.tone === 'warning') ?? insights[0];
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-primary/25 bg-card p-5 lg:p-6 h-full flex flex-col">
+    <section className="relative overflow-hidden rounded-2xl border border-primary/25 bg-card p-5 lg:p-6 flex flex-col">
       <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
       <div className="relative flex items-center gap-2">
         <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center">
