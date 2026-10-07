@@ -12,23 +12,28 @@ import { SimulatorPanel } from '@/components/investments/SimulatorPanel';
 import { InvestmentCharts } from '@/components/investments/InvestmentCharts';
 import { DividendsPanel } from '@/components/investments/DividendsPanel';
 
-type Tab = 'overview' | 'wallet' | 'fii' | 'stock' | 'etf' | 'fixed_income' | 'dividends' | 'simulator' | 'history';
+type Tab = 'wallet' | 'dividends' | 'simulator' | 'history';
+type ClassFilter = 'all' | AssetType;
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
-  { id: 'overview', label: 'Visão geral', icon: PieChart },
   { id: 'wallet', label: 'Carteira', icon: WalletIcon },
-  { id: 'fii', label: 'FIIs', icon: TrendingUp },
-  { id: 'stock', label: 'Ações', icon: TrendingUp },
-  { id: 'etf', label: 'ETFs', icon: TrendingUp },
-  { id: 'fixed_income', label: 'Renda Fixa', icon: TrendingUp },
-  { id: 'dividends', label: 'Dividendos', icon: DollarSign },
+  { id: 'dividends', label: 'Proventos', icon: DollarSign },
   { id: 'simulator', label: 'Simulador', icon: Calculator },
   { id: 'history', label: 'Histórico', icon: HistoryIcon },
 ];
 
+const CLASS_FILTERS: { id: ClassFilter; label: string }[] = [
+  { id: 'all', label: 'Todos' },
+  { id: 'fii', label: 'FIIs' },
+  { id: 'stock', label: 'Ações' },
+  { id: 'etf', label: 'ETFs' },
+  { id: 'fixed_income', label: 'Renda Fixa' },
+];
+
 export default function Investments() {
   const inv = useInvestments();
-  const [tab, setTab] = useState<Tab>('overview');
+  const [tab, setTab] = useState<Tab>('wallet');
+  const [classFilter, setClassFilter] = useState<ClassFilter>('all');
   const [addOpen, setAddOpen] = useState(false);
   const [addType, setAddType] = useState<AssetType>('fii');
   const [contribOpen, setContribOpen] = useState(false);
@@ -36,11 +41,11 @@ export default function Investments() {
   const [preselected, setPreselected] = useState<string | undefined>();
 
   const filteredData = useMemo(() => {
-    if (['fii', 'stock', 'etf', 'fixed_income'].includes(tab)) {
-      return inv.assetsWithMetrics.filter((x) => x.asset.type === tab);
+    if (classFilter !== 'all') {
+      return inv.assetsWithMetrics.filter((x) => x.asset.type === classFilter);
     }
     return inv.assetsWithMetrics;
-  }, [inv.assetsWithMetrics, tab]);
+  }, [inv.assetsWithMetrics, classFilter]);
 
   const currentPrice = (ticker: string) => inv.quotes[ticker]?.price ?? null;
 
