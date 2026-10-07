@@ -118,7 +118,7 @@ export default function Investments() {
 
         {/* Tabs + primary action */}
         <div className="flex items-center justify-between gap-2 border-b border-border">
-          <nav aria-label="Seções de investimentos" className="flex gap-1 overflow-x-auto scrollbar-hide min-w-0">
+          <nav aria-label="Seções de investimentos" className="flex-1 sm:flex-none grid grid-cols-4 sm:flex gap-0.5 sm:gap-1 overflow-x-auto scrollbar-hide min-w-0">
             {TABS.map((t) => {
               const active = tab === t.id;
               return (
@@ -126,7 +126,7 @@ export default function Investments() {
                   key={t.id}
                   onClick={() => setTab(t.id)}
                   aria-current={active ? 'page' : undefined}
-                  className={`shrink-0 px-2.5 sm:px-3 py-2.5 -mb-px border-b-2 text-sm font-medium transition-colors ${active ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                  className={`shrink-0 whitespace-nowrap px-1 sm:px-3 py-2.5 -mb-px border-b-2 text-[13px] sm:text-sm font-medium transition-colors ${active ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                 >
                   {t.label}
                 </button>
@@ -161,7 +161,9 @@ export default function Investments() {
         <motion.div key={tab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
           {tab === 'wallet' && (
             <>
-              <InvestmentCharts data={inv.assetsWithMetrics} dividends={inv.dividends} />
+              <div className="[&_.recharts-pie-sector:first-child_path]:!fill-primary [&_.recharts-bar-rectangle_path]:!fill-primary">
+                <InvestmentCharts data={inv.assetsWithMetrics} dividends={inv.dividends} />
+              </div>
               <div role="group" aria-label="Filtrar por classe de ativo" className="flex gap-1.5 overflow-x-auto scrollbar-hide">
                 {CLASS_FILTERS.map((f) => {
                   const active = classFilter === f.id;
