@@ -191,75 +191,43 @@ const kindIcon = { invoice: CreditCard, bill: CalendarClock, goal: Flag, piggy: 
 const kindName = { invoice: 'Fatura', bill: 'Recorrência', goal: 'Meta', piggy: 'Cofrinho' };
 const whenLabel = (d: number) => (d < 0 ? `Atrasado ${Math.abs(d)}d` : d === 0 ? 'Vence hoje' : d === 1 ? 'Vence amanhã' : `Vence em ${d} dias`);
 
-/* ---------- Atenção ---------- */
-export function AttentionCard() {
+/* ---------- Próximos compromissos (une Atenção + Próximos eventos) ---------- */
+export function UpcomingCommitmentsCard() {
   const navigate = useNavigate();
   const { formatCurrency } = useEffectiveFinance();
-  const events = useHomeEvents();
-  const items = events.filter(e => (e.kind === 'invoice' || e.kind === 'bill' ? e.days <= 7 : e.days <= 15)).slice(0, 3);
+  const events = useHomeEvents().slice(0, 5);
 
   return (
-    <section className="rounded-2xl border border-border/60 bg-card p-5 lg:p-6 h-full">
-      <SectionTitle>Atenção</SectionTitle>
-      {items.length === 0 ? (
-        <div className="flex items-start gap-3 py-2">
-          <CheckCircle2 size={18} className="text-income shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium">Tudo em ordem</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Nenhuma ação financeira requer sua atenção.</p>
-          </div>
-        </div>
+    <section className="rounded-2xl border border-border/60 bg-card p-5 lg:p-6">
+      <SectionTitle action="Ver calendário" onAction={() => navigate('/calendar')}>Próximos compromissos</SectionTitle>
+      {events.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nenhum compromisso nos próximos dias.</p>
       ) : (
         <ul className="divide-y divide-border/50">
-          {items.map(e => {
-            const Icon = kindIcon[e.kind];
-            const urgent = e.days <= 3;
-            return (
-              <li key={e.id}>
-                <button onClick={() => navigate(e.route)} className="w-full flex items-center gap-3 py-3 first:pt-0 last:pb-0 text-left group">
-                  <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', urgent ? 'bg-expense/10 text-expense' : 'bg-primary/10 text-primary')}>
-                    {urgent ? <AlertTriangle size={15} /> : <Icon size={15} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{e.title}</p>
-                    <p className={cn('text-[11px]', urgent ? 'text-expense' : 'text-muted-foreground')}>{whenLabel(e.days)}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    {typeof e.amount === 'number' && <p className="font-mono text-sm tabular-nums">{formatCurrency(e.amount)}</p>}
-                    <span className="text-[11px] text-primary inline-flex items-center gap-0.5">Ver <ArrowRight size={10} /></span>
-                  </div>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-/* ---------- Próximos eventos ---------- */
-export function NextEventsCard() {
-  const navigate = useNavigate();
-  const events = useHomeEvents().filter(e => e.days >= 0).slice(0, 4);
-
-  return (
-    <section className="rounded-2xl border border-border/60 bg-card p-5 lg:p-6 h-full">
-      <SectionTitle action="Ver calendário" onAction={() => navigate('/calendar')}>Próximos eventos</SectionTitle>
-      {events.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-2">Nenhum evento agendado para os próximos dias.</p>
-      ) : (
-        <ul className="space-y-3">
           {events.map(e => {
             let dl = e.date;
             try { dl = format(parseISO(e.date), 'dd/MM', { locale: ptBR }); } catch { /* keep */ }
+            const tone = e.days < 0 ? 'overdue' : e.days <= 7 ? 'soon' : 'future';
             return (
               <li key={e.id}>
-                <button onClick={() => navigate(e.route)} className="w-full flex items-center gap-3 text-left">
-                  <span className="font-mono text-xs tabular-nums text-muted-foreground w-11 shrink-0">{dl}</span>
-                  <span className="w-1 h-1 rounded-full bg-primary shrink-0" />
-                  <span className="text-sm truncate flex-1 min-w-0">{e.title}</span>
-                  <span className={cn(label, 'text-muted-foreground shrink-0')}>{kindName[e.kind]}</span>
+                <button
+                  onClick={() => navigate(e.route)}
+                  className="w-full flex items-center gap-3 py-2.5 first:pt-0 last:pb-0 text-left rounded-md hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className={cn('font-mono text-xs tabular-nums w-11 shrink-0',
+                    tone === 'overdue' ? 'text-expense' : tone === 'soon' ? 'text-primary' : 'text-muted-foreground')}>{dl}</span>
+                  <span className={cn('w-1.5 h-1.5 rounded-full shrink-0',
+                    tone === 'overdue' ? 'bg-expense' : tone === 'soon' ? 'bg-primary' : 'bg-muted-foreground/50')} />
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm truncate">{e.title}</span>
+                    <span className={cn('block text-[11px]',
+                      tone === 'overdue' ? 'text-expense' : tone === 'soon' ? 'text-primary' : 'text-muted-foreground')}>
+                      {kindName[e.kind]} · {whenLabel(e.days)}
+                    </span>
+                  </span>
+                  {typeof e.amount === 'number' && (
+                    <span className="font-mono text-sm tabular-nums shrink-0">{formatCurrency(e.amount)}</span>
+                  )}
                 </button>
               </li>
             );
