@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, TrendingUp, TrendingDown, Wallet as WalletIcon, DollarSign, RefreshCcw, Trophy, PieChart, History as HistoryIcon, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useInvestments, AssetType } from '@/hooks/useInvestments';
 import { formatBRL } from '@/lib/currency';
 import { WalletList } from '@/components/investments/WalletList';
@@ -12,23 +13,28 @@ import { SimulatorPanel } from '@/components/investments/SimulatorPanel';
 import { InvestmentCharts } from '@/components/investments/InvestmentCharts';
 import { DividendsPanel } from '@/components/investments/DividendsPanel';
 
-type Tab = 'overview' | 'wallet' | 'fii' | 'stock' | 'etf' | 'fixed_income' | 'dividends' | 'simulator' | 'history';
+type Tab = 'wallet' | 'dividends' | 'simulator' | 'history';
+type ClassFilter = 'all' | AssetType;
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
-  { id: 'overview', label: 'Visão geral', icon: PieChart },
   { id: 'wallet', label: 'Carteira', icon: WalletIcon },
-  { id: 'fii', label: 'FIIs', icon: TrendingUp },
-  { id: 'stock', label: 'Ações', icon: TrendingUp },
-  { id: 'etf', label: 'ETFs', icon: TrendingUp },
-  { id: 'fixed_income', label: 'Renda Fixa', icon: TrendingUp },
-  { id: 'dividends', label: 'Dividendos', icon: DollarSign },
+  { id: 'dividends', label: 'Proventos', icon: DollarSign },
   { id: 'simulator', label: 'Simulador', icon: Calculator },
   { id: 'history', label: 'Histórico', icon: HistoryIcon },
 ];
 
+const CLASS_FILTERS: { id: ClassFilter; label: string }[] = [
+  { id: 'all', label: 'Todos' },
+  { id: 'fii', label: 'FIIs' },
+  { id: 'stock', label: 'Ações' },
+  { id: 'etf', label: 'ETFs' },
+  { id: 'fixed_income', label: 'Renda Fixa' },
+];
+
 export default function Investments() {
   const inv = useInvestments();
-  const [tab, setTab] = useState<Tab>('overview');
+  const [tab, setTab] = useState<Tab>('wallet');
+  const [classFilter, setClassFilter] = useState<ClassFilter>('all');
   const [addOpen, setAddOpen] = useState(false);
   const [addType, setAddType] = useState<AssetType>('fii');
   const [contribOpen, setContribOpen] = useState(false);
@@ -36,11 +42,11 @@ export default function Investments() {
   const [preselected, setPreselected] = useState<string | undefined>();
 
   const filteredData = useMemo(() => {
-    if (['fii', 'stock', 'etf', 'fixed_income'].includes(tab)) {
-      return inv.assetsWithMetrics.filter((x) => x.asset.type === tab);
+    if (classFilter !== 'all') {
+      return inv.assetsWithMetrics.filter((x) => x.asset.type === classFilter);
     }
     return inv.assetsWithMetrics;
-  }, [inv.assetsWithMetrics, tab]);
+  }, [inv.assetsWithMetrics, classFilter]);
 
   const currentPrice = (ticker: string) => inv.quotes[ticker]?.price ?? null;
 
@@ -110,68 +116,80 @@ export default function Investments() {
           </div>
         )}
 
-        {/* Tabs */}
-        <nav aria-label="Seções de investimentos" className="flex gap-1 overflow-x-auto scrollbar-hide rounded-xl border border-border bg-card p-1">
-          {TABS.map((t) => {
-            const active = tab === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                aria-current={active ? 'page' : undefined}
-                className={`shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${active ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-              >
-                <t.icon size={13} />
-                {t.label}
+        {/* Tabs + primary action */}
+        <div className="flex items-center justify-between gap-2 border-b border-border">
+          <nav aria-label="Seções de investimentos" className="flex gap-1 overflow-x-auto scrollbar-hide min-w-0">
+            {TABS.map((t) => {
+              const active = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`shrink-0 px-2.5 sm:px-3 py-2.5 -mb-px border-b-2 text-sm font-medium transition-colors ${active ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </nav>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button aria-label="Adicionar" className="shrink-0 mb-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold flex items-center gap-1 hover:bg-primary/90">
+                <Plus size={14} /> <span className="hidden sm:inline">Adicionar</span>
               </button>
-            );
-          })}
-        </nav>
-
-        {/* Actions */}
-        {tab !== 'simulator' && tab !== 'history' && tab !== 'dividends' && (
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => { setAddType(tab === 'wallet' || tab === 'overview' ? 'fii' : (tab as AssetType)); setAddOpen(true); }}
-              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold flex items-center gap-1 hover:bg-primary/90"
-            >
-              <Plus size={14} /> Adicionar ativo
-            </button>
-            {inv.assets.length > 0 && (
-              <>
-                <button onClick={() => { setPreselected(undefined); setContribOpen(true); }} className="px-4 py-2 rounded-lg border border-border bg-card hover:bg-secondary text-sm font-semibold flex items-center gap-1">
-                  <Plus size={14} /> Novo aporte
-                </button>
-                <button onClick={() => setDivOpen(true)} className="px-4 py-2 rounded-lg border border-border bg-card hover:bg-secondary text-sm font-semibold flex items-center gap-1">
-                  <DollarSign size={14} /> Registrar provento
-                </button>
-              </>
-            )}
-          </div>
-        )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => { setAddType(classFilter === 'all' ? 'fii' : classFilter); setAddOpen(true); }}>
+                <WalletIcon size={14} className="mr-2" /> Adicionar ativo
+              </DropdownMenuItem>
+              {inv.assets.length > 0 && (
+                <>
+                  <DropdownMenuItem onClick={() => { setPreselected(undefined); setContribOpen(true); }}>
+                    <Plus size={14} className="mr-2" /> Novo aporte
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setDivOpen(true)}>
+                    <DollarSign size={14} className="mr-2" /> Registrar provento
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         {/* Content per tab */}
         <motion.div key={tab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          {tab === 'overview' && (
+          {tab === 'wallet' && (
             <>
               <InvestmentCharts data={inv.assetsWithMetrics} dividends={inv.dividends} />
-              <WalletList
-                data={inv.assetsWithMetrics}
-                onDelete={async (id) => { await inv.deleteAsset(id); toast.success('Ativo removido'); }}
-                onContribute={(id) => { setPreselected(id); setContribOpen(true); }}
-                onDividend={(id) => { setPreselected(id); setDivOpen(true); }}
-              />
+              <div role="group" aria-label="Filtrar por classe de ativo" className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+                {CLASS_FILTERS.map((f) => {
+                  const active = classFilter === f.id;
+                  return (
+                    <button
+                      key={f.id}
+                      onClick={() => setClassFilter(f.id)}
+                      aria-pressed={active}
+                      className={`shrink-0 px-2.5 py-1 rounded-md font-mono text-[11px] uppercase tracking-[0.08em] transition-colors ${active ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                      {f.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {filteredData.length === 0 && inv.assets.length > 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">Nenhum ativo nesta classe.</p>
+              ) : (
+                <WalletList
+                  data={filteredData}
+                  onDelete={async (id) => { await inv.deleteAsset(id); toast.success('Ativo removido'); }}
+                  onContribute={(id) => { setPreselected(id); setContribOpen(true); }}
+                  onDividend={(id) => { setPreselected(id); setDivOpen(true); }}
+                />
+              )}
             </>
           )}
 
-          {(tab === 'wallet' || tab === 'fii' || tab === 'stock' || tab === 'etf' || tab === 'fixed_income') && (
-            <WalletList
-              data={filteredData}
-              onDelete={async (id) => { await inv.deleteAsset(id); toast.success('Ativo removido'); }}
-              onContribute={(id) => { setPreselected(id); setContribOpen(true); }}
-              onDividend={(id) => { setPreselected(id); setDivOpen(true); }}
-            />
-          )}
 
           {tab === 'simulator' && <SimulatorPanel />}
 
