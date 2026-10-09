@@ -69,6 +69,8 @@ export default function AIInsights() {
   const [error, setError] = useState<string | null>(null);
   const [lastSignature, setLastSignature] = useState<string | null>(null);
   const [lastAt, setLastAt] = useState<number | null>(null);
+  const [showAllInsights, setShowAllInsights] = useState(false);
+  const [showAllRecs, setShowAllRecs] = useState(false);
 
   // Signature = number of transactions + latest date; recomputes only on real changes
   const currentSignature = `${transactions?.length ?? 0}::${transactions?.[0]?.date ?? ''}`;
@@ -138,49 +140,42 @@ export default function AIInsights() {
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
-      <main className="px-4 lg:px-8 pt-6 space-y-6 max-w-6xl mx-auto">
-        {/* ===== Copiloto Fox ===== */}
+      <main className="px-4 lg:px-8 pt-6 space-y-8 max-w-5xl mx-auto">
+        {/* ===== 1. Hero — Panorama financeiro ===== */}
         <section className="card-finance relative overflow-hidden" aria-labelledby="fox-title">
-          <div className="flex items-start justify-between gap-3">
+          <div className="grid gap-5 md:grid-cols-[1fr_240px] md:items-center">
             <div className="min-w-0">
-              <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-primary flex items-center gap-1.5">
-                <Sparkles size={12} /> Copiloto Fox
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-primary flex items-center gap-1.5">
+                  <Sparkles size={12} /> Copiloto Fox
+                </p>
+                <button
+                  onClick={analyze}
+                  disabled={loading}
+                  className="shrink-0 h-10 px-3 rounded-xl border border-border bg-secondary/60 hover:bg-secondary flex items-center gap-2 text-xs font-medium touch-scale disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+                  aria-label="Atualizar análise"
+                >
+                  <RefreshCw size={15} className={cn(loading && 'animate-spin')} />
+                </button>
+              </div>
               <h1 id="fox-title" className="text-2xl lg:text-3xl font-bold tracking-tight mt-1">Seu panorama financeiro</h1>
-              <p className="text-sm text-muted-foreground mt-1">Inteligência para entender seu dinheiro e tomar decisões melhores.</p>
-            </div>
-            <button
-              onClick={analyze}
-              disabled={loading}
-              className="shrink-0 h-10 px-3 rounded-xl border border-border bg-secondary/60 hover:bg-secondary flex items-center gap-2 text-xs font-medium touch-scale disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Atualizar análise"
-            >
-              <RefreshCw size={15} className={cn(loading && 'animate-spin')} />
-              <span className="hidden sm:inline">Atualizar análise</span>
-            </button>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 mt-4">
-            <FoxStatusPill loading={loading} error={!!error} stale={isStale} ready={!!valid} />
-            {lastLabel && (
-              <span className="text-[11px] font-mono text-muted-foreground flex items-center gap-1">
-                <Clock size={11} /> Última análise · {lastLabel}
-              </span>
-            )}
-          </div>
-
-          <div className="grid lg:grid-cols-[1fr_280px] gap-4 mt-5">
-            <div className="rounded-xl border border-border bg-background/40 p-4 min-h-[96px]">
-              {valid ? (
-                <>
-                  <p className="font-semibold">{report!.saudacao}</p>
-                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{report!.resumo_intro}</p>
-                </>
-              ) : loading ? (
-                <p className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> O Fox está analisando suas finanças…</p>
-              ) : (
-                <p className="text-sm text-muted-foreground">Seu Fox ainda está analisando seus dados.</p>
-              )}
+              <p className="text-sm text-muted-foreground mt-1">O Fox analisou os dados financeiros disponíveis e destaca o que importa agora.</p>
+              <div className="flex flex-wrap items-center gap-2 mt-4">
+                <FoxStatusPill loading={loading} error={!!error} stale={isStale} ready={!!valid} />
+                {lastLabel && (
+                  <span className="text-[11px] font-mono text-muted-foreground flex items-center gap-1">
+                    <Clock size={11} /> Última análise · {lastLabel}
+                  </span>
+                )}
+                <button
+                  onClick={analyze}
+                  disabled={loading}
+                  className="hidden md:inline-flex h-9 px-3 rounded-xl border border-border bg-secondary/60 hover:bg-secondary items-center gap-2 text-xs font-medium touch-scale disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Atualizar análise"
+                >
+                  <RefreshCw size={14} className={cn(loading && 'animate-spin')} /> Atualizar análise
+                </button>
+              </div>
             </div>
             <FoxScoreCard score={valid ? report!.finango_score : undefined} loading={loading && !valid} />
           </div>
@@ -206,80 +201,81 @@ export default function AIInsights() {
           </button>
         )}
 
+        {!valid && (
+          <FoxSection label="Resumo do Fox" title="O que está acontecendo">
+            <div className="border-l-2 border-primary/60 pl-4 py-1">
+              {loading ? (
+                <p className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> O Fox está analisando suas finanças…</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Seu Fox ainda está analisando seus dados.</p>
+              )}
+            </div>
+          </FoxSection>
+        )}
+
         <AnimatePresence mode="wait">
           {valid && (
-            <motion.div key="report" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-              {/* ===== Resumo inteligente ===== */}
-              {(report!.comparativos || report!.previsao_mes) && (
-                <FoxSection label="Resumo inteligente" title="O que está acontecendo com seu dinheiro">
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    {report!.comparativos?.['3_meses'] && (
-                      <>
-                        <Kpi label="Receitas · 3 meses" value={formatCurrency(report!.comparativos['3_meses'].receita || 0)} tone="income" />
-                        <Kpi label="Despesas · 3 meses" value={formatCurrency(report!.comparativos['3_meses'].despesa || 0)} tone="expense" />
-                        <Kpi
-                          label="Economia · 3 meses"
-                          value={formatCurrency(report!.comparativos['3_meses'].economia || 0)}
-                          tone={(report!.comparativos['3_meses'].economia || 0) >= 0 ? 'income' : 'expense'}
-                        />
-                      </>
-                    )}
-                    {report!.previsao_mes && (
-                      <Kpi label="Saldo previsto do mês" value={formatCurrency(report!.previsao_mes.saldo_previsto || 0)} />
-                    )}
-                  </div>
+            <motion.div key="report" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+              {/* ===== 2. O que está acontecendo ===== */}
+              <FoxSection label="Resumo do Fox" title="O que está acontecendo">
+                <div className="border-l-2 border-primary/60 pl-4 py-1">
+                  {report!.saudacao && <p className="text-base lg:text-lg font-semibold leading-snug">{report!.saudacao}</p>}
+                  {report!.resumo_intro && <p className="text-sm lg:text-base text-foreground/80 mt-1.5 leading-relaxed">{report!.resumo_intro}</p>}
                   {report!.comparativos && (
-                    <div className="mt-3 grid sm:grid-cols-3 gap-2">
+                    <p className="text-xs text-muted-foreground mt-3 flex flex-wrap gap-x-3 gap-y-1">
+                      <span className="font-mono uppercase tracking-wider text-[10px]">Economia</span>
                       {(['3_meses', '6_meses', '12_meses'] as const).map(k => {
                         const c = report!.comparativos[k];
                         if (!c) return null;
                         return (
-                          <div key={k} className="rounded-xl border border-border bg-background/40 p-3">
-                            <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Últimos {k.replace('_', ' ')}</p>
-                            <div className="flex justify-between gap-2 mt-1.5 text-xs">
-                              <span className="text-muted-foreground">Economia</span>
-                              <span className={cn('font-mono font-semibold', (c.economia || 0) >= 0 ? 'text-income' : 'text-expense')}>
-                                {formatCurrency(c.economia || 0)}
-                              </span>
-                            </div>
-                          </div>
+                          <span key={k}>
+                            {k.replace('_meses', 'm')} ·{' '}
+                            <span className={cn('font-mono font-semibold', (c.economia || 0) >= 0 ? 'text-income' : 'text-expense')}>
+                              {formatCurrency(c.economia || 0)}
+                            </span>
+                          </span>
                         );
                       })}
-                    </div>
+                    </p>
                   )}
-                </FoxSection>
-              )}
+                </div>
+              </FoxSection>
 
-              {/* ===== Fox Insights ===== */}
+              {/* ===== 3. O que merece sua atenção ===== */}
               <FoxSection label="Fox Insights" title="O que merece sua atenção">
                 {insights.length === 0 ? (
                   <EmptyFox />
                 ) : (
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {insights.map((it, i) => (
-                      <FoxInsightCard key={i} {...it} onAction={(to) => navigate(to)} />
-                    ))}
-                  </div>
+                  <>
+                    <div className="grid md:grid-cols-3 gap-3">
+                      {(showAllInsights ? insights : insights.slice(0, 3)).map((it, i) => (
+                        <FoxInsightCard key={i} {...it} onAction={(to) => navigate(to)} />
+                      ))}
+                    </div>
+                    {insights.length > 3 && (
+                      <ToggleLink open={showAllInsights} onClick={() => setShowAllInsights(v => !v)} more="Ver todos os insights" />
+                    )}
+                  </>
                 )}
               </FoxSection>
 
-              {/* ===== Recomendações do Fox ===== */}
+              {/* ===== 4. O que fazer agora ===== */}
               {report!.recomendacoes?.length > 0 && (
                 <FoxSection label="Recomendações do Fox" title="O que fazer agora">
                   <div className="grid md:grid-cols-2 gap-3">
-                    {report!.recomendacoes.map((r, i) => {
+                    {(showAllRecs ? report!.recomendacoes : report!.recomendacoes.slice(0, 2)).map((r, i) => {
                       const act = actionFor(`${r.acao} ${r.motivo}`);
                       return (
                         <article key={i} className="rounded-xl border border-border bg-card p-4 flex flex-col">
-                          <div className="flex items-center gap-2 text-primary">
-                            <Lightbulb size={15} aria-hidden />
-                            <span className="text-[10px] font-mono uppercase tracking-wider">Recomendação</span>
+                          <div className="flex items-start gap-3">
+                            <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                              <Lightbulb size={15} aria-hidden />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-sm">{r.acao}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{r.motivo}</p>
+                            </div>
                           </div>
-                          <p className="font-semibold text-sm mt-2">{r.acao}</p>
-                          <p className="text-xs text-muted-foreground mt-1">{r.motivo}</p>
-                          {r.impacto && (
-                            <p className="text-xs mt-2"><span className="font-mono uppercase text-[10px] text-muted-foreground mr-1">Impacto</span>{r.impacto}</p>
-                          )}
                           <button
                             onClick={() => navigate(act.to)}
                             className="mt-3 self-start min-h-[40px] inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
@@ -290,80 +286,58 @@ export default function AIInsights() {
                       );
                     })}
                   </div>
+                  {report!.recomendacoes.length > 2 && (
+                    <ToggleLink open={showAllRecs} onClick={() => setShowAllRecs(v => !v)} more="Ver todas as recomendações" />
+                  )}
                 </FoxSection>
               )}
 
-              <div className="grid lg:grid-cols-2 gap-6">
-                {/* Metas */}
-                {report!.metas_analise?.length > 0 && (
-                  <FoxSection label="Metas" title="Seus objetivos">
-                    <div className="space-y-3">
-                      {report!.metas_analise.map((m, i) => (
-                        <div key={i} className="rounded-xl border border-border bg-background/40 p-3">
+              <div className="grid lg:grid-cols-2 gap-8 lg:gap-6">
+                {/* ===== 5. Objetivos ===== */}
+                <FoxSection label="Metas" title="Seus objetivos">
+                  {report!.metas_analise?.length > 0 ? (
+                    <div className="space-y-2">
+                      {report!.metas_analise.slice(0, 2).map((m, i) => (
+                        <div key={i} className="rounded-xl border border-border bg-card p-3">
                           <div className="flex items-center justify-between gap-2 mb-1.5">
                             <p className="font-semibold text-sm truncate">{m.nome}</p>
-                            <span className="text-[11px] font-mono text-muted-foreground shrink-0">{Math.round(m.progresso_percentual || 0)}% · {m.tempo_estimado}</span>
+                            <span className="text-[11px] font-mono text-muted-foreground shrink-0">{Math.round(m.progresso_percentual || 0)}%</span>
                           </div>
                           <div className="h-1.5 bg-secondary rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(m.progresso_percentual || 0)} aria-valuemin={0} aria-valuemax={100}>
                             <div className="h-full bg-primary" style={{ width: `${Math.min(100, Math.max(0, m.progresso_percentual || 0))}%` }} />
                           </div>
-                          <p className="text-xs text-muted-foreground mt-2">{m.sugestao}</p>
+                          {m.tempo_estimado && <p className="text-[11px] text-muted-foreground mt-1.5">{m.tempo_estimado}</p>}
                         </div>
                       ))}
                       <button onClick={() => navigate('/savings')} className="min-h-[40px] inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4">
                         Ver metas <ArrowRight size={13} />
                       </button>
                     </div>
-                  </FoxSection>
-                )}
+                  ) : (
+                    <EmptyFox />
+                  )}
+                </FoxSection>
 
-                {/* Previsão */}
-                {report!.previsao_mes && (
+                {/* ===== 6. Próximos movimentos ===== */}
+                {report!.previsao_mes?.proximos_vencimentos?.length > 0 && (
                   <FoxSection label="Previsão do mês" title="Próximos movimentos">
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <MiniStat label="Saldo previsto" value={formatCurrency(report!.previsao_mes.saldo_previsto || 0)} icon={<Wallet size={14} />} />
-                      <MiniStat label="Economia prevista" value={formatCurrency(report!.previsao_mes.economia_prevista || 0)} icon={<ArrowUpRight size={14} />} tone="income" />
-                    </div>
-                    {report!.previsao_mes.proximos_vencimentos?.length > 0 && (
-                      <div className="space-y-1 mb-2">
-                        <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Próximos vencimentos</p>
-                        {report!.previsao_mes.proximos_vencimentos.map((v, i) => (
-                          <div key={i} className="flex items-center justify-between gap-2 text-sm py-1">
-                            <span className="min-w-0 truncate">{v.descricao} <span className="text-xs text-muted-foreground">· {v.quando}</span></span>
-                            <span className="font-mono font-semibold shrink-0">{formatCurrency(v.valor)}</span>
+                    <div className="space-y-2">
+                      {report!.previsao_mes.proximos_vencimentos.slice(0, 2).map((v, i) => (
+                        <div key={i} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{v.descricao}</p>
+                            <p className="text-[11px] text-muted-foreground">{v.quando}</p>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                    {report!.previsao_mes.maior_gasto_esperado?.categoria && (
-                      <p className="text-xs text-muted-foreground pt-2 border-t border-border">
-                        Maior gasto esperado: <span className="text-foreground font-medium">{report!.previsao_mes.maior_gasto_esperado.categoria}</span> — <span className="font-mono">{formatCurrency(report!.previsao_mes.maior_gasto_esperado.valor_estimado || 0)}</span>
-                      </p>
-                    )}
-                    <p className="text-[10px] text-muted-foreground mt-3">Projeções baseadas no seu histórico financeiro.</p>
+                          <span className="font-mono text-sm font-semibold shrink-0">{formatCurrency(v.valor)}</span>
+                        </div>
+                      ))}
+                      <button onClick={() => navigate('/calendar')} className="min-h-[40px] inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4">
+                        Ver calendário <ArrowRight size={13} />
+                      </button>
+                    </div>
                   </FoxSection>
                 )}
               </div>
-
-              {/* Assinaturas */}
-              {report!.assinaturas_detectadas?.length > 0 && (
-                <FoxSection label="Gastos recorrentes" title="Possíveis assinaturas">
-                  <div className="grid sm:grid-cols-2 gap-2">
-                    {report!.assinaturas_detectadas.map((a, i) => (
-                      <div key={i} className="flex items-center justify-between gap-2 p-3 rounded-xl border border-border bg-background/40">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{a.descricao}</p>
-                          <p className="text-xs text-muted-foreground">{a.frequencia}</p>
-                        </div>
-                        <span className="font-mono text-sm font-semibold shrink-0">{formatCurrency(a.valor)}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <button onClick={() => navigate('/recurring')} className="mt-3 min-h-[40px] inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4">
-                    <Repeat size={13} /> Ver recorrências
-                  </button>
-                </FoxSection>
-              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -472,6 +446,14 @@ function Kpi({ label, value, tone }: { label: string; value: string; tone?: 'inc
       <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className={cn('font-mono font-semibold text-base mt-1 truncate', tone === 'income' && 'text-income', tone === 'expense' && 'text-expense')}>{value}</p>
     </div>
+  );
+}
+
+function ToggleLink({ open, onClick, more }: { open: boolean; onClick: () => void; more: string }) {
+  return (
+    <button onClick={onClick} aria-expanded={open} className="min-h-[40px] inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+      {open ? 'Mostrar menos' : <>{more} <ArrowRight size={13} /></>}
+    </button>
   );
 }
 
