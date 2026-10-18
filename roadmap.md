@@ -1,5 +1,9 @@
 # Roadmap
 
+## Fase atual
+- [x] FASE 5 — Apresentação de Dinheiro refinada; estados vazios e links testados em 1280px/393px nos quatro temas, sem operações financeiras.
+- [ ] FASE 5 — Validar linhas de transações, cartões e alertas preenchidos (bloqueado: a conta disponível não apresentou registros nessas seções; não criar dados nem usar outra conta sem autorização).
+
 ## Aguardando autorização
 - [ ] FASE 7 — Finango IA / Copiloto Fox (aguardando aprovação do usuário)
 
