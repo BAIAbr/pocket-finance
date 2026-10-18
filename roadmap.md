@@ -1,5 +1,8 @@
 # Roadmap
 
+## Fase atual
+- [ ] FASE 5 — Refinar somente a apresentação de Dinheiro e validar em 1280px/393px nos quatro temas, sem operações financeiras.
+
 ## Aguardando autorização
 - [ ] FASE 7 — Finango IA / Copiloto Fox (aguardando aprovação do usuário)
 

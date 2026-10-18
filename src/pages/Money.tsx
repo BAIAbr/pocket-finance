@@ -7,6 +7,7 @@ import { useRecurring, daysUntil } from '@/hooks/useRecurring';
 import { TransactionList } from '@/components/TransactionList';
 import CreditCardVisual from '@/components/creditcards/CreditCardVisual';
 import { QuickActionsFab } from '@/components/QuickActionsFab';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const tabs = [
@@ -39,20 +40,12 @@ export default function Money() {
   const activeRecurring = recurring.filter(r => r.is_active).sort((a, b) => a.next_due_date.localeCompare(b.next_due_date));
   const monthlyRecurring = activeRecurring.filter(r => r.type === 'expense' && r.frequency === 'monthly').reduce((s, r) => s + Number(r.amount), 0);
 
-  const kpis = [
-    { label: isFamily ? 'Saldo familiar' : 'Saldo disponível', value: formatCurrency(totalBalance), icon: Wallet, tone: totalBalance < 0 ? 'text-expense' : '' },
-    { label: 'Entradas do mês', value: `+${formatCurrency(currentMonthStats.income)}`, icon: TrendingUp, tone: 'text-income' },
-    { label: 'Saídas do mês', value: `-${formatCurrency(currentMonthStats.expense)}`, icon: TrendingDown, tone: 'text-expense' },
-    ...(!isFamily ? [{ label: 'Faturas em aberto', value: formatCurrency(openInvoices), icon: CreditCard, tone: '' }] : []),
-    { label: 'Próximos 7 dias', value: formatCurrency(next7Total), icon: AlertTriangle, tone: next7Total > 0 ? 'text-primary' : '', hint: `${next7.length} conta(s) recorrente(s)` },
-  ];
-
   return (
     <div className="min-h-screen bg-background pb-28 lg:pb-8 safe-top">
-      <header className="px-4 lg:px-8 pt-6 pb-4">
+      <header className="px-4 lg:px-8 pt-5 lg:pt-6 pb-4">
         <Label>{isFamily ? 'Contexto familiar' : 'Minha conta'}</Label>
-        <h1 className="text-2xl lg:text-4xl font-semibold tracking-tight">Dinheiro</h1>
-        <p className="text-sm text-muted-foreground mt-1">Transações, cartões, faturas e recorrências em um só lugar.</p>
+        <h1 className="text-2xl lg:text-4xl font-semibold">Dinheiro</h1>
+        <p className="text-sm text-muted-foreground mt-1">Sua situação financeira e movimentações em um só lugar.</p>
       </header>
 
       <main className="px-4 lg:px-8 space-y-6">
@@ -69,21 +62,62 @@ export default function Money() {
           })}
         </nav>
 
-        <section className={cn('grid grid-cols-2 gap-3', kpis.length === 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-4')}>
-          {kpis.map(k => (
-            <div key={k.label} className="rounded-xl border border-border bg-card p-4 min-w-0">
-              <div className="flex items-center justify-between gap-2"><Label className="truncate">{k.label}</Label><k.icon size={14} className="text-muted-foreground shrink-0" /></div>
-              <p className={cn('mt-2 font-mono text-lg lg:text-xl font-medium tabular-nums truncate', k.tone)}>{k.value}</p>
-              {'hint' in k && k.hint && <p className="mt-1 text-xs text-muted-foreground truncate">{k.hint}</p>}
+        <section aria-labelledby="monthly-summary" className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-6">
+          <div className="min-w-0 rounded-lg border border-primary/30 bg-card p-5 lg:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <h2 id="monthly-summary" className="text-sm font-medium">Resumo do mês</h2>
+              <TrendingDown size={18} className="shrink-0 text-primary" />
             </div>
-          ))}
+            <div className="mt-5">
+              <Label>Despesas do mês</Label>
+              <p className="mt-1 font-mono text-3xl lg:text-4xl font-semibold tabular-nums text-primary break-words">{formatCurrency(currentMonthStats.expense)}</p>
+            </div>
+            <dl className="mt-5 grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+              <div className="min-w-0">
+                <dt className="flex items-center gap-2 text-xs text-muted-foreground"><TrendingUp size={14} />Entradas do mês</dt>
+                <dd className="mt-1.5 font-mono text-lg font-medium tabular-nums text-income break-words">+{formatCurrency(currentMonthStats.income)}</dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="flex items-center gap-2 text-xs text-muted-foreground"><Wallet size={14} />{isFamily ? 'Saldo familiar' : 'Saldo disponível'}</dt>
+                <dd className={cn('mt-1.5 font-mono text-lg font-medium tabular-nums break-words', totalBalance < 0 && 'text-expense')}>{formatCurrency(totalBalance)}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="min-w-0 space-y-5 py-1 lg:py-2">
+            {!isFamily && (
+              <div className="border-b border-border pb-4">
+                <div className="flex items-center gap-2 text-sm font-medium"><CreditCard size={16} className="text-muted-foreground" /><h2>Faturas em aberto</h2></div>
+                <p className="mt-2 font-mono text-2xl font-medium tabular-nums break-words">{formatCurrency(openInvoices)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Valor restante das faturas de cartão.</p>
+              </div>
+            )}
+            <div>
+              <div className="flex items-center gap-2 text-sm font-medium"><AlertTriangle size={16} className={next7Total > 0 ? 'text-primary' : 'text-muted-foreground'} /><h2>Próximos 7 dias</h2></div>
+              <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <p className={cn('font-mono text-xl font-medium tabular-nums break-words', next7Total > 0 && 'text-primary')}>{formatCurrency(next7Total)}</p>
+                <span className="text-xs text-muted-foreground">{next7.length} conta(s) recorrente(s)</span>
+              </div>
+              {next7.length === 0 && <p className="mt-1 text-xs text-muted-foreground">Nenhuma despesa recorrente prevista nos próximos 7 dias.</p>}
+            </div>
+          </div>
+        </section>
+
+        <section className="min-w-0 border-t border-border pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div className="flex flex-wrap items-center gap-2"><h2 className="text-base font-medium">Últimas transações</h2><Label className="border border-border rounded px-1.5 py-0.5">7 dias</Label></div>
+            <Button variant="link" size="sm" onClick={() => navigate('/history')} className="px-0 text-xs">Ver histórico <ChevronRight size={12} /></Button>
+          </div>
+          <div className="[&_.transaction-item]:rounded-lg [&_.transaction-item]:min-h-20 [&_.transaction-item]:gap-2 sm:[&_.transaction-item]:gap-3 [&_.transaction-item>div:first-child]:shrink-0 [&_.transaction-item>div:last-child]:shrink-0 [&_.transaction-item>div:last-child_span]:whitespace-nowrap [&_.transaction-item>div:nth-child(2)>p:first-child]:whitespace-normal [&_.transaction-item>div:nth-child(2)>p:first-child]:break-words [&_.card-finance]:border-0 [&_.card-finance]:bg-transparent [&_.card-finance]:shadow-none">
+            <TransactionList compact />
+          </div>
         </section>
 
         {!isFamily && !cardsLoading && cards.length > 0 && (
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
+          <section className="space-y-3 border-t border-border pt-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-base font-medium">Cartões de crédito</h2>
-              <button onClick={() => navigate('/cards')} className="text-xs text-primary flex items-center gap-1">Gerenciar cartões <ChevronRight size={12} /></button>
+              <Button variant="link" size="sm" onClick={() => navigate('/cards')} className="px-0 text-xs">Gerenciar cartões <ChevronRight size={12} /></Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {cards.slice(0, 2).map(card => {
@@ -98,21 +132,13 @@ export default function Money() {
           </section>
         )}
 
-        <section className="rounded-2xl border border-border bg-card p-4 lg:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2"><h2 className="text-base font-medium">Últimas transações</h2><Label className="border border-border rounded px-1.5 py-0.5">7 dias</Label></div>
-            <button onClick={() => navigate('/history')} className="text-xs text-primary flex items-center gap-1">Ver histórico <ChevronRight size={12} /></button>
-          </div>
-          <TransactionList compact />
-        </section>
-
-        <section className="rounded-2xl border border-border bg-card p-4 lg:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-baseline gap-2 min-w-0">
+        <section className="border-t border-border pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div className="flex flex-wrap items-baseline gap-2 min-w-0">
               <h2 className="text-base font-medium">Recorrências e assinaturas</h2>
-              {monthlyRecurring > 0 && <span className="font-mono text-[11px] text-primary truncate">{formatCurrency(monthlyRecurring)}/mês</span>}
+              {monthlyRecurring > 0 && <span className="font-mono text-[11px] text-primary break-words">{formatCurrency(monthlyRecurring)}/mês</span>}
             </div>
-            <button onClick={() => navigate('/recurring')} className="text-xs text-primary flex items-center gap-1 shrink-0">Ver todas <ChevronRight size={12} /></button>
+            <Button variant="link" size="sm" onClick={() => navigate('/recurring')} className="px-0 text-xs">Ver todas <ChevronRight size={12} /></Button>
           </div>
           {activeRecurring.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">Nenhuma recorrência ativa.</p>
@@ -121,7 +147,7 @@ export default function Money() {
               {activeRecurring.slice(0, 5).map(r => (
                 <li key={r.id} className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{r.name}</p>
+                    <p className="text-sm font-medium break-words">{r.name}</p>
                     <p className="text-xs text-muted-foreground">Próximo: {r.next_due_date.split('-').reverse().join('/')}</p>
                   </div>
                   <span className={cn('font-mono text-sm tabular-nums shrink-0', r.type === 'income' ? 'text-income' : 'text-expense')}>
