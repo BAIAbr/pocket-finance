@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { addMonths, format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
+import { moneyQueryError } from '@/lib/moneyPresentation';
 
 export interface CreditCard {
   id: string;
@@ -159,9 +160,13 @@ export function useCreditCards() {
   const [recurring, setRecurring] = useState<CreditCardRecurring[]>([]);
   const [payments, setPayments] = useState<CreditCardPayment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!user) { setLoading(false); return; }
+    if (!user) { setLoadError(null); setLoading(false); return; }
+    setLoading(true);
+    setLoadError(null);
+    try {
     const [c, inv, ins, p, u, r, pay] = await Promise.all([
       supabase.from('credit_cards').select('*').order('created_at'),
       supabase.from('credit_card_invoices').select('*').order('reference_month', { ascending: false }),
@@ -171,6 +176,7 @@ export function useCreditCards() {
       supabase.from('credit_card_recurring' as any).select('*').order('created_at'),
       supabase.from('credit_card_payments').select('*').order('payment_date', { ascending: false }),
     ]);
+    setLoadError(moneyQueryError(c, inv, u));
     setCards((c.data as any) ?? []);
     setInvoices((inv.data as any) ?? []);
     setInstallments((ins.data as any) ?? []);
@@ -178,7 +184,11 @@ export function useCreditCards() {
     setUsage((u.data as any) ?? []);
     setRecurring((r.data as any) ?? []);
     setPayments((pay.data as any) ?? []);
-    setLoading(false);
+    } catch {
+      setLoadError('Não foi possível carregar os dados.');
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => { refresh(); }, [refresh]);
@@ -417,7 +427,7 @@ export function useCreditCards() {
   }, [refresh]);
 
   return {
-    cards, invoices, installments, purchases, usage, recurring, payments, loading, totals,
+    cards, invoices, installments, purchases, usage, recurring, payments, loading, loadError, totals,
     refresh, createCard, updateCard, deleteCard,
     createPurchase, deletePurchase, payInvoice, getCardMetrics,
     createRecurring, updateRecurring, deleteRecurring, toggleRecurring, runRecurringNow,

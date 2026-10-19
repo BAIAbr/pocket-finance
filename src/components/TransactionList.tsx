@@ -9,6 +9,7 @@ import { Transaction } from '@/hooks/useSupabaseFinance';
 import { useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import { EditTransactionModal } from './EditTransactionModal';
+import { isRecentMoneyDate, moneyEmptyKind } from '@/lib/moneyPresentation';
 
 interface TransactionItemProps {
   transaction: Transaction;
@@ -101,21 +102,23 @@ export function TransactionItem({ transaction, showActions = false, onEdit }: Tr
 
 interface TransactionListProps {
   compact?: boolean;
+  moneyOverview?: boolean;
 }
 
-export function TransactionList({ compact = false }: TransactionListProps) {
-  const { recentTransactions, isLoading, isFamily } = useEffectiveFinance();
+export function TransactionList({ compact = false, moneyOverview = false }: TransactionListProps) {
+  const { recentTransactions, transactions, isLoading, loadError, isFamily } = useEffectiveFinance();
   const navigate = useNavigate();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const displayTransactions = useMemo(() => {
     if (!compact) return recentTransactions;
+    if (moneyOverview) return transactions.filter(t => isRecentMoneyDate(t.date)).slice(0, 5);
     const sevenDaysAgo = subDays(new Date(), 7);
     const weekTransactions = recentTransactions.filter(t =>
       isAfter(parseISO(t.date), sevenDaysAgo)
     );
     return weekTransactions.slice(0, 5);
-  }, [recentTransactions, compact]);
+  }, [recentTransactions, transactions, compact, moneyOverview]);
 
   if (isLoading) {
     return (
@@ -135,14 +138,19 @@ export function TransactionList({ compact = false }: TransactionListProps) {
     );
   }
 
+  if (moneyOverview && loadError) {
+    return <p role="alert" className="py-4 text-sm text-destructive">Não foi possível carregar as transações.</p>;
+  }
+
   if (displayTransactions.length === 0) {
+    const outsidePeriod = moneyOverview && moneyEmptyKind(transactions.length) === 'outside-period';
     return (
       <div className="card-finance text-center py-8">
         <p className="text-muted-foreground">
-          {isFamily ? 'Nenhuma transação compartilhada' : 'Nenhuma transação ainda'}
+          {outsidePeriod ? 'Nenhuma transação nos últimos 7 dias' : isFamily ? 'Nenhuma transação compartilhada' : 'Nenhuma transação ainda'}
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          {isFamily ? 'Compartilhe transações para ver aqui' : 'Toque no botão + para adicionar'}
+          {outsidePeriod ? 'Seus outros registros continuam no histórico.' : isFamily ? 'Compartilhe transações para ver aqui' : 'Toque no botão + para adicionar'}
         </p>
       </div>
     );

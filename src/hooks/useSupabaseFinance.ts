@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { moneyQueryError } from '@/lib/moneyPresentation';
 
 export interface Transaction {
   id: string;
@@ -119,6 +120,7 @@ export function useSupabaseFinance(userId: string | null) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [settings, setSettings] = useState<FinanceSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Load all data when userId changes
   useEffect(() => {
@@ -129,12 +131,14 @@ export function useSupabaseFinance(userId: string | null) {
       setPiggyBanks([]);
       setPiggyBankTransactions([]);
       setProfile(null);
+      setLoadError(null);
       setIsLoading(false);
       return;
     }
 
     const loadData = async () => {
       setIsLoading(true);
+      setLoadError(null);
       try {
         const [
           transactionsRes,
@@ -152,6 +156,7 @@ export function useSupabaseFinance(userId: string | null) {
           supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
         ]);
 
+        setLoadError(moneyQueryError(transactionsRes, categoriesRes));
         if (transactionsRes.data) setTransactions(transactionsRes.data as Transaction[]);
         if (categoriesRes.data) setCategories(categoriesRes.data as Category[]);
         if (savingsGoalsRes.data) setSavingsGoals(savingsGoalsRes.data as SavingsGoal[]);
@@ -166,6 +171,7 @@ export function useSupabaseFinance(userId: string | null) {
           });
         }
       } catch (error) {
+        setLoadError('Não foi possível carregar os dados.');
         console.error('Error loading data:', error);
       } finally {
         setIsLoading(false);
@@ -177,12 +183,21 @@ export function useSupabaseFinance(userId: string | null) {
 
   const refresh = useCallback(async () => {
     if (!userId) return;
-    const [tx, cats] = await Promise.all([
-      supabase.from('transactions').select('*').order('date', { ascending: false }),
-      supabase.from('categories').select('*').order('name'),
-    ]);
-    if (tx.data) setTransactions(tx.data as Transaction[]);
-    if (cats.data) setCategories(cats.data as Category[]);
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const [tx, cats] = await Promise.all([
+        supabase.from('transactions').select('*').order('date', { ascending: false }),
+        supabase.from('categories').select('*').order('name'),
+      ]);
+      setLoadError(moneyQueryError(tx, cats));
+      if (tx.data) setTransactions(tx.data as Transaction[]);
+      if (cats.data) setCategories(cats.data as Category[]);
+    } catch {
+      setLoadError('Não foi possível carregar os dados.');
+    } finally {
+      setIsLoading(false);
+    }
   }, [userId]);
 
 
@@ -865,6 +880,7 @@ export function useSupabaseFinance(userId: string | null) {
     totalBalance,
     currentMonthStats,
     isLoading,
+    loadError,
 
     // Transaction actions
     addTransaction,
