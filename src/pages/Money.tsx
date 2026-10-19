@@ -9,6 +9,7 @@ import CreditCardVisual from '@/components/creditcards/CreditCardVisual';
 import { QuickActionsFab } from '@/components/QuickActionsFab';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { isUpcomingMoneyDue, moneyDueState, openMoneyInvoice } from '@/lib/moneyPresentation';
 
 const tabs = [
   { label: 'Visão geral', icon: LayoutGrid, to: '/money' },
@@ -22,18 +23,22 @@ const Label = ({ children, className }: { children: React.ReactNode; className?:
   <span className={cn('font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground', className)}>{children}</span>
 );
 
+function ReadNotice({ loading, error }: { loading: boolean; error: string | null }) {
+  return <p role={error ? 'alert' : 'status'} className={cn('py-3 text-sm', error ? 'text-destructive' : 'text-muted-foreground')}>{loading ? 'Carregando…' : error}</p>;
+}
+
 export default function Money() {
   const navigate = useNavigate();
-  const { totalBalance, currentMonthStats, formatCurrency, isFamily } = useEffectiveFinance();
-  const { cards, invoices, getCardMetrics, loading: cardsLoading } = useCreditCards();
-  const { items: recurring } = useRecurring();
+  const { totalBalance, currentMonthStats, formatCurrency, isFamily, isLoading: financeLoading, loadError: financeError } = useEffectiveFinance();
+  const { cards, invoices, getCardMetrics, loading: cardsLoading, loadError: cardsError } = useCreditCards();
+  const { items: recurring, isLoading: recurringLoading, loadError: recurringError } = useRecurring();
 
   const openInvoices = useMemo(
     () => (invoices as any[]).filter(i => i.status !== 'paid').reduce((s, i) => s + Math.max(Number(i.total_amount) - Number(i.paid_amount || 0), 0), 0),
     [invoices]
   );
   const next7 = useMemo(
-    () => recurring.filter(r => r.is_active && r.type === 'expense' && daysUntil(r.next_due_date) >= 0 && daysUntil(r.next_due_date) <= 7),
+    () => recurring.filter(r => r.is_active && r.type === 'expense' && isUpcomingMoneyDue(daysUntil(r.next_due_date))),
     [recurring]
   );
   const next7Total = next7.reduce((s, r) => s + Number(r.amount), 0);
@@ -68,6 +73,7 @@ export default function Money() {
               <h2 id="monthly-summary" className="text-sm font-medium">Resumo do mês</h2>
               <TrendingDown size={18} className="shrink-0 text-primary" />
             </div>
+            {financeLoading || financeError ? <ReadNotice loading={financeLoading} error={financeError} /> : <>
             <div className="mt-5">
               <Label>Despesas do mês</Label>
               <p className="mt-1 font-mono text-3xl lg:text-4xl font-semibold tabular-nums text-primary break-words">{formatCurrency(currentMonthStats.expense)}</p>
@@ -82,23 +88,26 @@ export default function Money() {
                 <dd className={cn('mt-1.5 font-mono text-lg font-medium tabular-nums break-words', totalBalance < 0 && 'text-expense')}>{formatCurrency(totalBalance)}</dd>
               </div>
             </dl>
+            </>}
           </div>
 
           <div className="min-w-0 space-y-5 py-1 lg:py-2">
             {!isFamily && (
               <div className="border-b border-border pb-4">
                 <div className="flex items-center gap-2 text-sm font-medium"><CreditCard size={16} className="text-muted-foreground" /><h2>Faturas em aberto</h2></div>
-                <p className="mt-2 font-mono text-2xl font-medium tabular-nums break-words">{formatCurrency(openInvoices)}</p>
+                {cardsLoading || cardsError ? <ReadNotice loading={cardsLoading} error={cardsError} /> : <p className="mt-2 font-mono text-2xl font-medium tabular-nums break-words">{formatCurrency(openInvoices)}</p>}
                 <p className="mt-1 text-xs text-muted-foreground">Valor restante das faturas de cartão.</p>
               </div>
             )}
             <div>
               <div className="flex items-center gap-2 text-sm font-medium"><AlertTriangle size={16} className={next7Total > 0 ? 'text-primary' : 'text-muted-foreground'} /><h2>Próximos 7 dias</h2></div>
+              {recurringLoading || recurringError ? <ReadNotice loading={recurringLoading} error={recurringError} /> : <>
               <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <p className={cn('font-mono text-xl font-medium tabular-nums break-words', next7Total > 0 && 'text-primary')}>{formatCurrency(next7Total)}</p>
                 <span className="text-xs text-muted-foreground">{next7.length} conta(s) recorrente(s)</span>
               </div>
               {next7.length === 0 && <p className="mt-1 text-xs text-muted-foreground">Nenhuma despesa recorrente prevista nos próximos 7 dias.</p>}
+              </>}
             </div>
           </div>
         </section>
@@ -109,26 +118,28 @@ export default function Money() {
             <Button variant="link" size="sm" onClick={() => navigate('/history')} className="px-0 text-xs">Ver histórico <ChevronRight size={12} /></Button>
           </div>
           <div className="[&_.transaction-item]:rounded-lg [&_.transaction-item]:min-h-20 [&_.transaction-item]:gap-2 sm:[&_.transaction-item]:gap-3 [&_.transaction-item>div:first-child]:shrink-0 [&_.transaction-item>div:last-child]:shrink-0 [&_.transaction-item>div:last-child_span]:whitespace-nowrap [&_.transaction-item>div:nth-child(2)>p:first-child]:whitespace-normal [&_.transaction-item>div:nth-child(2)>p:first-child]:break-words [&_.card-finance]:border-0 [&_.card-finance]:bg-transparent [&_.card-finance]:shadow-none">
-            <TransactionList compact />
+            <TransactionList compact moneyOverview />
           </div>
         </section>
 
-        {!isFamily && !cardsLoading && cards.length > 0 && (
+        {!isFamily && (cardsLoading || cardsError || cards.length > 0) && (
           <section className="space-y-3 border-t border-border pt-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-base font-medium">Cartões de crédito</h2>
               <Button variant="link" size="sm" onClick={() => navigate('/cards')} className="px-0 text-xs">Gerenciar cartões <ChevronRight size={12} /></Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {cardsLoading || cardsError ? <ReadNotice loading={cardsLoading} error={cardsError} /> : <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {cards.slice(0, 2).map(card => {
                 const m = getCardMetrics(card.id);
+                const invoice = openMoneyInvoice(m.cardInvoices);
                 return (
                   <CreditCardVisual key={card.id} card={card} used={m.used} available={m.available} percent={m.percent}
-                    invoiceAmount={m.currentInvoice ? Number(m.currentInvoice.total_amount) - Number(m.currentInvoice.paid_amount) : 0}
-                    dueDate={m.currentInvoice?.due_date} onClick={() => navigate(`/cards/${card.id}`)} />
+                    invoiceAmount={invoice ? Number(invoice.total_amount) - Number(invoice.paid_amount) : 0}
+                    hasOpenInvoice={Boolean(invoice)}
+                    dueDate={invoice?.due_date} onClick={() => navigate(`/cards/${card.id}`)} />
                 );
               })}
-            </div>
+            </div>}
           </section>
         )}
 
@@ -136,25 +147,29 @@ export default function Money() {
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div className="flex flex-wrap items-baseline gap-2 min-w-0">
               <h2 className="text-base font-medium">Recorrências e assinaturas</h2>
-              {monthlyRecurring > 0 && <span className="font-mono text-[11px] text-primary break-words">{formatCurrency(monthlyRecurring)}/mês</span>}
+              {!recurringLoading && !recurringError && monthlyRecurring > 0 && <span className="font-mono text-[11px] text-primary break-words">{formatCurrency(monthlyRecurring)}/mês</span>}
             </div>
             <Button variant="link" size="sm" onClick={() => navigate('/recurring')} className="px-0 text-xs">Ver todas <ChevronRight size={12} /></Button>
           </div>
-          {activeRecurring.length === 0 ? (
+          {recurringLoading || recurringError ? <ReadNotice loading={recurringLoading} error={recurringError} /> : activeRecurring.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">Nenhuma recorrência ativa.</p>
           ) : (
             <ul className="divide-y divide-border">
-              {activeRecurring.slice(0, 5).map(r => (
+              {activeRecurring.slice(0, 5).map(r => {
+                const days = daysUntil(r.next_due_date);
+                const state = moneyDueState(days);
+                const dueLabel = state === 'overdue' ? 'Vencida' : days === 0 ? 'Vence hoje' : state === 'soon' ? 'Vence em breve' : 'Próximo';
+                return (
                 <li key={r.id} className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium break-words">{r.name}</p>
-                    <p className="text-xs text-muted-foreground">Próximo: {r.next_due_date.split('-').reverse().join('/')}</p>
+                    <p className={cn('text-xs', state === 'overdue' ? 'text-expense' : state === 'soon' ? 'text-primary' : 'text-muted-foreground')}>{dueLabel}: {r.next_due_date.split('-').reverse().join('/')}</p>
                   </div>
                   <span className={cn('font-mono text-sm tabular-nums shrink-0', r.type === 'income' ? 'text-income' : 'text-expense')}>
                     {r.type === 'income' ? '+' : '-'}{formatCurrency(Number(r.amount))}
                   </span>
                 </li>
-              ))}
+              ); })}
             </ul>
           )}
         </section>

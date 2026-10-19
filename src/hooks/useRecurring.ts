@@ -5,6 +5,7 @@ import { useFamilyContext } from '@/contexts/FamilyContext';
 import { useFinanceContext } from '@/contexts/FinanceContext';
 import { addDays, addMonths, addWeeks, addYears, format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
+import { moneyQueryError } from '@/lib/moneyPresentation';
 
 export type Frequency = 'weekly' | 'monthly' | 'yearly';
 
@@ -58,20 +59,29 @@ export function useRecurring() {
   const { addTransaction } = useFinanceContext();
   const [items, setItems] = useState<RecurringTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user?.id) {
       setItems([]);
+      setLoadError(null);
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
-    const { data, error } = await (supabase as any)
-      .from('recurring_transactions')
-      .select('*')
-      .order('next_due_date', { ascending: true });
-    if (!error && data) setItems(data as RecurringTransaction[]);
-    setIsLoading(false);
+    setLoadError(null);
+    try {
+      const { data, error } = await (supabase as any)
+        .from('recurring_transactions')
+        .select('*')
+        .order('next_due_date', { ascending: true });
+      setLoadError(moneyQueryError({ error }));
+      if (!error && data) setItems(data as RecurringTransaction[]);
+    } catch {
+      setLoadError('Não foi possível carregar os dados.');
+    } finally {
+      setIsLoading(false);
+    }
   }, [user?.id]);
 
   useEffect(() => { load(); }, [load]);
@@ -162,7 +172,7 @@ export function useRecurring() {
     return true;
   }, [addTransaction, update]);
 
-  return { items, isLoading, create, update, remove, togglePause, payNow, reload: load };
+  return { items, isLoading, loadError, create, update, remove, togglePause, payNow, reload: load };
 }
 
 export function daysUntil(dateStr: string): number {

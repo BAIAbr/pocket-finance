@@ -12,9 +12,10 @@ interface Props {
   invoiceAmount?: number;
   onClick?: () => void;
   compact?: boolean;
+  hasOpenInvoice?: boolean;
 }
 
-export default function CreditCardVisual({ card, used, available, percent, dueDate, invoiceAmount, onClick, compact }: Props) {
+export default function CreditCardVisual({ card, used, available, percent, dueDate, invoiceAmount, onClick, compact, hasOpenInvoice }: Props) {
   const barColor = percent >= 80 ? 'bg-red-500' : percent >= 50 ? 'bg-yellow-500' : 'bg-emerald-500';
 
   return (
@@ -41,8 +42,8 @@ export default function CreditCardVisual({ card, used, available, percent, dueDa
       {!compact && (
         <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
           <div>
-            <div className="opacity-80">Fatura atual</div>
-            <div className="text-base font-semibold">{fmt(invoiceAmount ?? used)}</div>
+            <div className="opacity-80">{hasOpenInvoice === false ? 'Sem fatura em aberto' : 'Fatura atual'}</div>
+            {hasOpenInvoice !== false && <div className="text-base font-semibold">{fmt(invoiceAmount ?? used)}</div>}
           </div>
           <div className="text-right">
             <div className="opacity-80">Disponível</div>
@@ -61,7 +62,7 @@ export default function CreditCardVisual({ card, used, available, percent, dueDa
         </div>
       </div>
 
-      {dueDate && !compact && (
+      {dueDate && !compact && hasOpenInvoice !== false && (
         <div className="mt-3 text-[11px] opacity-90">
           Vence em {new Date(dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}
         </div>
