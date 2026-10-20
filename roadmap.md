@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Fase atual
-- [ ] FASE 5.2 — Corrigir períodos, status, fatura paga e estados de leitura somente nas dependências indispensáveis de Dinheiro; validar sem operações financeiras.
+- [x] FASE 5.2 — Correções de períodos, status, fatura paga e estados de leitura aplicadas; duas transações reais e estados de demora/falha testados sem operações financeiras.
+- [ ] FASE 5.2 — Validar recorrência vencida e cartão sem fatura aberta com registros reais (bloqueado: a conta disponível não possui recorrências, cartões nem faturas; não criar dados nem usar outra conta sem autorização).
 - [x] FASE 5 — Apresentação de Dinheiro refinada; estados vazios e links testados em 1280px/393px nos quatro temas, sem operações financeiras.
 - [ ] FASE 5 — Validar linhas de transações, cartões e alertas preenchidos (bloqueado: a conta disponível não apresentou registros nessas seções; não criar dados nem usar outra conta sem autorização).
 
